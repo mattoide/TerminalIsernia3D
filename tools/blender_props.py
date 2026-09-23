@@ -342,4 +342,33 @@ for a, b in zip(tops, tops[1:]):                                       # catenar
         tube(emd, "ti_lamp_black", p, q, 0.012, 0.012, 4)
 write_dae(os.path.join(OUT, "ti_powerline.dae"), [emd], GEO)
 
+# ----------------------------------------------------------------------------- autolavaggio (OSM way 1238868719)
+# tettoia 35.6 x 7.1 m con 6 piste (ortofoto: copertura bianca), nel sistema locale: x lungo la tettoia, centro in 0;
+# build_level la posa al centro OSM con la sua rotazione e alla quota del piazzale
+cmd_ = MeshData("carwash")
+CL, CW, CH = 35.6, 7.1, 4.3
+nb = 6
+for k in range(nb + 1):                                         # colonne sui due lati lunghi
+    x = -CL / 2 + CL * k / nb
+    for y in (-CW / 2 + 0.15, CW / 2 - 0.15):
+        box(cmd_, "ti_lamp_pole", Vector((x, y, 0)), Vector((x, y, CH)), 0.22)
+    if 0 < k < nb:                                              # pannelli divisori tra le piste
+        box(cmd_, "ti_carwash_panel", Vector((x, -CW / 2 + 0.6, 0.3)), Vector((x, CW / 2 - 0.6, 0.3)), 0.06, 0.6)
+        for zz in (1.2, 2.1, 3.0):
+            box(cmd_, "ti_carwash_panel", Vector((x, -CW / 2 + 0.6, zz)), Vector((x, CW / 2 - 0.6, zz)), 0.05, 0.9)
+    if k < nb:                                                  # braccio della lancia e box gettoniera per pista
+        xc = -CL / 2 + CL * (k + 0.5) / nb
+        box(cmd_, "ti_carwash_blue", Vector((xc + 2.2, CW / 2 - 0.35, 0)), Vector((xc + 2.2, CW / 2 - 0.35, 1.5)), 0.5, 0.35)
+        box(cmd_, "ti_lamp_pole", Vector((xc, 0, CH - 0.1)), Vector((xc + 1.2, 0, CH - 0.1)), 0.06)
+roof0, roof1 = CH, CH + 0.45
+c8 = [Vector((sx * CL / 2, sy * CW / 2, z)) for z in (roof0, roof1) for sx, sy in ((-1, -1), (1, -1), (1, 1), (-1, 1))]
+ctr_ = Vector((0, 0, (roof0 + roof1) / 2))
+quad(cmd_, "ti_carwash_roof", c8[4], c8[5], c8[6], c8[7], ref=ctr_)
+quad(cmd_, "ti_carwash_roof", c8[3], c8[2], c8[1], c8[0], ref=ctr_)
+for i in range(4):
+    j = (i + 1) % 4
+    quad(cmd_, "ti_carwash_blue", c8[i], c8[j], c8[j + 4], c8[i + 4], ref=ctr_)      # fascia blu sul bordo
+box(cmd_, "ti_curb", Vector((-CL / 2 - 0.5, 0, -0.3)), Vector((CL / 2 + 0.5, 0, -0.3)), CW + 1.0, 0.36)   # platea in cemento
+write_dae(os.path.join(OUT, "ti_carwash.dae"), [cmd_], Matrix.Identity(4))
+
 print("PROPS_OK", cmd.tri_count(), rmd.tri_count(), lmd.tri_count(), wmd.tri_count(), "tende", n_str, "grate", gmd.tri_count(), "lampione", pmd.tri_count())

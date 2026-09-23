@@ -33,7 +33,7 @@ MATS = {
     "AsfaltoTerminal":          ("ti_asphalt",       "plan", 3.0),
     "MarciapiediExtraExterni":  ("ti_pavers_moss",   "plan", 1.6),
     "MarciapiediExterni":       ("ti_pavers_moss",   "plan", 1.6),
-    "Marciapiedi":              ("ti_pavers",        "plan", 1.6),
+    "Marciapiedi":              ("ti_island_soil",   "plan", 2.0),   # isole diagonali: terra ed erba secca (Street View 2022)
     "BordoMarciapiediInterni":  ("ti_curb",          "plan", 1.0),
     "prato":                    ("ti_planter_soil",  "plan", 2.0),
     "Parapetto":                ("ti_railing",       "plan", 1.0),
@@ -49,6 +49,11 @@ MATS = {
     "TettoEdificio":            ("ti_bld_roof",      "plan", 2.0),
     "PilastriEdificio":         ("ti_bld_frame",     "plan", 1.0),
 }
+
+# il piazzale vero finisce al vialetto pedonale di x ~ -36.6 (ortofoto, OSM, utente): il rettangolo del modello v0.3
+# piu' a sud-ovest (fino a x -95) nella realta' e' bosco, prato e un cantiere -> tutto cio' che sta a x < X_CUT non si esporta
+X_CUT = -37.0
+cut_keep = lambda new, pts: sum(p.x for p in pts) / 3 >= X_CUT
 
 # UV1 macro: quadrato che contiene tutto il piazzale (coordinate modello)
 MACRO_X0, MACRO_Y0, MACRO_SIZE = -100.0, -115.0, 230.0
@@ -147,7 +152,7 @@ def build_asphalt_grid(md, rect_obj, edge):
     kept = 0
 
     def keep(cx, cy):
-        if cx > 118.3:                       # oltre il bordo nord-est: bosco
+        if cx > 118.3 or cx < X_CUT:         # oltre il bordo nord-est: bosco; a sud-ovest del vialetto: non c'e' piazzale
             return False
         if cx >= -20.5:                      # sopra il marciapiede nord-ovest: prato/bosco
             lim = max(edge.get(int(math.floor(cx)) + d, -1e9) for d in (-1, 0, 1))
@@ -183,7 +188,7 @@ edge = nw_strip_edge(objs["BaseTerminal"])
 kept = build_asphalt_grid(ground, objs["Plane"], edge)
 for o in visible:
     if o.name == "BaseTerminal" or o.name == "Prato" or (o.name.startswith("Plane.0") and o.name != "Plane.015"):
-        extract(o, ground)
+        extract(o, ground, keep_filter=cut_keep)
 n, m = write_dae(os.path.join(OUT_DIR, "ti_ground.dae"), [ground], GEO)
 meta["shapes"]["ti_ground.dae"] = {"tris": n, "materials": m, "asphalt_cells": kept}
 
@@ -196,7 +201,7 @@ meta["shapes"]["ti_building.dae"] = {"tris": n, "materials": m}
 # 3) ringhiera
 rail = MeshData("railing")
 for nm in ("Cube", "Cube.001", "Cube.002"):
-    extract(objs[nm], rail)
+    extract(objs[nm], rail, keep_filter=cut_keep)
 n, m = write_dae(os.path.join(OUT_DIR, "ti_railing.dae"), [rail], GEO)
 meta["shapes"]["ti_railing.dae"] = {"tris": n, "materials": m}
 
@@ -204,6 +209,8 @@ meta["shapes"]["ti_railing.dae"] = {"tris": n, "materials": m}
 props = MeshData("props")
 for o in visible:
     if o.name.startswith(("Panchina", "ProtezionePanchina")):
+        if (o.matrix_world @ Vector(o.bound_box[0]).lerp(Vector(o.bound_box[6]), 0.5)).x < X_CUT:
+            continue
         extract(o, props)
         c = GEO @ (o.matrix_world @ Vector(o.bound_box[0]).lerp(Vector(o.bound_box[6]), 0.5))
         meta["benches"].append([c.x, c.y, c.z])
@@ -223,6 +230,8 @@ for o in bpy.data.objects:
         has_pole = any(c.name.startswith("Palo") for c in o.children)
         if not has_pole:
             continue
+        if o.matrix_world.translation.x < X_CUT:
+            continue
         W = GEO @ o.matrix_world
         head = W @ (inv @ objs["Luce.001"].matrix_world).translation
         meta["lamps"].append({"pos": list(W.translation), "rot": [list(r) for r in W.to_3x3()], "head": list(head)})
@@ -235,7 +244,7 @@ for o in bpy.data.objects:
         cx = sum(v.x for v in bb) / 8; cy = sum(v.y for v in bb) / 8
         h = max(v.z for v in bb)
         key = (round(cx, 1), round(cy, 1))
-        if key in seen:
+        if key in seen or cx < X_CUT:
             continue
         seen.add(key)
         w = GEO @ Vector((cx, cy, 0))

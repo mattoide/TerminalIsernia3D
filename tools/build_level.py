@@ -234,6 +234,12 @@ def terminal_materials():
         pbr("ti_willow_bark", None, "WOOD", baseColorMap=AS + "tree/poplar/t_poplar_bark/t_poplar_bark_b.color.dds",
             normalMap=AS + "tree/poplar/t_poplar_bark/t_poplar_bark_nm.normal.dds", roughnessMap=AS + "tree/poplar/t_poplar_bark/t_poplar_bark_r.data.dds",
             ambientOcclusionMap=AS + "tree/poplar/t_poplar_bark/t_poplar_bark_ao.data.dds"),
+        pbr("ti_island_soil", None, "GRASS", baseColorMap=AS + "terrain/grass/t_dirt_dry_grass/t_dirt_dry_grass_b.png",
+            normalMap=AS + "terrain/grass/t_dirt_dry_grass/t_dirt_dry_grass_nm.png", roughnessMap=AS + "terrain/grass/t_dirt_dry_grass/t_dirt_dry_grass_r.png",
+            ambientOcclusionMap=AS + "terrain/grass/t_dirt_dry_grass/t_dirt_dry_grass_ao.png"),
+        pbr("ti_carwash_roof", None, "METAL", baseColorFactor=[0.86, 0.87, 0.88, 1], **dict(paint, roughnessFactor=0.5)),
+        pbr("ti_carwash_blue", None, "METAL", baseColorFactor=[0.08, 0.22, 0.55, 1], **dict(paint, roughnessFactor=0.45)),
+        pbr("ti_carwash_panel", None, "PLASTIC", baseColorFactor=[0.75, 0.78, 0.8, 1], roughnessFactor=0.4, metallicFactor=0),
         pbr("ti_grille", None, "METAL", baseColorMap=AS + "tileable/metal/metal_paint_peeling/paint_peeling_d.dds",
             normalMap=AS + "tileable/metal/metal_paint_peeling/paint_peeling_n.dds", baseColorFactor=[0.09, 0.075, 0.065, 1],
             roughnessFactor=0.7, metallicFactor=0.25),   # grate verniciate scure, arrugginite
@@ -352,7 +358,7 @@ def make_forest(meta):
     # 1) aiuole del terminal: lecci da citta' al posto degli alberi originali
     for t in meta["trees"]:
         x, y = t["pos"]; h = t["height"]
-        kind = "holm_oak_city_tall" if h > 5 else "holm_oak_city_small"
+        kind = "tree_aspen_small_a" if h > 5 else "holm_oak_city_small"      # Street View 2022: latifoglie giovani, foglie giallo-verdi
         z = 0.1
         a = rng.uniform(0, 2 * math.pi)
         inst.setdefault(kind, []).append({"ctxid": 0, "pos": [x, y, z], "rotationMatrix": rot_list_from_yaw(a),
@@ -477,6 +483,13 @@ def make_forest(meta):
             inst.setdefault(k, []).append({"ctxid": 0, "pos": [round(float(x), 2), round(float(y), 2), round(float(z), 2)],
                                            "rotationMatrix": [round(v, 5) for v in rot_list_from_yaw(a)],
                                            "scale": round(float(rng.uniform(0.9, 1.3)), 3), "type": k})
+    # 5b) boschetto nella parte sud-ovest che non e' piazzale (ortofoto: alberi fitti tra il vialetto e il cantiere)
+    from matplotlib.path import Path as _MP
+    copse = _MP([geo.model2world(x, y) for x, y in [(-42, 38), (-42, -30), (-58, -43), (-86, -33), (-72, 8), (-60, 32)]])
+    X, Y = poisson(lambda X, Y: copse.contains_points(np.stack([X, Y], 1)) & (tsample(TDLOT, X, Y) > 4) &
+                   (tsample(TDROAD, X, Y) > tsample(TRHW, X, Y) + 2.5), -200, -200, 100, 100, 5.0)
+    for x, y, uu in zip(X, Y, rng.random(len(X))):
+        put(["oak_dry_a", "tree_beech_large_b", "tree_aspen_large_a", "cork_oak_medium", "generibush", "tree_beech_bush_a"][int(uu * 6) % 6], x, y)
     # 6) il grande salice piangente oltre il marciapiede nord-ovest (Street View 2022): libero lo spazio della chioma
     wx, wy = geo.model2world(*WILLOW_MODEL)
     for kind in list(inst):
@@ -710,6 +723,15 @@ def buildings(L):
         if area < 12:
             continue
         kind = t.get("building", "yes")
+        if t.get("amenity") == "car_wash":
+            cx_, cy_ = float(ctr[0]), float(ctr[1])
+            L.add("dintorni/edifici", {"name": "autolavaggio", "class": "TSStatic", "position": [round(cx_, 3), round(cy_, 3), round(float(tz(cx_, cy_)[0]) + 0.05, 3)],
+                                        "rotationMatrix": [round(v, 6) for v in rot_list_from_yaw(yaw)],
+                                        "shapeName": LVP + "art/shapes/terminal/ti_carwash.dae", "collisionType": "Visible Mesh Final",
+                                        "decalType": "Visible Mesh", "useInstanceRenderData": True})
+            BLD_POLYS.append([(cx_ + math.cos(yaw) * hx - math.sin(yaw) * hy, cy_ + math.sin(yaw) * hx + math.cos(yaw) * hy)
+                              for hx, hy in ((-Lb / 2, -Wb / 2), (Lb / 2, -Wb / 2), (Lb / 2, Wb / 2), (-Lb / 2, Wb / 2))])
+            continue
         levels = None
         try:
             levels = float(t.get("building:levels")) if t.get("building:levels") else None
@@ -915,22 +937,27 @@ def lot_details(L, meta):
     asph = ndimage.binary_erosion(asph, iterations=6)          # almeno 3 m dai cordoli
     ys, xs = np.nonzero(asph)
 
-    def rnd_pts(n):
-        i = rng.integers(0, len(xs), n)
-        return R.x0 + (xs[i] + 0.5) * R.res, R.y0 + (ys[i] + 0.5) * R.res
+    clr_all = ndimage.distance_transform_edt(asph_full) * R.res      # distanza dal primo cordolo/isola/marciapiede
+
+    def rnd_pts(n, need=0.0):
+        """n punti sull'asfalto con almeno 'need' m liberi attorno (i decal si proiettano su tutto: niente sbordi)."""
+        ok = np.nonzero((clr_all > need).ravel())[0]
+        i = ok[rng.integers(0, len(ok), n)]
+        yy, xx = np.unravel_index(i, clr_all.shape)
+        return R.x0 + (xx + 0.5) * R.res, R.y0 + (yy + 0.5) * R.res
 
     inst = {}
     def dec(name, x, y, size, rect=0, z=0.0):
         a = rng.uniform(0, 2 * math.pi)
         inst.setdefault(name, []).append([int(rect), round(float(size), 3), 0, round(float(x), 3), round(float(y), 3), z, 0, 0, 1,
                                           round(math.cos(a), 5), round(math.sin(a), 5), 0, int(rng.integers(1, 2 ** 31))])
-    for x, y in zip(*rnd_pts(25)):
+    for x, y in zip(*rnd_pts(25, 3.2)):
         dec("repair_patch_decal", x, y, rng.uniform(2.2, 5.5), rng.integers(0, 4))
-    for x, y in zip(*rnd_pts(14)):
+    for x, y in zip(*rnd_pts(14, 1.2)):
         dec("pothole_decal", x, y, rng.uniform(0.7, 1.5), rng.integers(0, 4))
-    for x, y in zip(*rnd_pts(6)):
+    for x, y in zip(*rnd_pts(6, 3.5)):
         dec("eca_decals_concrete_damage_decal", x, y, rng.uniform(3, 6))
-    for x, y in zip(*rnd_pts(10)):
+    for x, y in zip(*rnd_pts(10, 1.6)):
         dec("ind_stuff_02", x, y, rng.uniform(1.0, 2.5))                # macchie d'olio sparse
     # macchie d'olio dove si fermavano i bus: lungo il lato nord dell'isola delle pensiline
     for mx in np.arange(-14, 72, 4.5):
@@ -951,14 +978,31 @@ def lot_details(L, meta):
 
     # crepe lunghe: giunzione centrale del piazzale (Street View 2022) e crepe sparse
     def crack(P, w=1.2):
-        L.add("piazzale/crepe", {"class": "DecalRoad", "position": P[0], "material": "italy_road_cracks",
-                                 "nodes": [[round(p[0], 3), round(p[1], 3), 0.01, w] for p in P], "overObjects": True,
-                                 "improvedSpline": True, "renderPriority": 26, "textureLength": 16, "decalBias": 0.0015,
-                                 "startEndFade": [2, 2], "distanceFade": [90, 40], "drivability": -1})
-    seam = [geo.model2world(mx, 1.5 + 0.6 * math.sin(mx / 9.0)) for mx in np.arange(-85, 112, 6)]
+        """crepa come DecalRoad, spezzata dove passerebbe su isole, cordoli o marciapiedi."""
+        P = np.asarray(P, float)
+        dd = np.concatenate([[0], np.cumsum(np.hypot(*np.diff(P[:, :2], axis=0).T))])
+        s_ = np.arange(0, dd[-1], 0.5)
+        Q = np.stack([np.interp(s_, dd, P[:, 0]), np.interp(s_, dd, P[:, 1])], 1)
+        ii = np.clip(((Q[:, 0] - R.x0) / R.res).astype(int), 0, R.w - 1); jj = np.clip(((Q[:, 1] - R.y0) / R.res).astype(int), 0, R.h - 1)
+        ok = clr_all[jj, ii] >= w / 2 + 0.3
+        k = 0
+        while k < len(Q):
+            if not ok[k]:
+                k += 1; continue
+            e = k
+            while e < len(Q) and ok[e]:
+                e += 1
+            seg = Q[k:e][::6]
+            if (e - k) * 0.5 >= 3.0 and len(seg) >= 2:
+                L.add("piazzale/crepe", {"class": "DecalRoad", "position": [float(seg[0][0]), float(seg[0][1]), 0.01], "material": "italy_road_cracks",
+                                         "nodes": [[round(float(p[0]), 3), round(float(p[1]), 3), 0.01, w] for p in seg], "overObjects": True,
+                                         "improvedSpline": True, "renderPriority": 26, "textureLength": 16, "decalBias": 0.0015,
+                                         "startEndFade": [2, 2], "distanceFade": [90, 40], "drivability": -1})
+            k = e
+    seam = [geo.model2world(mx, 1.5 + 0.6 * math.sin(mx / 9.0)) for mx in np.arange(-36, 112, 2)]
     crack(seam, 1.6)
     for k in range(26):
-        x, y = rnd_pts(1); x, y = float(x[0]), float(y[0])
+        x, y = rnd_pts(1, 1.0); x, y = float(x[0]), float(y[0])
         a = rng.uniform(0, math.pi); Lc = rng.uniform(8, 26)
         P = [[x + math.cos(a) * t + rng.normal(0, 0.4), y + math.sin(a) * t + rng.normal(0, 0.4)] for t in np.linspace(0, Lc, 5)]
         crack(P, rng.uniform(0.9, 1.6))
@@ -1150,7 +1194,7 @@ def spawns_and_vehicles(L):
     sp.pop("__parent", None)
     L.add("PlayerDropPoints", sp)
     # spawn extra: davanti all'edificio e all'ingresso sud-ovest
-    for name, (mx, my, yaw) in {"spawn_edificio": (78, -30, 180), "spawn_ingresso": (-70, 20, -30)}.items():
+    for name, (mx, my, yaw) in {"spawn_edificio": (78, -30, 180), "spawn_ingresso": (-24, 12, -20)}.items():
         x, y = geo.model2world(mx, my)
         L.add("PlayerDropPoints", {"name": name, "class": "SpawnSphere", "position": [x, y, 0.6], "dataBlock": "SpawnSphereMarker",
                                    "radius": 5, "rotationMatrix": rot_list_from_yaw(math.radians(yaw + geo.MODEL_ROT_DEG)),
@@ -1163,10 +1207,10 @@ def spawns_and_vehicles(L):
         L.add("CameraBookmarks", {"name": name, "internalName": name, "class": "CameraBookmark", "position": [cx, cy, cam[2]],
                                   "dataBlock": "CameraBookmarkMarker", "rotationMatrix": [*r, *f, *u]})
     bookmark("foto_facciata", (99, -34, 1.7), (99, -8, 2.2))
-    bookmark("vista_piazzale", (-40, -35, 4), (60, 5, 0))
+    bookmark("vista_piazzale", (-32, -36, 4), (60, 5, 0))
     bookmark("aereo", (-120, -150, 90), (40, 0, 0))
     bookmark("pensilina", (55, -24, 1.7), (62.6, -13.8, 1.2))
-    bookmark("ingresso", (-95, 30, 2), (0, -10, 1))
+    bookmark("ingresso", (-60, -44, 2.5), (0, -20, 1))
 
 
 def info_and_misc():

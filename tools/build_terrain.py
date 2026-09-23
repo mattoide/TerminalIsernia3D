@@ -154,7 +154,22 @@ def save_img(arr, name, mode):
 
 
 # ================================================================== main
+def rava_to_lot(P):
+    """la Strada Comunale Rava su OSM corre ~9 m a sud-est della corsia del piazzale del modello: da x modello -110
+    la porto dolcemente sulla corsia del piazzale (y modello -38), cosi' al bordo tagliato (x -37) le due si raccordano."""
+    from geo import world2model, model2world
+    Q = []
+    for x, y in P:
+        mx, my = world2model(x, y)
+        k = smoothstep(-110, -37, mx)
+        Q.append(model2world(mx, my + (-38.0 - my) * k))
+    return np.array(Q)
+
+
 LONG_BRIDGE = 70.0          # oltre questa lunghezza il ponte e' un viadotto vero (mesh di build_bridges.py)
+
+
+CARWASH_YARD = []       # (j0, j1, i0, i1, maschera) del piazzale dell'autolavaggio, per lo strato asfalto
 
 
 def building_pads(osm, XX, YY, Z, D_out, margin=1.0, blend=7.0):
@@ -174,6 +189,9 @@ def building_pads(osm, XX, YY, Z, D_out, margin=1.0, blend=7.0):
         a, L, W, ctr = o
         if L * W < 12:
             continue
+        m_, b_ = (margin, blend)
+        if t.get("amenity") == "car_wash":                # piazzale asfaltato attorno alle piste di lavaggio
+            m_, b_ = 9.0, 6.0
         r = math.hypot(L, W) / 2 + margin + blend
         i0 = max(0, int((ctr[0] - r - X0) / SQ)); i1 = min(N, int((ctr[0] + r - X0) / SQ) + 2)
         j0 = max(0, int((ctr[1] - r - Y0) / SQ)); j1 = min(N, int((ctr[1] + r - Y0) / SQ) + 2)
@@ -181,12 +199,14 @@ def building_pads(osm, XX, YY, Z, D_out, margin=1.0, blend=7.0):
             continue
         xs, ys = XX[j0:j1, i0:i1] - ctr[0], YY[j0:j1, i0:i1] - ctr[1]
         u = xs * math.cos(a) + ys * math.sin(a); v = -xs * math.sin(a) + ys * math.cos(a)
-        d = np.hypot(np.maximum(np.abs(u) - L / 2 - margin, 0), np.maximum(np.abs(v) - W / 2 - margin, 0))
+        d = np.hypot(np.maximum(np.abs(u) - L / 2 - m_, 0), np.maximum(np.abs(v) - W / 2 - m_, 0))
         inside = d <= 0
         if not inside.any() or D_out[j0:j1, i0:i1][inside].min() < 25:   # l'edificio del terminal e' la nostra mesh
             continue
         zp = float(np.median(Z[j0:j1, i0:i1][inside]))
-        w = 1 - smoothstep(0, blend, d)
+        w = 1 - smoothstep(0, b_, d)
+        if t.get("amenity") == "car_wash":
+            CARWASH_YARD.append((j0, j1, i0, i1, d <= 0))
         PZ[j0:j1, i0:i1] += w * zp; PW[j0:j1, i0:i1] += w
         PM[j0:j1, i0:i1] = np.maximum(PM[j0:j1, i0:i1], w)
         n += 1
@@ -274,17 +294,23 @@ def main():
             continue
         s = np.arange(0, L[-1], 1.0)
         P = np.stack([np.interp(s, L, pts[:, 0]), np.interp(s, L, pts[:, 1])], 1)
+        hw_way = HW[tg["highway"]]
+        if tg.get("name") == "Strada Comunale Rava":
+            P = rava_to_lot(P); hw_way = 3.5
+        if tg.get("service") == "driveway" and np.hypot(P[:, 0], P[:, 1]).min() < 150:
+            hw_way = 3.0                                  # stradina asfaltata che sale all'autolavaggio
         keep = (np.abs(P[:, 0]) < 2040) & (np.abs(P[:, 1]) < 2040)
         if keep.sum() < 2:
             continue
         zprof = dem15(P[:, 0], P[:, 1])
         zprof = ndimage.gaussian_filter1d(zprof - H0, 25, mode="nearest")
-        # vicino al piazzale la strada si porta a quota 0
-        dl = np.hypot(P[:, 0] - cx_w, P[:, 1] - cy_w)
-        zprof = zprof * smoothstep(120, 260, dl)
+        # vicino al piazzale la strada si porta a quota 0: conta la distanza dal bordo del piazzale (prima dal centro,
+        # 120-260 m, che teneva a quota 0 anche la stradina dell'autolavaggio: arrivava 1.2 m sotto il suo piazzale)
+        dl = ndimage.map_coordinates(D_out.astype(np.float32), [(P[:, 1] - Y0) / SQ, (P[:, 0] - X0) / SQ], order=1, mode="nearest")
+        zprof = zprof * smoothstep(8, 70, dl)
         nid = [n for n in w["nodes"] if n in osm.en]
         idx = np.clip(np.round(L).astype(int), 0, len(s) - 1)
-        ways.append(dict(w=w, tg=tg, P=P, s=s, z=zprof, keep=keep, nodes=list(zip(nid, idx))))
+        ways.append(dict(w=w, tg=tg, P=P, s=s, z=zprof, keep=keep, nodes=list(zip(nid, idx)), hw=hw_way))
     # 2) incroci: tutte le strade che si toccano nello stesso nodo OSM ci arrivano alla stessa quota
     #    (prima ogni via era lisciata per conto suo: gradini e rampe del 40-50% agli innesti)
     from collections import defaultdict
@@ -325,7 +351,7 @@ def main():
                 sel = list(range(0, len(Pk), 4))
                 if sel[-1] != len(Pk) - 1:
                     sel.append(len(Pk) - 1)
-                roads_out.append({"type": tg["highway"], "name": tg.get("name", ""), "hw": HW[tg["highway"]],
+                roads_out.append({"type": tg["highway"], "name": tg.get("name", ""), "hw": W_["hw"],
                                   "oneway": tg.get("oneway") == "yes", "surface": tg.get("surface", ""),
                                   "bridge": bool(tg.get("bridge") and tg.get("bridge") != "no"),
                                   "pts": [[float(Pk[i][0]), float(Pk[i][1]), float(zk[i])] for i in sel]})
@@ -334,7 +360,7 @@ def main():
         ci = np.clip(((Pin[:, 0] - X0) / SQ).round().astype(int), 0, N - 1)
         cj = np.clip(((Pin[:, 1] - Y0) / SQ).round().astype(int), 0, N - 1)
         road_center[cj, ci] = True
-        road_hw[cj, ci] = np.maximum(road_hw[cj, ci], HW[tg["highway"]])
+        road_hw[cj, ci] = np.maximum(road_hw[cj, ci], W_["hw"])
         road_z[cj, ci] = zin
     dr, ridx = ndimage.distance_transform_edt(~road_center, return_indices=True)
     dr *= SQ
@@ -391,6 +417,10 @@ def main():
     zmin = float(Zf.min()) - 1.0
     maxh = float(Zf.max() - zmin) + 1.0
     names = [m[0] for m in TMATS]
+    # piazzale dell'autolavaggio asfaltato (ortofoto)
+    ia = [n for n, *_ in TMATS].index("ti_t_asphalt")
+    for j0, j1, i0, i1, msk in CARWASH_YARD:
+        sub = lay[j0:j1, i0:i1]; sub[msk] = ia
     write_ter(os.path.join(LEVEL, "terrain_main.ter"), Zf - zmin, lay, names, maxh)
     write_terrain_json(os.path.join(LEVEL, "terrain_main.terrain.json"), "/levels/terminal_isernia/terrain_main.ter", N, names)
     write_heightmap_png(os.path.join(LEVEL, "terrain_main.ter"))

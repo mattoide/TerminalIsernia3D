@@ -33,6 +33,10 @@ Correzioni dopo una nuova analisi della mappa (script `tools/analyze_level.py` +
 - **Confronto con Street View (set 2022)**: graffiti sulla fascia bassa della facciata ad archi, lucernario a piramide sul
   tetto, pennacchi sul canneto, linea elettrica con pali di cemento lungo il lato sud-est, marciapiede lungo la ringhiera
   in autobloccanti grigi, lampioni del piazzale a pastorale (braccio curvo), alberi dei campi a gruppi e filari.
+- **Piazzale com'è davvero**: tolto il rettangolo a sud-ovest del modello v0.3 (nella realtà è bosco e cantiere, il
+  piazzale finisce al vialetto pedonale); la Strada Comunale Rava si raccorda al bordo nuovo; isole diagonali in terra
+  ed erba secca con giovani latifoglie; crepe, rappezzi e sgommate non sbordano più su isole e marciapiedi.
+- **Autolavaggio**: la stradina asfaltata che sale dal piazzale, il piazzale in piano e la tettoia con 6 piste.
 
 ## Novità della v1.0 (rispetto alla 0.3)
 

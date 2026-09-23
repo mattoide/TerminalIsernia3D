@@ -845,6 +845,110 @@
   "materialTag1": "terminal_isernia",
   "translucentBlendOp": "None"
  },
+ "ti_island_soil": {
+  "name": "ti_island_soil",
+  "mapTo": "ti_island_soil",
+  "class": "Material",
+  "persistentId": "83985ea6-8869-5eb5-a2ae-7799bd99a0a7",
+  "Stages": [
+   {
+    "baseColorMap": "/assets/materials/terrain/grass/t_dirt_dry_grass/t_dirt_dry_grass_b.png",
+    "normalMap": "/assets/materials/terrain/grass/t_dirt_dry_grass/t_dirt_dry_grass_nm.png",
+    "roughnessMap": "/assets/materials/terrain/grass/t_dirt_dry_grass/t_dirt_dry_grass_r.png",
+    "ambientOcclusionMap": "/assets/materials/terrain/grass/t_dirt_dry_grass/t_dirt_dry_grass_ao.png"
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "GRASS",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_carwash_roof": {
+  "name": "ti_carwash_roof",
+  "mapTo": "ti_carwash_roof",
+  "class": "Material",
+  "persistentId": "ec1dea6d-5863-584e-9cbe-88d3089ab785",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.86,
+     0.87,
+     0.88,
+     1
+    ],
+    "baseColorMap": "/assets/materials/tileable/metal/metal_paint/metal_paint_d.color.png",
+    "normalMap": "/assets/materials/tileable/metal/metal_paint/metal_paint_nm.normal.png",
+    "roughnessFactor": 0.5,
+    "metallicFactor": 0
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "METAL",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_carwash_blue": {
+  "name": "ti_carwash_blue",
+  "mapTo": "ti_carwash_blue",
+  "class": "Material",
+  "persistentId": "9d2029eb-b549-5fb4-9fb1-b5a10797994c",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.08,
+     0.22,
+     0.55,
+     1
+    ],
+    "baseColorMap": "/assets/materials/tileable/metal/metal_paint/metal_paint_d.color.png",
+    "normalMap": "/assets/materials/tileable/metal/metal_paint/metal_paint_nm.normal.png",
+    "roughnessFactor": 0.45,
+    "metallicFactor": 0
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "METAL",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_carwash_panel": {
+  "name": "ti_carwash_panel",
+  "mapTo": "ti_carwash_panel",
+  "class": "Material",
+  "persistentId": "aa06d907-a461-5e73-a676-d1ca3e203af8",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.75,
+     0.78,
+     0.8,
+     1
+    ],
+    "roughnessFactor": 0.4,
+    "metallicFactor": 0
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "PLASTIC",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
  "ti_grille": {
   "name": "ti_grille",
   "mapTo": "ti_grille",
