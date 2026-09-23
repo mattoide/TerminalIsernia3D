@@ -121,7 +121,9 @@ def write_ter(path, heights_m, layers, names, max_h):
     """heights_m relativi alla position.z del TerrainBlock, riga 0 = sud."""
     n = heights_m.shape[0]
     h = np.clip(np.round(heights_m / max_h * 65535), 0, 65535).astype("<u2")
-    with open(path, "wb") as f:
+    tmp = os.path.join(BUILD, "tmp_save", os.path.basename(path))       # scrittura atomica (il gioco tiene la mod montata)
+    os.makedirs(os.path.dirname(tmp), exist_ok=True)
+    with open(tmp, "wb") as f:
         f.write(struct.pack("<BI", 9, n))
         f.write(h.tobytes())
         f.write(layers.astype(np.uint8).tobytes())
@@ -129,6 +131,7 @@ def write_ter(path, heights_m, layers, names, max_h):
         for nm in names:
             b = nm.encode()
             f.write(struct.pack("<B", len(b)) + b)
+    os.replace(tmp, path)
 
 
 def write_heightmap_png(ter_path):
@@ -192,7 +195,7 @@ def building_pads(osm, XX, YY, Z, D_out, margin=1.0, blend=7.0):
         m_, b_ = (margin, blend)
         if t.get("amenity") == "car_wash":                # piazzale asfaltato attorno alle piste di lavaggio
             m_, b_ = 9.0, 6.0
-        r = math.hypot(L, W) / 2 + margin + blend
+        r = math.hypot(L, W) / 2 + m_ + b_
         i0 = max(0, int((ctr[0] - r - X0) / SQ)); i1 = min(N, int((ctr[0] + r - X0) / SQ) + 2)
         j0 = max(0, int((ctr[1] - r - Y0) / SQ)); j1 = min(N, int((ctr[1] + r - Y0) / SQ) + 2)
         if i1 <= i0 or j1 <= j0:
@@ -201,12 +204,13 @@ def building_pads(osm, XX, YY, Z, D_out, margin=1.0, blend=7.0):
         u = xs * math.cos(a) + ys * math.sin(a); v = -xs * math.sin(a) + ys * math.cos(a)
         d = np.hypot(np.maximum(np.abs(u) - L / 2 - m_, 0), np.maximum(np.abs(v) - W / 2 - m_, 0))
         inside = d <= 0
-        if not inside.any() or D_out[j0:j1, i0:i1][inside].min() < 25:   # l'edificio del terminal e' la nostra mesh
+        foot = np.hypot(np.maximum(np.abs(u) - L / 2, 0), np.maximum(np.abs(v) - W / 2, 0)) <= 0
+        if not inside.any() or not foot.any() or D_out[j0:j1, i0:i1][foot].min() < 25:   # il terminal e' la nostra mesh
             continue
         zp = float(np.median(Z[j0:j1, i0:i1][inside]))
         w = 1 - smoothstep(0, b_, d)
         if t.get("amenity") == "car_wash":
-            CARWASH_YARD.append((j0, j1, i0, i1, d <= 0))
+            CARWASH_YARD.append((j0, j1, i0, i1, d <= 0, w, zp))
         PZ[j0:j1, i0:i1] += w * zp; PW[j0:j1, i0:i1] += w
         PM[j0:j1, i0:i1] = np.maximum(PM[j0:j1, i0:i1], w)
         n += 1
@@ -373,6 +377,9 @@ def main():
     # piazzole piane sotto gli edifici OSM (prima gli edifici in pendio restavano sepolti fino a 13 m a monte)
     Znat = building_pads(osm, XX, YY, Znat, D_out)
     Znat = Znat * (1 - road_blend) + RZ * road_blend
+    # il piazzale dell'autolavaggio vince sulla stradina che gli passa accanto (la strada vi sale con una rampa)
+    for j0, j1, i0, i1, msk, w, zp in CARWASH_YARD:
+        sub = Znat[j0:j1, i0:i1]; sub[:] = sub * (1 - w) + zp * w
     # raccordo al piazzale: entro 3 m dal bordo quota del bordo, poi naturale in 25 m
     k = smoothstep(2.5, 25, D_out)
     Zf = E_z - 0.02 + (Znat - (E_z - 0.02)) * k
@@ -419,7 +426,7 @@ def main():
     names = [m[0] for m in TMATS]
     # piazzale dell'autolavaggio asfaltato (ortofoto)
     ia = [n for n, *_ in TMATS].index("ti_t_asphalt")
-    for j0, j1, i0, i1, msk in CARWASH_YARD:
+    for j0, j1, i0, i1, msk, w, zp in CARWASH_YARD:
         sub = lay[j0:j1, i0:i1]; sub[msk] = ia
     write_ter(os.path.join(LEVEL, "terrain_main.ter"), Zf - zmin, lay, names, maxh)
     write_terrain_json(os.path.join(LEVEL, "terrain_main.terrain.json"), "/levels/terminal_isernia/terrain_main.ter", N, names)

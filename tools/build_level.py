@@ -597,7 +597,7 @@ def roads(L):
             continue
         road("m_road_variation_01", P, hw * 2, renderPriority=25, textureLength=112, **ai)
         near = dist < 900                     # dettagli solo vicino al terminal (tempi di caricamento)
-        if near:
+        if near and r.get("name") != "Strada Comunale Rava":   # la Rava continua l'asfalto del piazzale: niente velo chiaro
             road("italy_asphalt_overlay_light", P, hw * 2 - 0.4, renderPriority=20, textureLength=112)
         for s in ((-1, 1) if not deck else ()):
             road("italy_road_edge_damage_wide_grassy", offset_line(P, s * (hw + 0.4)), 1.6, textureLength=8, distanceFade=[90, 30])
