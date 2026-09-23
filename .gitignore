@@ -1,0 +1,10 @@
+# download e file intermedi (si rigenerano con tools/fetch_sources.py e tools/build_all.py)
+_orig/
+src/cc0/
+src/dem/
+src/osm/
+build/
+dist/
+__pycache__/
+*.pyc
+*.blend1

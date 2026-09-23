@@ -1,0 +1,325 @@
+"""Esporta il modello Blender del terminal nei .dae della mod (sistema georeferenziato).
+
+Uso (headless):
+  blender -b src/blender/terminal.blend --python tools/blender_export.py -- <cartella_output_shapes> <file_meta.json>
+
+Cosa fa:
+  * applica i modificatori e porta tutto nel sistema est/nord del livello (geo.MODEL_ROT_DEG / MODEL_OFFSET)
+  * sostituisce il rettangolo d'asfalto unico con una griglia tagliata al perimetro reale del piazzale
+  * rigenera le UV in scala reale (metri) per i materiali ripetibili e aggiunge una UV1 "macro" sul piazzale
+  * rinomina i materiali col prefisso ti_ (evita conflitti con altre mod)
+  * separa lampioni (istanze), arredi, ringhiera, edificio, pavimentazioni
+  * scrive posizioni di lampioni e alberi in un json per build_level.py
+Blender 5.x non ha piu' l'esportatore Collada, quindi il .dae e' scritto a mano (sotto).
+"""
+import bpy, bmesh, math, json, os, sys
+from mathutils import Matrix, Vector
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import geo
+
+argv = sys.argv[sys.argv.index("--") + 1:]
+OUT_DIR, META_FILE = argv[0], argv[1]
+os.makedirs(OUT_DIR, exist_ok=True)
+
+GEO = Matrix.Translation((geo.MODEL_OFFSET[0], geo.MODEL_OFFSET[1], 0.0)) @ Matrix.Rotation(math.radians(geo.MODEL_ROT_DEG), 4, 'Z')
+
+# ---------------------------------------------------------------- materiali
+# nome originale -> (nuovo nome, modo UV, lato tessera in metri)
+#   modo "keep"  = UV originali (texture fotografiche/atlas)
+#   modo "plan"  = proiezione planare/box in metri, nel sistema del modello (allineata al piazzale)
+MATS = {
+    "AsfaltoTerminal":          ("ti_asphalt",       "plan", 3.0),
+    "MarciapiediExtraExterni":  ("ti_pavers_moss",   "plan", 1.6),
+    "MarciapiediExterni":       ("ti_pavers_moss",   "plan", 1.6),
+    "Marciapiedi":              ("ti_pavers",        "plan", 1.6),
+    "BordoMarciapiediInterni":  ("ti_curb",          "plan", 1.0),
+    "prato":                    ("ti_planter_soil",  "plan", 2.0),
+    "Parapetto":                ("ti_railing",       "plan", 1.0),
+    "PaloLuce":                 ("ti_lamp_pole",     "plan", 1.0),
+    "ScompartoLuce":            ("ti_lamp_head",     "plan", 0.5),
+    "Panchina":                 ("ti_bench",         "plan", 1.0),
+    "ProtezionePanchina":       ("ti_shelter",       "plan", 1.0),
+    "MuraEdificioDestra.001":   ("ti_bld_facade_arches", "keep", 0),
+    "MuraEdificioDestra":       ("ti_bld_plaster",   "plan", 2.0),
+    "MuraEdificioSinistra":     ("ti_bld_wall_left", "keep", 0),
+    "MuroEdificioDietro":       ("ti_bld_wall_front","keep", 0),
+    "PareteGraffito":           ("ti_bld_graffiti",  "keep", 0),
+    "TettoEdificio":            ("ti_bld_roof",      "plan", 2.0),
+    "PilastriEdificio":         ("ti_bld_frame",     "plan", 1.0),
+}
+
+# UV1 macro: quadrato che contiene tutto il piazzale (coordinate modello)
+MACRO_X0, MACRO_Y0, MACRO_SIZE = -100.0, -115.0, 230.0
+
+
+def map_material(m):
+    if m is None:
+        return ("ti_curb", "plan", 1.0)
+    return MATS.get(m.name, ("ti_curb", "plan", 1.0))
+
+
+# ---------------------------------------------------------------- estrazione mesh
+class MeshData:
+    """triangoli per materiale, con posizioni/normali/uv0/uv1 per-vertice (gia' spezzati per angolo)."""
+    def __init__(self, name):
+        self.name = name
+        self.by_mat = {}          # mat -> list of (pos, nrm, uv0, uv1) * 3
+
+    def add_tri(self, mat, corners):
+        self.by_mat.setdefault(mat, []).append(corners)
+
+    def tri_count(self):
+        return sum(len(v) for v in self.by_mat.values())
+
+
+def planar_uv(p_model, n_model, tile):
+    """proiezione in metri: facce orizzontali -> XY del modello, verticali -> (orizzontale, Z)."""
+    if abs(n_model.z) > 0.6:
+        return (p_model.x / tile, p_model.y / tile)
+    h = Vector((-n_model.y, n_model.x, 0.0))
+    if h.length < 1e-6:
+        h = Vector((1, 0, 0))
+    h.normalize()
+    return (p_model.dot(h) / tile, p_model.z / tile)
+
+
+def extract(obj, md, xform_model=None, keep_filter=None):
+    """aggiunge i triangoli di obj a md. xform_model: matrice verso lo spazio 'modello'
+    (default matrix_world); lo spazio finale e' GEO @ modello (o solo modello per le istanze)."""
+    dg = bpy.context.evaluated_depsgraph_get()
+    oe = obj.evaluated_get(dg)
+    me = oe.to_mesh()
+    me.calc_loop_triangles()
+    M = xform_model if xform_model is not None else obj.matrix_world
+    Mn = M.to_3x3().inverted().transposed()
+    uv_src = me.uv_layers.active.data if me.uv_layers.active else None
+    try:
+        cn = me.corner_normals
+        cnv = lambda li: cn[li].vector
+    except AttributeError:
+        cnv = lambda li: me.loops[li].normal
+    for lt in me.loop_triangles:
+        mat = me.materials[lt.material_index] if me.materials else None
+        new, mode, tile = map_material(mat)
+        pts = [M @ me.vertices[v].co for v in lt.vertices]
+        if keep_filter and not keep_filter(new, pts):
+            continue
+        fn = (Mn @ lt.normal).normalized()
+        corners = []
+        for k in range(3):
+            li = lt.loops[k]
+            p = pts[k]
+            n = (Mn @ cnv(li)).normalized()
+            if mode == "keep" and uv_src:
+                uv = tuple(uv_src[li].uv)
+            else:
+                uv = planar_uv(p, fn, tile)
+            uv1 = ((p.x - MACRO_X0) / MACRO_SIZE, (p.y - MACRO_Y0) / MACRO_SIZE)
+            corners.append((p.copy(), n, uv, uv1))
+        md.add_tri(new, corners)
+    oe.to_mesh_clear()
+
+
+# ---------------------------------------------------------------- asfalto a griglia tagliata
+def nw_strip_edge(fp_obj):
+    """per ogni x (1 m) la y massima del marciapiede nord-ovest (bordo esterno)."""
+    dg = bpy.context.evaluated_depsgraph_get()
+    oe = fp_obj.evaluated_get(dg)
+    me = oe.to_mesh()
+    edge = {}
+    for p in me.polygons:
+        c = fp_obj.matrix_world @ p.center
+        if c.y < 12 or c.x < -24:
+            continue
+        ws = [fp_obj.matrix_world @ me.vertices[v].co for v in p.vertices]
+        for k in range(int(math.floor(min(w.x for w in ws))), int(math.ceil(max(w.x for w in ws))) + 1):
+            x = k + 0.5
+            for a, b in zip(ws, ws[1:] + ws[:1]):       # intersezione con la retta X = x
+                if (a.x - x) * (b.x - x) <= 0 and abs(b.x - a.x) > 1e-6:
+                    y = a.y + (b.y - a.y) * (x - a.x) / (b.x - a.x)
+                    edge[k] = max(edge.get(k, -1e9), y)
+    oe.to_mesh_clear()
+    return edge
+
+
+def build_asphalt_grid(md, rect_obj, edge):
+    bb = [rect_obj.matrix_world @ Vector(c) for c in rect_obj.bound_box]
+    x0, x1 = min(v.x for v in bb), max(v.x for v in bb)
+    y0, y1 = min(v.y for v in bb), max(v.y for v in bb)
+    z = max(v.z for v in bb)
+    step = 2.0
+    nx, ny = int(math.ceil((x1 - x0) / step)), int(math.ceil((y1 - y0) / step))
+    xs = [x0 + min(i * step, x1 - x0) for i in range(nx + 1)]
+    ys = [y0 + min(j * step, y1 - y0) for j in range(ny + 1)]
+    new, mode, tile = MATS["AsfaltoTerminal"]
+    up = Vector((0, 0, 1))
+    kept = 0
+
+    def keep(cx, cy):
+        if cx > 118.3:                       # oltre il bordo nord-est: bosco
+            return False
+        if cx >= -20.5:                      # sopra il marciapiede nord-ovest: prato/bosco
+            lim = max(edge.get(int(math.floor(cx)) + d, -1e9) for d in (-1, 0, 1))
+            if lim > -1e8 and cy > lim - 1.2:
+                return False
+        return True
+
+    for i in range(nx):
+        for j in range(ny):
+            ax, bx, ay, by = xs[i], xs[i + 1], ys[j], ys[j + 1]
+            if not keep((ax + bx) / 2, (ay + by) / 2):
+                continue
+            kept += 1
+            quad = [Vector((ax, ay, z)), Vector((bx, ay, z)), Vector((bx, by, z)), Vector((ax, by, z))]
+            for tri in ((0, 1, 2), (0, 2, 3)):
+                corners = []
+                for k in tri:
+                    p = quad[k]
+                    corners.append((p, up, planar_uv(p, up, tile),
+                                    ((p.x - MACRO_X0) / MACRO_SIZE, (p.y - MACRO_Y0) / MACRO_SIZE)))
+                md.add_tri(new, corners)
+    return kept
+
+
+# ---------------------------------------------------------------- scrittura Collada
+def fmt(vals):
+    return " ".join("%.5g" % v for v in vals)
+
+
+def write_dae(path, meshes, to_world):
+    """meshes: lista di MeshData (spazio modello). to_world: Matrix applicata alle posizioni."""
+    R3 = to_world.to_3x3()
+    geoms, nodes, mats = [], [], set()
+    for mi, md in enumerate(meshes):
+        if md.tri_count() == 0:
+            continue
+        gid = f"g{mi}"
+        P, N, U0, U1, prims = [], [], [], [], []
+        idx = 0
+        for mat, tris in sorted(md.by_mat.items()):
+            mats.add(mat)
+            ind = []
+            for tri in tris:
+                for (p, n, uv0, uv1) in tri:
+                    wp = to_world @ p
+                    wn = (R3 @ n).normalized()
+                    P += (wp.x, wp.y, wp.z); N += (wn.x, wn.y, wn.z)
+                    U0 += (uv0[0], uv0[1]); U1 += (uv1[0], uv1[1])
+                    ind.append(idx); idx += 1
+            prims.append((mat, len(tris), ind))
+        cnt = idx
+        src = lambda nm, arr, stride, params: (
+            f'<source id="{gid}-{nm}"><float_array id="{gid}-{nm}-a" count="{len(arr)}">{fmt(arr)}</float_array>'
+            f'<technique_common><accessor source="#{gid}-{nm}-a" count="{len(arr)//stride}" stride="{stride}">'
+            + "".join(f'<param name="{p}" type="float"/>' for p in params) + '</accessor></technique_common></source>')
+        g = [f'<geometry id="{gid}" name="{md.name}"><mesh>',
+             src("pos", P, 3, "XYZ"), src("nrm", N, 3, "XYZ"), src("uv0", U0, 2, "ST"), src("uv1", U1, 2, "ST"),
+             f'<vertices id="{gid}-v"><input semantic="POSITION" source="#{gid}-pos"/></vertices>']
+        for mat, ntri, ind in prims:
+            g.append(f'<triangles material="{mat}-material" count="{ntri}">'
+                     f'<input semantic="VERTEX" source="#{gid}-v" offset="0"/>'
+                     f'<input semantic="NORMAL" source="#{gid}-nrm" offset="0"/>'
+                     f'<input semantic="TEXCOORD" source="#{gid}-uv0" offset="0" set="0"/>'
+                     f'<input semantic="TEXCOORD" source="#{gid}-uv1" offset="0" set="1"/>'
+                     f'<p>{" ".join(map(str, ind))}</p></triangles>')
+        g.append('</mesh></geometry>')
+        geoms.append("".join(g))
+        binds = "".join(f'<instance_material symbol="{m}-material" target="#{m}-material"/>' for m, _, _ in prims)
+        nodes.append(f'<node id="{md.name}_a2" name="{md.name}_a2" type="NODE">'
+                     f'<matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>'
+                     f'<instance_geometry url="#{gid}" name="{md.name}_a2"><bind_material><technique_common>{binds}'
+                     f'</technique_common></bind_material></instance_geometry></node>')
+    ident = '<matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>'
+    effects = "".join(f'<effect id="{m}-effect"><profile_COMMON><technique sid="common"><lambert><diffuse>'
+                      f'<color sid="diffuse">0.8 0.8 0.8 1</color></diffuse></lambert></technique></profile_COMMON></effect>'
+                      for m in sorted(mats))
+    materials = "".join(f'<material id="{m}-material" name="{m}"><instance_effect url="#{m}-effect"/></material>'
+                        for m in sorted(mats))
+    doc = ('<?xml version="1.0" encoding="utf-8"?>\n'
+           '<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">'
+           '<asset><contributor><authoring_tool>TerminalIsernia blender_export.py</authoring_tool></contributor>'
+           '<unit name="meter" meter="1"/><up_axis>Z_UP</up_axis></asset>'
+           f'<library_effects>{effects}</library_effects><library_materials>{materials}</library_materials>'
+           f'<library_geometries>{"".join(geoms)}</library_geometries>'
+           '<library_visual_scenes><visual_scene id="Scene" name="Scene">'
+           f'<node id="base00" name="base00" type="NODE">{ident}'
+           f'<node id="start01" name="start01" type="NODE">{ident}{"".join(nodes)}</node>'
+           f'<node id="detail2" name="detail2" type="NODE">{ident}</node>'
+           '</node></visual_scene></library_visual_scenes>'
+           '<scene><instance_visual_scene url="#Scene"/></scene></COLLADA>')
+    open(path, "w", encoding="utf8").write(doc)
+    return sum(m.tri_count() for m in meshes), sorted(mats)
+
+
+# ---------------------------------------------------------------- main
+objs = {o.name: o for o in bpy.data.objects}
+visible = [o for o in bpy.data.objects if o.type == 'MESH' and not o.hide_get() and not o.hide_render]
+meta = {"shapes": {}, "lamps": [], "trees": [], "benches": []}
+
+# 1) pavimentazioni: griglia d'asfalto + marciapiedi, aiuole, cordoli
+ground = MeshData("ground")
+edge = nw_strip_edge(objs["BaseTerminal"])
+kept = build_asphalt_grid(ground, objs["Plane"], edge)
+for o in visible:
+    if o.name == "BaseTerminal" or o.name == "Prato" or (o.name.startswith("Plane.0") and o.name != "Plane.015"):
+        extract(o, ground)
+n, m = write_dae(os.path.join(OUT_DIR, "ti_ground.dae"), [ground], GEO)
+meta["shapes"]["ti_ground.dae"] = {"tris": n, "materials": m, "asphalt_cells": kept}
+
+# 2) edificio
+bld = MeshData("building")
+extract(objs["Plane.015"], bld)
+n, m = write_dae(os.path.join(OUT_DIR, "ti_building.dae"), [bld], GEO)
+meta["shapes"]["ti_building.dae"] = {"tris": n, "materials": m}
+
+# 3) ringhiera
+rail = MeshData("railing")
+for nm in ("Cube", "Cube.001", "Cube.002"):
+    extract(objs[nm], rail)
+n, m = write_dae(os.path.join(OUT_DIR, "ti_railing.dae"), [rail], GEO)
+meta["shapes"]["ti_railing.dae"] = {"tris": n, "materials": m}
+
+# 4) panchine e pensiline
+props = MeshData("props")
+for o in visible:
+    if o.name.startswith(("Panchina", "ProtezionePanchina")):
+        extract(o, props)
+        c = GEO @ (o.matrix_world @ Vector(o.bound_box[0]).lerp(Vector(o.bound_box[6]), 0.5))
+        meta["benches"].append([c.x, c.y, c.z])
+n, m = write_dae(os.path.join(OUT_DIR, "ti_props.dae"), [props], GEO)
+meta["shapes"]["ti_props.dae"] = {"tris": n, "materials": m}
+
+# 5) lampione: una sola mesh nello spazio del suo Empty, poi istanze
+tmpl = objs["Lampione.015"]
+inv = tmpl.matrix_world.inverted()
+lamp = MeshData("lamp")
+extract(objs["Palo.001"], lamp, xform_model=inv @ objs["Palo.001"].matrix_world)
+extract(objs["Luce.001"], lamp, xform_model=inv @ objs["Luce.001"].matrix_world)
+n, m = write_dae(os.path.join(OUT_DIR, "ti_lamp.dae"), [lamp], Matrix.Identity(4))
+meta["shapes"]["ti_lamp.dae"] = {"tris": n, "materials": m}
+for o in bpy.data.objects:
+    if o.type == 'EMPTY' and o.name.startswith("Lampione"):
+        has_pole = any(c.name.startswith("Palo") for c in o.children)
+        if not has_pole:
+            continue
+        W = GEO @ o.matrix_world
+        head = W @ (inv @ objs["Luce.001"].matrix_world).translation
+        meta["lamps"].append({"pos": list(W.translation), "rot": [list(r) for r in W.to_3x3()], "head": list(head)})
+
+# 6) alberi: solo posizioni (sostituiti da alberi vanilla con LOD e vento)
+seen = set()
+for o in bpy.data.objects:
+    if o.type == 'MESH' and o.name.startswith("tree"):
+        bb = [o.matrix_world @ Vector(c) for c in o.bound_box]
+        cx = sum(v.x for v in bb) / 8; cy = sum(v.y for v in bb) / 8
+        h = max(v.z for v in bb)
+        key = (round(cx, 1), round(cy, 1))
+        if key in seen:
+            continue
+        seen.add(key)
+        w = GEO @ Vector((cx, cy, 0))
+        meta["trees"].append({"pos": [w.x, w.y], "height": h})
+
+json.dump(meta, open(META_FILE, "w"), indent=1)
+print("EXPORT_OK", json.dumps({k: v["tris"] for k, v in meta["shapes"].items()}), "lamps", len(meta["lamps"]), "trees", len(meta["trees"]))

@@ -1,0 +1,10 @@
+*.png filter=lfs diff=lfs merge=lfs -text
+*.jpg filter=lfs diff=lfs merge=lfs -text
+*.dds filter=lfs diff=lfs merge=lfs -text
+*.dae filter=lfs diff=lfs merge=lfs -text
+*.ter filter=lfs diff=lfs merge=lfs -text
+*.blend filter=lfs diff=lfs merge=lfs -text
+*.zip filter=lfs diff=lfs merge=lfs -text
+mod/levels/terminal_isernia/forest/*.json filter=lfs diff=lfs merge=lfs -text
+mod/levels/terminal_isernia/main/MissionGroup/roads/*.json filter=lfs diff=lfs merge=lfs -text
+mod/levels/terminal_isernia/main/MissionGroup/dintorni/**/*.json filter=lfs diff=lfs merge=lfs -text
