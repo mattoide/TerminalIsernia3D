@@ -127,9 +127,9 @@
    {
     "ambientOcclusionMap": "/levels/italy/art/decals/t_asphalt_repair_patch_decal_ao.data.png",
     "baseColorFactor": [
-     0.883816004,
-     0.883807003,
-     0.883807003,
+     0.42,
+     0.42,
+     0.41,
      1
     ],
     "baseColorMap": "/levels/italy/art/decals/t_asphalt_repair_patch_decal_b.color.png",
@@ -194,5 +194,61 @@
   "translucent": true,
   "translucentZWrite": true,
   "version": 1.5
+ },
+ "ti_skid_dark": {
+  "name": "ti_skid_dark",
+  "mapTo": "ti_skid_dark",
+  "class": "Material",
+  "persistentId": "069765f3-9019-5ea2-898d-20877da331e6",
+  "Stages": [
+   {
+    "colorMap": "/assets/materials/decalroad/treadmark/skidmark_car_single/skidmark_car_single_d.dds",
+    "diffuseColor": [
+     1,
+     1,
+     1,
+     0.9
+    ],
+    "useAnisotropic": true
+   },
+   {},
+   {},
+   {}
+  ],
+  "alphaRef": 150,
+  "annotation": "ASPHALT",
+  "castShadows": false,
+  "materialTag0": "RoadAndPath",
+  "materialTag1": "beamng",
+  "translucent": true,
+  "translucentZWrite": true
+ },
+ "ti_skid_faded": {
+  "name": "ti_skid_faded",
+  "mapTo": "ti_skid_faded",
+  "class": "Material",
+  "persistentId": "48d30a2b-e96b-5a86-8ff3-0aa226648e76",
+  "Stages": [
+   {
+    "colorMap": "/assets/materials/decalroad/treadmark/skidmark_car_single/skidmark_car_single_d.dds",
+    "diffuseColor": [
+     1,
+     1,
+     1,
+     0.5
+    ],
+    "useAnisotropic": true
+   },
+   {},
+   {},
+   {}
+  ],
+  "alphaRef": 150,
+  "annotation": "ASPHALT",
+  "castShadows": false,
+  "materialTag0": "RoadAndPath",
+  "materialTag1": "beamng",
+  "translucent": true,
+  "translucentZWrite": true
  }
 }

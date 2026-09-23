@@ -3,6 +3,10 @@
   ti_canopy.dae      pensiline a denti di sega sui due lati lunghi dell'edificio (travi verdi + pannelli traslucidi)
   ti_reeds.dae       ciuffo di canne (Arundo) alto 2.4-3.8 m, card con le texture d'erba lunga del gioco
   ti_lamp_globe.dae  lampione decorativo nero a due globi
+  ti_grilles.dae     grate metalliche nei tre archi della facciata sud-est (misurati sulla mesh: luce 1.97 m,
+                     imposta 2.20 m, chiave 3.08 m, muro a y modello -14.1..-13.35)
+  ti_willow.dae      grande salice piangente oltre il marciapiede nord-ovest (Street View 2022): tronco e branche
+                     con la corteccia di pioppo del gioco, chioma a cupola di ~13 m con "tende" di rametti pendenti
 
 blender -b --factory-startup --python tools/blender_props.py -- build/shapes
 """
@@ -108,7 +112,7 @@ for i in range(30):
     u0, u1 = k / 5, (k + 1) / 5; v0 = 0.5 * (1 - row); v1 = v0 + 0.5
     p0 = base - d * w / 2; p1 = base + d * w / 2
     p2 = p1 + UP * H + lean; p3 = p0 + UP * H + lean
-    mat = "ti_reeds_dry" if random.random() < 0.25 else "ti_reeds"
+    mat = "ti_reeds_dry" if random.random() < 0.12 else "ti_reeds"
     n = d.cross(UP).normalized().lerp(UP, 0.5).normalized()      # normali "morbide" verso l'alto, come l'erba vanilla
     quad(rmd, mat, p0, p1, p2, p3, uvs=[(u0, v0), (u1, v0), (u1, v1), (u0, v1)], n=n)
 write_dae(os.path.join(OUT, "ti_reeds.dae"), [rmd], Matrix.Identity(4))
@@ -142,4 +146,134 @@ for s in (-1, 1):
     sphere(lmd, "ti_lamp_globe", c, 0.19)
     cyl(lmd, "ti_lamp_black", 3.28, 3.38, 0.14, 0.05, cx=s * 0.52)   # cappello del globo
 write_dae(os.path.join(OUT, "ti_lamp_globe.dae"), [lmd], Matrix.Identity(4))
-print("PROPS_OK", cmd.tri_count(), rmd.tri_count(), lmd.tri_count())
+
+
+# ----------------------------------------------------------------------------- grate negli archi
+gmd = MeshData("grilles")
+Y_MID = -13.73                                              # a meta' dello spessore del muro
+for xa, xb in ((92.46, 94.42), (97.46, 99.40), (102.44, 104.40)):
+    xc, r = (xa + xb) / 2, (xb - xa) / 2
+    z_sp, z_cr = 2.20, 3.08
+    arch = lambda x: z_sp + math.sqrt(max(0.0, r * r - (x - xc) ** 2)) * (z_cr - z_sp) / r
+    # montanti tondi (sezione 22 mm) ogni 12 cm, tagliati sulla curva dell'arco
+    for x in [xa + 0.07 + k * 0.12 for k in range(int((xb - xa - 0.1) / 0.12) + 1)]:
+        if x > xb - 0.05:
+            break
+        box(gmd, "ti_grille", Vector((x, Y_MID, 0.12)), Vector((x, Y_MID, arch(x) - 0.03)), 0.022)
+    # traversi piatti 50x10 mm
+    for z in (0.22, 1.15, 2.12):
+        box(gmd, "ti_grille", Vector((xa + 0.02, Y_MID, z)), Vector((xb - 0.02, Y_MID, z)), 0.012, 0.05)
+    # telaio: montanti laterali e arco a segmenti
+    box(gmd, "ti_grille", Vector((xa + 0.025, Y_MID, 0.1)), Vector((xa + 0.025, Y_MID, z_sp)), 0.04)
+    box(gmd, "ti_grille", Vector((xb - 0.025, Y_MID, 0.1)), Vector((xb - 0.025, Y_MID, z_sp)), 0.04)
+    pts = [Vector((xc - (r - 0.025) * math.cos(t), Y_MID, z_sp + (r - 0.025) * math.sin(t) * (z_cr - z_sp) / r)) for t in
+           [math.pi * k / 16 for k in range(17)]]
+    for p, q in zip(pts, pts[1:]):
+        box(gmd, "ti_grille", p, q, 0.04)
+write_dae(os.path.join(OUT, "ti_grilles.dae"), [gmd], GEO)
+
+# ----------------------------------------------------------------------------- salice piangente
+def tube(md, mat, p0, p1, r0, r1, seg=8, v0=0.0):
+    """tronco/ramo conico da p0 a p1 (uv: u attorno, v lungo in metri/1.5)."""
+    ax = (p1 - p0); L = ax.length; ax = ax.normalized()
+    s = ax.cross(UP if abs(ax.dot(UP)) < 0.95 else Vector((1, 0, 0))).normalized(); u = ax.cross(s).normalized()
+    for i in range(seg):
+        t0, t1 = 2 * math.pi * i / seg, 2 * math.pi * (i + 1) / seg
+        a0 = s * math.cos(t0) + u * math.sin(t0); a1 = s * math.cos(t1) + u * math.sin(t1)
+        q = [p0 + a0 * r0, p0 + a1 * r0, p1 + a1 * r1, p1 + a0 * r1]
+        n = [a0, a1, a1, a0]
+        uv = [(i / seg, v0), ((i + 1) / seg, v0), ((i + 1) / seg, v0 + L / 1.5), (i / seg, v0 + L / 1.5)]
+        for tri in ((0, 1, 2), (0, 2, 3)):
+            md.add_tri(mat, [(q[k].copy(), n[k].copy(), uv[k], (0.0, 0.0)) for k in tri])
+    return v0 + L / 1.5
+
+
+def limb(md, pts, r0, r1, seg):
+    v = 0.0
+    for k in range(len(pts) - 1):
+        a = r0 + (r1 - r0) * k / (len(pts) - 1); b = r0 + (r1 - r0) * (k + 1) / (len(pts) - 1)
+        v = tube(md, "ti_willow_bark", pts[k], pts[k + 1], a, b, seg, v)
+
+
+random.seed(11)
+wmd = MeshData("willow")
+# tronco leggermente inclinato, poi 5 branche principali che salgono e si aprono
+base_lean = Vector((0.25, -0.1, 0))
+limb(wmd, [Vector((0, 0, -0.3)), Vector((0, 0, 1.2)) + base_lean * 0.4, Vector((0, 0, 2.5)) + base_lean], 0.40, 0.31, 12)
+top = Vector((0, 0, 2.5)) + base_lean
+tips = []
+for i in range(5):
+    a = 2 * math.pi * i / 5 + random.uniform(-0.3, 0.3)
+    d = Vector((math.cos(a), math.sin(a), 0))
+    el = math.radians(random.uniform(38, 58)); Ll = random.uniform(5.0, 6.5)
+    p1 = top + d * 0.3 + UP * 0.2
+    p2 = p1 + (d * math.cos(el) + UP * math.sin(el)) * Ll * 0.45
+    p3 = p2 + (d * math.cos(el * 0.8) + UP * math.sin(el * 0.8)) * Ll * 0.35
+    p4 = p3 + (d * 0.9 + UP * 0.25).normalized() * Ll * 0.25
+    limb(wmd, [p1, p2, p3, p4], 0.21, 0.06, 8)
+    for k in range(3):                                         # rami secondari ad arco
+        t = random.uniform(0.35, 0.9)
+        q0 = p2.lerp(p3, t) if t < 0.7 else p3.lerp(p4, (t - 0.7) / 0.3)
+        b = a + random.uniform(-0.9, 0.9); e = Vector((math.cos(b), math.sin(b), 0))
+        q1 = q0 + (e * 0.8 + UP * 0.6).normalized() * random.uniform(1.0, 1.6)
+        q2 = q1 + (e * 1.0 + UP * 0.05).normalized() * random.uniform(1.0, 1.8)
+        q3 = q2 + (e * 0.8 - UP * 0.5).normalized() * random.uniform(0.6, 1.2)
+        limb(wmd, [q0, q1, q2, q3], 0.055, 0.02, 5)
+        tips.append(q2)
+    tips.append(p4)
+
+# chioma: cupola (raggio orizzontale ~6.6 m, cima ~10.3 m) da cui pendono le tende di rametti
+C0 = Vector((0.2, -0.1, 5.4)); RH, RV = 6.6, 4.9
+NCOL = 8
+
+
+def strand(md, p, L, w, facing, mat="ti_willow_leaves"):
+    """una tenda: due quad verticali che scendono per L metri dal punto p, rivolti verso 'facing'."""
+    col = random.randrange(NCOL); u0, u1 = col / NCOL, (col + 1) / NCOL
+    t = UP.cross(facing).normalized()
+    bow = facing * random.uniform(0.15, 0.45)                  # la tenda si allarga un po' verso il basso
+    sway = t * random.uniform(-0.2, 0.2)
+    mid = p - UP * (L * 0.5) + bow * 0.6 + sway * 0.5
+    bot = p - UP * L + bow + sway
+    vt, vb = 1.0, max(0.0, 1.0 - L / 6.5)                      # la texture copre 6.5 m di tenda
+    vm = (vt + vb) / 2
+    nrm = (facing * 0.7 + UP * 0.3).normalized()               # normali morbide verso fuori, come il fogliame vanilla
+    rows = [(p, vt), (mid, vm), (bot, vb)]
+    for (a, va), (b, vb2) in zip(rows, rows[1:]):
+        q = [a - t * w / 2, a + t * w / 2, b + t * w / 2, b - t * w / 2]
+        uv = [(u0, va), (u1, va), (u1, vb2), (u0, vb2)]
+        for tri in ((0, 3, 2), (0, 2, 1)):
+            md.add_tri(mat, [(q[k].copy(), nrm.copy(), uv[k], (0.0, 0.0)) for k in tri])
+
+
+def dome_point(theta, phi, shrink=1.0):
+    """theta: azimut, phi: 0 = equatore .. pi/2 = cima."""
+    r = RH * shrink * (1 + 0.12 * math.sin(3 * theta + 1.3) + 0.06 * math.sin(7 * theta) + 0.05 * math.sin(2 * theta + 0.4))
+    return C0 + Vector((math.cos(theta) * math.cos(phi) * r, math.sin(theta) * math.cos(phi) * r, math.sin(phi) * RV * shrink))
+
+
+n_str = 0
+clumps = [(random.uniform(0, 2 * math.pi), math.asin(random.uniform(-0.05, 0.95)), random.uniform(0.9, 1.08)) for _ in range(80)]
+for i in range(560):                                           # tende esterne, a ciocche (varchi scuri tra una e l'altra)
+    cth, cph, cr = clumps[random.randrange(len(clumps))]
+    th = cth + random.gauss(0, 0.09)
+    ph = min(1.35, max(-0.05, cph + random.gauss(0, 0.07)))
+    p = dome_point(th, ph, shrink=cr)
+    face = Vector((math.cos(th), math.sin(th), 0))
+    # dall'alto scendono piu' lunghe: il bordo della tenda arriva a 0.6-1.8 m da terra
+    L = max(1.2, p.z - random.uniform(0.15, 0.9)) * random.uniform(0.82, 1.0)   # la tenda arriva quasi a terra
+    if ph > 1.1:
+        L = random.uniform(1.5, 3.0)                           # in cima solo ciuffi corti
+    w = random.uniform(0.7, 1.1)
+    strand(wmd, p, L, w, face)
+    face2 = (face + UP.cross(face) * random.choice([-1, 1]) * 1.2).normalized()   # seconda card incrociata
+    strand(wmd, p + face * 0.1, L * random.uniform(0.7, 0.95), w * 0.8, face2)
+    n_str += 2
+for i in range(140):                                           # riempimento interno (chioma meno trasparente)
+    th = random.uniform(0, 2 * math.pi); ph = random.uniform(0.2, 1.2)
+    p = dome_point(th, ph, shrink=random.uniform(0.45, 0.8))
+    face = Vector((math.cos(th), math.sin(th), 0))
+    strand(wmd, p, random.uniform(1.5, 3.5), random.uniform(0.8, 1.2), face)
+    n_str += 1
+write_dae(os.path.join(OUT, "ti_willow.dae"), [wmd], Matrix.Identity(4))
+print("PROPS_OK", cmd.tri_count(), rmd.tri_count(), lmd.tri_count(), wmd.tri_count(), "tende", n_str, "grate", gmd.tri_count())

@@ -17,7 +17,7 @@ from scipy import ndimage
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from geo import model2world
 from osm import OSM
-from build_textures import fbm
+from build_textures import fbm, save_atomic
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 LEVEL = os.path.join(ROOT, "mod", "levels", "terminal_isernia")
@@ -136,7 +136,7 @@ def write_heightmap_png(ter_path):
     d = open(ter_path, "rb").read()
     n = struct.unpack("<I", d[1:5])[0]
     h = np.frombuffer(d[5:5 + n * n * 2], dtype="<u2").reshape(n, n)[::-1]
-    Image.fromarray(h.astype(np.uint16)).save(ter_path.replace(".ter", ".terrainheightmap.png"))
+    save_atomic(Image.fromarray(h.astype(np.uint16)), ter_path.replace(".ter", ".terrainheightmap.png"))
 
 
 def write_terrain_json(path, level_rel_ter, n, names):
@@ -150,10 +150,51 @@ def write_terrain_json(path, level_rel_ter, n, names):
 
 
 def save_img(arr, name, mode):
-    Image.fromarray(np.clip(arr * 255 + 0.5, 0, 255).astype(np.uint8), mode).save(os.path.join(TEX, name), optimize=True)
+    save_atomic(Image.fromarray(np.clip(arr * 255 + 0.5, 0, 255).astype(np.uint8), mode), os.path.join(TEX, name), optimize=True)
 
 
 # ================================================================== main
+LONG_BRIDGE = 70.0          # oltre questa lunghezza il ponte e' un viadotto vero (mesh di build_bridges.py)
+
+
+def building_pads(osm, XX, YY, Z, D_out, margin=1.0, blend=7.0):
+    """spiana il terreno sotto ogni edificio OSM (rettangolo orientato + margine) alla quota mediana,
+    raccordando in 'blend' metri: come i terrazzamenti veri di Isernia."""
+    from osm import obb
+    N = Z.shape[0]
+    PZ = np.zeros_like(Z); PW = np.zeros_like(Z); PM = np.zeros_like(Z)
+    n = 0
+    for pts, t in osm.polygons_where(lambda t: "building" in t):
+        P = np.asarray(pts); c0 = P.mean(0)
+        if np.hypot(*c0) > 1450:
+            continue
+        o = obb(pts)
+        if o is None:
+            continue
+        a, L, W, ctr = o
+        if L * W < 12:
+            continue
+        r = math.hypot(L, W) / 2 + margin + blend
+        i0 = max(0, int((ctr[0] - r - X0) / SQ)); i1 = min(N, int((ctr[0] + r - X0) / SQ) + 2)
+        j0 = max(0, int((ctr[1] - r - Y0) / SQ)); j1 = min(N, int((ctr[1] + r - Y0) / SQ) + 2)
+        if i1 <= i0 or j1 <= j0:
+            continue
+        xs, ys = XX[j0:j1, i0:i1] - ctr[0], YY[j0:j1, i0:i1] - ctr[1]
+        u = xs * math.cos(a) + ys * math.sin(a); v = -xs * math.sin(a) + ys * math.cos(a)
+        d = np.hypot(np.maximum(np.abs(u) - L / 2 - margin, 0), np.maximum(np.abs(v) - W / 2 - margin, 0))
+        inside = d <= 0
+        if not inside.any() or D_out[j0:j1, i0:i1][inside].min() < 25:   # l'edificio del terminal e' la nostra mesh
+            continue
+        zp = float(np.median(Z[j0:j1, i0:i1][inside]))
+        w = 1 - smoothstep(0, blend, d)
+        PZ[j0:j1, i0:i1] += w * zp; PW[j0:j1, i0:i1] += w
+        PM[j0:j1, i0:i1] = np.maximum(PM[j0:j1, i0:i1], w)
+        n += 1
+    pad = np.where(PW > 0, PZ / np.maximum(PW, 1e-6), Z)
+    print("piazzole edifici:", n)
+    return Z * (1 - PM) + pad * PM
+
+
 def main():
     os.makedirs(TEX, exist_ok=True)
     rng = np.random.default_rng(42)
@@ -217,15 +258,19 @@ def main():
           "construction": 3.5, "busway": 3}
     road_center = np.zeros((N, N), bool); road_hw = np.zeros((N, N), np.float32); road_z = np.zeros((N, N), np.float32)
     roads_out = []
+    # 1) profili: quota DEM lisciata lungo la strada. Gallerie escluse; i ponti corti (tombini, fossi, torrenti)
+    #    diventano strada normale sul terreno spianato, i viadotti lunghi li fa build_bridges.py
+    ways = []
     for w, tg in osm.ways_where(lambda t: t.get("highway") in HW):
-        if tg.get("bridge") or tg.get("tunnel") or tg.get("layer", "0") not in ("0",):
+        if tg.get("tunnel") and tg.get("tunnel") != "no":
             continue
         pts = np.array(osm.way_pts(w))
         if len(pts) < 2:
             continue
-        # ricampiono ogni 1 m
         seg = np.hypot(*np.diff(pts, axis=0).T); L = np.concatenate([[0], np.cumsum(seg)])
         if L[-1] < 2:
+            continue
+        if tg.get("bridge") and tg.get("bridge") != "no" and L[-1] > LONG_BRIDGE:
             continue
         s = np.arange(0, L[-1], 1.0)
         P = np.stack([np.interp(s, L, pts[:, 0]), np.interp(s, L, pts[:, 1])], 1)
@@ -236,15 +281,61 @@ def main():
         zprof = ndimage.gaussian_filter1d(zprof - H0, 25, mode="nearest")
         # vicino al piazzale la strada si porta a quota 0
         dl = np.hypot(P[:, 0] - cx_w, P[:, 1] - cy_w)
-        near = 1 - smoothstep(120, 260, dl)
-        zprof = zprof * (1 - near)
-        roads_out.append({"type": tg["highway"], "name": tg.get("name", ""), "hw": HW[tg["highway"]], "oneway": tg.get("oneway") == "yes",
-                          "surface": tg.get("surface", ""), "pts": [[float(a), float(b), float(c)] for (a, b), c in zip(P[::4], zprof[::4])]})
-        ci = np.clip(((P[:, 0] - X0) / SQ).round().astype(int), 0, N - 1)
-        cj = np.clip(((P[:, 1] - Y0) / SQ).round().astype(int), 0, N - 1)
+        zprof = zprof * smoothstep(120, 260, dl)
+        nid = [n for n in w["nodes"] if n in osm.en]
+        idx = np.clip(np.round(L).astype(int), 0, len(s) - 1)
+        ways.append(dict(w=w, tg=tg, P=P, s=s, z=zprof, keep=keep, nodes=list(zip(nid, idx))))
+    # 2) incroci: tutte le strade che si toccano nello stesso nodo OSM ci arrivano alla stessa quota
+    #    (prima ogni via era lisciata per conto suo: gradini e rampe del 40-50% agli innesti)
+    from collections import defaultdict
+    use = defaultdict(int)
+    for W_ in ways:
+        for n, _ in W_["nodes"]:
+            use[n] += 1
+    junc = {n for n, c in use.items() if c > 1}
+    for it in range(4):
+        acc = defaultdict(list)
+        for W_ in ways:
+            for n, i in W_["nodes"]:
+                if n in junc:
+                    acc[n].append(W_["z"][i])
+        target = {n: float(np.mean(v)) for n, v in acc.items()}
+        for W_ in ways:
+            J = [(W_["s"][i], target[n] - W_["z"][i]) for n, i in W_["nodes"] if n in junc]
+            if not J:
+                continue
+            num = np.zeros_like(W_["z"]); den = np.zeros_like(W_["z"])
+            for sj, cj in J:
+                h = np.clip(1 - np.abs(W_["s"] - sj) / 80.0, 0, 1)
+                num += cj * h; den += h
+            W_["z"] = W_["z"] + num / np.maximum(den, 1.0)
+    # 3) raster delle carreggiate; in uscita solo i tratti dentro il terreno principale
+    for W_ in ways:
+        tg, P, zprof, keep = W_["tg"], W_["P"], W_["z"], W_["keep"]
+        k = 0
+        while k < len(P):
+            if not keep[k]:
+                k += 1
+                continue
+            e = k
+            while e < len(P) and keep[e]:
+                e += 1
+            if e - k >= 4:
+                Pk, zk = P[k:e], zprof[k:e]
+                sel = list(range(0, len(Pk), 4))
+                if sel[-1] != len(Pk) - 1:
+                    sel.append(len(Pk) - 1)
+                roads_out.append({"type": tg["highway"], "name": tg.get("name", ""), "hw": HW[tg["highway"]],
+                                  "oneway": tg.get("oneway") == "yes", "surface": tg.get("surface", ""),
+                                  "bridge": bool(tg.get("bridge") and tg.get("bridge") != "no"),
+                                  "pts": [[float(Pk[i][0]), float(Pk[i][1]), float(zk[i])] for i in sel]})
+            k = e
+        Pin, zin = P[keep], zprof[keep]
+        ci = np.clip(((Pin[:, 0] - X0) / SQ).round().astype(int), 0, N - 1)
+        cj = np.clip(((Pin[:, 1] - Y0) / SQ).round().astype(int), 0, N - 1)
         road_center[cj, ci] = True
         road_hw[cj, ci] = np.maximum(road_hw[cj, ci], HW[tg["highway"]])
-        road_z[cj, ci] = zprof
+        road_z[cj, ci] = zin
     dr, ridx = ndimage.distance_transform_edt(~road_center, return_indices=True)
     dr *= SQ
     RHW = road_hw[ridx[0], ridx[1]]; RZ = road_z[ridx[0], ridx[1]]
@@ -253,6 +344,8 @@ def main():
 
     # --- composizione quote
     Znat = Z + detail * smoothstep(6, 60, D_out) * (1 - road_blend) + ditch
+    # piazzole piane sotto gli edifici OSM (prima gli edifici in pendio restavano sepolti fino a 13 m a monte)
+    Znat = building_pads(osm, XX, YY, Znat, D_out)
     Znat = Znat * (1 - road_blend) + RZ * road_blend
     # raccordo al piazzale: entro 3 m dal bordo quota del bordo, poi naturale in 25 m
     k = smoothstep(2.5, 25, D_out)

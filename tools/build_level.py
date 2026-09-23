@@ -10,7 +10,7 @@ from scipy import ndimage
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import geo
 import vanilla_assets as va
-from osm import OSM
+from osm import OSM, obb
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 LV = os.path.join(ROOT, "mod", "levels", "terminal_isernia")
@@ -26,6 +26,26 @@ IMPORTED = {}          # materiali copiati dai livelli ufficiali (un solo file, 
 
 def uid(s):
     return str(uuid.uuid5(uuid.NAMESPACE_URL, "terminal_isernia/" + s))
+
+
+_GZ = {}
+
+
+def ground_z(x, y):
+    """quota del suolo in (x, y): la mesh del piazzale (asfalto 0, marciapiedi e isole 0.1) o il terreno."""
+    if "r" not in _GZ:
+        from build_terrain import dae_triangles
+        from PIL import Image, ImageDraw
+        x0, y0, res, n = -200.0, -200.0, 0.25, 1600
+        im = Image.new("F", (n, n), -99.0); d = ImageDraw.Draw(im)
+        for m, tri in dae_triangles(os.path.join(BUILD, "shapes", "ti_ground.dae")):
+            d.polygon([((p[0] - x0) / res, (p[1] - y0) / res) for p in tri], fill=float(max(p[2] for p in tri)))
+        _GZ["r"] = (np.asarray(im), x0, y0, res, n)
+    a, x0, y0, res, n = _GZ["r"]
+    i, j = int((x - x0) / res), int((y - y0) / res)
+    if 0 <= i < n and 0 <= j < n and a[j, i] > -50:
+        return float(a[j, i])
+    return float(tz(x, y)[0])
 
 
 def rot_list_from_yaw(a):
@@ -158,8 +178,9 @@ def terminal_materials():
     paint = dict(baseColorMap=AS + "tileable/metal/metal_paint/metal_paint_d.color.png",
                  normalMap=AS + "tileable/metal/metal_paint/metal_paint_nm.normal.png", roughnessFactor=0.55, metallicFactor=0)
     mats = dict([
+        # detailMap su UV1 (230 m): variazione macro, corsie consumate e bordi sporchi; rompe la ripetizione dei 3 m
         pbr("ti_asphalt", T + "t_ti_asphalt", "ASPHALT",
-            detailNormalMap=AS + "breakup/m_asphalt_02/t_asphalt_detail_01_nm.normal.png", detailNormalMapStrength=0.6, detailScale=[0.35, 0.35],
+            detailMap=T + "t_ti_asphalt_macro_detail_b.data.png", detailMapUseUV=1, detailScale=[1, 1], detailBaseColorMapStrength=1.0,
             layer2=stage(baseColorMap=T + "t_ti_asphalt_cracked_b.color.png", normalMap=T + "t_ti_asphalt_cracked_nm.normal.png",
                          roughnessMap=T + "t_ti_asphalt_cracked_r.data.png", ambientOcclusionMap=T + "t_ti_asphalt_cracked_ao.data.png",
                          opacityMap=T + "t_ti_asphalt_breakup_o.data.png", opacityMapUseUV=1, opacityFactor=0.8)),
@@ -170,8 +191,8 @@ def terminal_materials():
             baseColorMap=AS + "terrain/forest/t_forest_ground/t_forest_ground_b.png", normalMap=AS + "terrain/forest/t_forest_ground/t_forest_ground_nm.png",
             roughnessMap=AS + "terrain/forest/t_forest_ground/t_forest_ground_r.png", ambientOcclusionMap=AS + "terrain/forest/t_forest_ground/t_forest_ground_ao.png"),
         pbr("ti_railing", None, "METAL", baseColorMap=AS + "tileable/metal/metal_paint_peeling/paint_peeling_d.dds",
-            normalMap=AS + "tileable/metal/metal_paint_peeling/paint_peeling_n.dds", baseColorFactor=[0.42, 0.22, 0.13, 1],
-            roughnessFactor=0.75, metallicFactor=0.3),   # ringhiera verniciata marrone e arrugginita (Street View 2022)
+            normalMap=AS + "tileable/metal/metal_paint_peeling/paint_peeling_n.dds", baseColorFactor=[0.19, 0.085, 0.05, 1],
+            roughnessFactor=0.82, metallicFactor=0.1),   # ringhiera verniciata marrone scuro e arrugginita (Street View 2022)
         pbr("ti_lamp_pole", None, "METAL", baseColorFactor=[0.75, 0.76, 0.78, 1], **galv),
         pbr("ti_lamp_head", None, "METAL", baseColorFactor=[0.9, 0.88, 0.8, 1], roughnessFactor=0.25, metallicFactor=0,
             emissive=True, instanceEmissive=True, emissiveFactor=[1, 1, 1], emissiveIntensityNits=12000),
@@ -185,8 +206,8 @@ def terminal_materials():
         pbr("ti_bld_roof", T + "t_ti_roof", "ASPHALT"),
         pbr("ti_bld_frame", T + "t_ti_pillar", "ASPHALT", **det_concrete),   # pilastri in cemento chiaro
         pbr("ti_canopy_steel", None, "METAL", baseColorFactor=[0.10, 0.27, 0.17, 1], **paint),
-        pbr("ti_canopy_panel", None, "PLASTIC", baseColorFactor=[0.84, 0.86, 0.80, 0.72], roughnessFactor=0.35, metallicFactor=0,
-            detailMap=AS + "breakup/t_detail_concrete_02/t_detail_concrete_02_detail_b.data.png", detailBaseColorMapStrength=0.5,
+        pbr("ti_canopy_panel", None, "PLASTIC", baseColorFactor=[0.50, 0.55, 0.50, 0.58], roughnessFactor=0.55, metallicFactor=0,
+            detailMap=AS + "breakup/t_detail_concrete_02/t_detail_concrete_02_detail_b.data.png", detailBaseColorMapStrength=0.8,
             detailScale=[1, 1], m_translucent=True, m_translucentBlendOp="LerpAlpha", m_translucentZWrite=False,
             m_doubleSided=True, m_castShadows=True),
         pbr("ti_lamp_black", None, "METAL", baseColorFactor=[0.035, 0.035, 0.035, 1], **dict(paint, roughnessFactor=0.45)),
@@ -194,8 +215,23 @@ def terminal_materials():
             emissive=True, instanceEmissive=True, emissiveFactor=[1, 1, 1], emissiveIntensityNits=6000),
         pbr("ti_backdrop", None, "GRASS", baseColorMap=LVP + "art/terrains/t_ti_far_base_b.png",
             normalMap=LVP + "art/terrains/t_ti_far_base_nm.png", roughnessFactor=0.95, metallicFactor=0),
+        ("ti_willow_leaves", {"name": "ti_willow_leaves", "mapTo": "ti_willow_leaves", "class": "Material", "persistentId": uid("mat/willow_leaves"),
+                              "version": 1.5, "Stages": [{"baseColorMap": T + "t_ti_willow_leaves_b.color.png", "opacityMap": T + "t_ti_willow_leaves_o.data.png",
+                                                          "normalMap": T + "t_ti_willow_leaves_nm.normal.png", "roughnessMap": T + "t_ti_willow_leaves_r.data.png"},
+                                                         {}, {}, {}],
+                              "alphaRef": 90, "alphaTest": True, "doubleSided": True, "invertBackFaceNormals": True, "subSurface": True,
+                              "subSurfaceIntensity": 1, "groundType": "GRASS", "annotation": "NATURE", "materialTag0": "beamng",
+                              "translucentBlendOp": "None"}),
+        pbr("ti_willow_bark", None, "WOOD", baseColorMap=AS + "tree/poplar/t_poplar_bark/t_poplar_bark_b.color.dds",
+            normalMap=AS + "tree/poplar/t_poplar_bark/t_poplar_bark_nm.normal.dds", roughnessMap=AS + "tree/poplar/t_poplar_bark/t_poplar_bark_r.data.dds",
+            ambientOcclusionMap=AS + "tree/poplar/t_poplar_bark/t_poplar_bark_ao.data.dds"),
+        pbr("ti_grille", None, "METAL", baseColorMap=AS + "tileable/metal/metal_paint_peeling/paint_peeling_d.dds",
+            normalMap=AS + "tileable/metal/metal_paint_peeling/paint_peeling_n.dds", baseColorFactor=[0.09, 0.075, 0.065, 1],
+            roughnessFactor=0.7, metallicFactor=0.25),   # grate verniciate scure, arrugginite
+        pbr("ti_bridge_concrete", T + "t_ti_curb", "ASPHALT", **det_concrete),
+        pbr("ti_bridge_deck", T + "t_ti_asphalt", "ASPHALT"),
         reeds_mat("ti_reeds", "t_grass_green_long_03", [0.58, 0.74, 0.52, 1]),
-        reeds_mat("ti_reeds_dry", "t_grass_dry_long_01", [0.78, 0.74, 0.62, 1]),
+        reeds_mat("ti_reeds_dry", "t_grass_dry_long_01", [0.62, 0.63, 0.52, 1]),
     ])
     return mats
 
@@ -204,10 +240,11 @@ def terminal_materials():
 def place_terminal(L):
     shp = os.path.join(LV, "art", "shapes", "terminal")
     os.makedirs(shp, exist_ok=True)
-    for f in glob.glob(os.path.join(BUILD, "shapes", "*.dae")):
-        shutil.copy2(f, shp)
+    for f in glob.glob(os.path.join(BUILD, "shapes", "*.dae")):      # copia atomica: il gioco tiene la mod montata
+        tmp = os.path.join(BUILD, "tmp_save", os.path.basename(f)); os.makedirs(os.path.dirname(tmp), exist_ok=True)
+        shutil.copy2(f, tmp); os.replace(tmp, os.path.join(shp, os.path.basename(f)))
     json.dump(terminal_materials(), open(os.path.join(shp, "main.materials.json"), "w"), indent=1)
-    for nm in ("ti_ground", "ti_building", "ti_railing", "ti_props", "ti_canopy"):
+    for nm in ("ti_ground", "ti_building", "ti_railing", "ti_props", "ti_canopy", "ti_grilles"):
         L.add("terminal", {"name": nm.replace("ti_", "terminal_"), "class": "TSStatic", "position": [0, 0, 0], "shapeName": LVP + f"art/shapes/terminal/{nm}.dae",
                            "collisionType": "Visible Mesh Final", "decalType": "Visible Mesh", "useInstanceRenderData": True})
     meta = json.load(open(os.path.join(BUILD, "export_meta.json")))
@@ -252,6 +289,10 @@ def write_forest_defs():
                                "persistentId": uid("fid/reeds"), "annotation": "NATURE",
                                "shapeFile": LVP + "art/shapes/terminal/ti_reeds.dae", "windScale": 0.8, "trunkBendScale": 0.03,
                                "branchAmp": 0.08, "detailAmp": 0.35, "detailFreq": 0.9, "mass": 1}
+    items["ti_willow"] = {"name": "ti_willow", "internalName": "ti_willow_int", "class": "ForestItemData",
+                          "persistentId": uid("fid/willow"), "annotation": "NATURE",
+                          "shapeFile": LVP + "art/shapes/terminal/ti_willow.dae", "windScale": 0.7, "trunkBendScale": 0.006,
+                          "branchAmp": 0.12, "detailAmp": 0.25, "detailFreq": 0.6, "mass": 5000, "radius": 0.4}
     for lv, names in FOREST_ITEMS.items():
         fi = va.forest_items(lv)
         for n in names:
@@ -279,9 +320,19 @@ def poisson(mask_fn, x0, y0, x1, y1, spacing, max_tries=1):
     return X[keep], Y[keep]
 
 
+# coordinate modello del tronco: sul marciapiede nord-ovest, 1.2 m prima della ringhiera (non oltre).
+# Street View set 2022 (41.60392 N 14.24645 E): salice a 306 gradi, base al cordolo a ~70 m; chioma ~16 m sull'ortofoto
+WILLOW_MODEL = (14.0, 23.3)
+
+
 def make_forest(meta):
     inst = {}
     def put(kind, x, y, s_lo=0.85, s_hi=1.2, z_off=-0.05):
+        x, y = np.atleast_1d(x), np.atleast_1d(y)
+        ok = ~in_building(x, y) & (tsample(TDROAD, x, y) > tsample(TRHW, x, y) + 0.8)
+        x, y = x[ok], y[ok]
+        if len(x) == 0:
+            return
         z = tz(x, y) + z_off
         for xi, yi, zi in zip(np.atleast_1d(x), np.atleast_1d(y), np.atleast_1d(z)):
             a = rng.uniform(0, 2 * math.pi)
@@ -362,10 +413,19 @@ def make_forest(meta):
         dr = tsample(TDROAD, X, Y); hw = tsample(TRHW, X, Y)
         mx = np.array([geo.world2model(x, y)[0] for x, y in zip(X, Y)]) if len(X) else np.zeros(0)
         n = np.sin(X * 0.21) * np.cos(Y * 0.17) + np.sin(X * 0.05 + Y * 0.07)
-        return (d > 2.0) & (d < 11 + 4 * n) & (dr > hw + 1.2) & (mx > -45) & (n > -1.1)
+        return (d > 2.0) & (d < 11 + 4 * n) & (dr > hw + 1.2) & (mx > -45) & (n > -0.35)
     X, Y = poisson(reed_mask, -250, -250, 250, 250, 1.6)
     for x, y in zip(X, Y):
         put("ti_reeds_clump", x, y, 0.8, 1.25, z_off=0.0)
+    # nei varchi del canneto: siepe mista di arbusti (Street View 2022: il bordo nord-ovest e' soprattutto cespugli)
+    def shrub_mask(X, Y):
+        d = tsample(TDLOT, X, Y)
+        dr = tsample(TDROAD, X, Y); hw = tsample(TRHW, X, Y)
+        n = np.sin(X * 0.21) * np.cos(Y * 0.17) + np.sin(X * 0.05 + Y * 0.07)
+        return (d > 2.5) & (d < 12) & (dr > hw + 1.5) & (n <= -0.35)
+    X, Y = poisson(shrub_mask, -250, -250, 250, 250, 3.2)
+    for x, y, uu in zip(X, Y, rng.random(len(X))):
+        put(["tall_plant_bush", "generibush", "tree_beech_bush_a", "fluffy_bush", "holm_oak_bush"][int(uu * 5) % 5], x, y, 0.8, 1.3)
     # 5) boschi sulle colline dell'orizzonte (fuori dal terreno principale), modelli leggeri per la distanza
     far_kinds = ["oak_a_distant", "tree_beech_forest_group", "tree_aspen_forest_group", "oak_a_distant", "tree_beech_small_forest_group"]
     for (r0, r1, sp) in ((2040, 3200, 26.0), (3200, 5000, 42.0)):
@@ -381,6 +441,12 @@ def make_forest(meta):
             inst.setdefault(k, []).append({"ctxid": 0, "pos": [round(float(x), 2), round(float(y), 2), round(float(z), 2)],
                                            "rotationMatrix": [round(v, 5) for v in rot_list_from_yaw(a)],
                                            "scale": round(float(rng.uniform(0.9, 1.3)), 3), "type": k})
+    # 6) il grande salice piangente oltre il marciapiede nord-ovest (Street View 2022): libero lo spazio della chioma
+    wx, wy = geo.model2world(*WILLOW_MODEL)
+    for kind in list(inst):
+        inst[kind] = [o for o in inst[kind] if math.hypot(o["pos"][0] - wx, o["pos"][1] - wy) > 8.5]
+    inst["ti_willow"] = [{"ctxid": 0, "pos": [round(wx, 3), round(wy, 3), round(ground_z(wx, wy) - 0.05, 3)],
+                          "rotationMatrix": [round(v, 6) for v in rot_list_from_yaw(math.radians(20))], "scale": 1.1, "type": "ti_willow"}]
     fdir = os.path.join(LV, "forest")
     if os.path.isdir(fdir):
         shutil.rmtree(fdir)
@@ -450,14 +516,21 @@ def roads(L):
         return Q
 
     cnt = 0
-    for r in TINFO["roads"]:
+    # viadotti (build_bridges.py): mesh percorribile + DecalRoad proiettati sull'impalcato
+    bpath = os.path.join(BUILD, "bridges.json")
+    decks = json.load(open(bpath)) if os.path.exists(bpath) else []
+    if decks:
+        L.add("roads", {"name": "viadotti", "class": "TSStatic", "position": [0, 0, 0], "shapeName": LVP + "art/shapes/terminal/ti_bridges.dae",
+                        "collisionType": "Visible Mesh Final", "decalType": "Visible Mesh", "useInstanceRenderData": True})
+    for r in TINFO["roads"] + [dict(d, deck=True, surface="") for d in decks]:
         P = np.array(r["pts"])
         if len(P) < 2:
             continue
         dist = np.hypot(P[:, 0], P[:, 1]).min()
         if dist > 1500:
             continue
-        P[:, 2] = tz(P[:, 0], P[:, 1]) + 0.02
+        deck = r.get("deck", False)
+        P[:, 2] = (P[:, 2] if deck else tz(P[:, 0], P[:, 1])) + 0.02
         hw = r["hw"]
         unpaved = r["type"] == "track" or r["surface"] in ("unpaved", "gravel", "dirt", "ground")
         def road(mat, pts, width, **kw):
@@ -466,6 +539,8 @@ def roads(L):
             o = {"class": "DecalRoad", "position": nodes[0][:3], "material": mat, "nodes": nodes, "improvedSpline": True,
                  "breakAngle": 5, "decalBias": 0.0015, "distanceFade": [120, 50], "startEndFade": [1, 1], "drivability": -1}
             o.update(kw)
+            if deck:
+                o["overObjects"] = True
             L.add("roads", o); cnt += 1
         ai = dict(drivability=0.4 if r["type"] in ("track", "service") else 1.0, oneWay=r.get("oneway", False))
         if unpaved:
@@ -475,7 +550,7 @@ def roads(L):
         near = dist < 900                     # dettagli solo vicino al terminal (tempi di caricamento)
         if near:
             road("italy_asphalt_overlay_light", P, hw * 2 - 0.4, renderPriority=20, textureLength=112)
-        for s in (-1, 1):
+        for s in ((-1, 1) if not deck else ()):
             road("italy_road_edge_damage_wide_grassy", offset_line(P, s * (hw + 0.4)), 1.6, textureLength=8, distanceFade=[90, 30])
         if near and r["type"] in ("primary", "secondary", "tertiary", "trunk", "unclassified") and hw >= 3:
             for s in (-1, 1):
@@ -492,25 +567,27 @@ IND = ["ind_bld_8x8", "ind_bld_12x10", "ind_bld_12x12", "ind_bld_12x15", "ind_bl
 BIG = ["italy_bld_20x12_apartment", "italy_village_hotel"]
 
 
-def obb(pts):
-    P = np.asarray(pts)[:-1] if np.allclose(pts[0], pts[-1]) else np.asarray(pts)
-    best = None
-    for i in range(len(P)):
-        e = P[(i + 1) % len(P)] - P[i]
-        if np.hypot(*e) < 0.5:
-            continue
-        a = math.atan2(e[1], e[0]); c, s = math.cos(a), math.sin(a)
-        R = np.array([[c, s], [-s, c]]); Q = P @ R.T
-        mn, mx = Q.min(0), Q.max(0); area = np.prod(mx - mn)
-        if best is None or area < best[0]:
-            ctr = ((mn + mx) / 2) @ R
-            best = (area, a, mx - mn, ctr)
-    if best is None:
-        return None
-    area, a, (L, W), ctr = best
-    if W > L:
-        L, W, a = W, L, a + math.pi / 2
-    return a, L, W, ctr
+BLD_POLYS = []          # impronte (4 vertici, coordinate mondo) degli edifici piazzati
+_BLD = {}
+
+
+def bld_mask():
+    """raster 1 m (+-1500 m) delle impronte degli edifici, allargate di 1 m."""
+    if "m" not in _BLD:
+        from PIL import Image, ImageDraw
+        n, x0 = 3000, -1500.0
+        im = Image.new("L", (n, n), 0); d = ImageDraw.Draw(im)
+        for Pq in BLD_POLYS:
+            d.polygon([(p[0] - x0, p[1] - x0) for p in Pq], fill=1)
+        _BLD["m"] = ndimage.binary_dilation(np.asarray(im) > 0, iterations=1)
+    return _BLD["m"]
+
+
+def in_building(x, y):
+    m = bld_mask()
+    i = np.clip((np.atleast_1d(x) + 1500).astype(int), 0, 2999); j = np.clip((np.atleast_1d(y) + 1500).astype(int), 0, 2999)
+    inside = (np.abs(np.atleast_1d(x)) < 1500) & (np.abs(np.atleast_1d(y)) < 1500)
+    return m[j, i] & inside
 
 
 def buildings(L):
@@ -522,9 +599,32 @@ def buildings(L):
     from matplotlib.path import Path as MPath
     ind_paths = [MPath(p) for p in ind_area]
     used, placed = set(), 0
+    skipped = {"sovrapposti": 0, "su_strada": 0}
+    from matplotlib.path import Path as MPath2
+    grid = {}                                            # hash spaziale 20 m delle impronte gia' piazzate
+
+    def footprint_pts(cx, cy, yaw, Lseg, W, n=5):
+        ca, sa = math.cos(yaw), math.sin(yaw)
+        u = (np.linspace(0.1, 0.9, n) - 0.5)
+        A, B = np.meshgrid(u * Lseg, u * W)
+        return np.stack([cx + ca * A.ravel() - sa * B.ravel(), cy + sa * A.ravel() + ca * B.ravel()], 1)
 
     def place(shape, cx, cy, yaw, Lseg, W, zs=None, levels=None):
         nonlocal placed
+        # niente edifici doppi (OSM ha a volte building + building:part) ne' sulla carreggiata
+        pts = footprint_pts(cx, cy, yaw, Lseg, W)
+        near = [q for k in {(int(cx // 20) + a, int(cy // 20) + b) for a in (-2, -1, 0, 1, 2) for b in (-2, -1, 0, 1, 2)} for q in grid.get(k, [])]
+        if any(q.contains_points(pts).mean() > 0.25 for q in near):
+            skipped["sovrapposti"] += 1
+            return
+        if np.mean(tsample(TDROAD, pts[:, 0], pts[:, 1]) < tsample(TRHW, pts[:, 0], pts[:, 1])) > 0.2:
+            skipped["su_strada"] += 1
+            return
+        ca, sa = math.cos(yaw), math.sin(yaw)
+        corners = [(cx + ca * hx - sa * hy, cy + sa * hx + ca * hy) for hx, hy in
+                   ((-Lseg / 2, -W / 2), (Lseg / 2, -W / 2), (Lseg / 2, W / 2), (-Lseg / 2, W / 2))]
+        BLD_POLYS.append(corners)
+        grid.setdefault((int(cx // 20), int(cy // 20)), []).append(MPath2(corners))
         mn, mx = np.array(dims[shape]["min"]), np.array(dims[shape]["max"])
         sx0, sy0 = mx[:2] - mn[:2]
         if sx0 >= sy0:
@@ -544,6 +644,13 @@ def buildings(L):
         hx, hy = np.array([-1, 1, 1, -1, 0]) * Lseg / 2, np.array([-1, -1, 1, 1, 0]) * W / 2
         ca, sa = math.cos(yaw), math.sin(yaw)
         z = float(tz(cx + ca * hx - sa * hy, cy + sa * hx + ca * hy).min()) - 0.1
+        # stretto tra strade a quote diverse (le strade vincono sulla piazzola): se il terreno copre piu' della
+        # fondazione del modello di oltre 3 m, l'edificio sembrerebbe sepolto -> lo salto
+        zmax = float(tz(pts[:, 0], pts[:, 1]).max())
+        if zmax - z > -mn[2] * sz + 3.0:
+            skipped["sepolti"] = skipped.get("sepolti", 0) + 1
+            BLD_POLYS.pop(); grid[(int(cx // 20), int(cy // 20))].pop()
+            return
         L.add("dintorni/edifici", {"class": "TSStatic", "position": [round(px, 3), round(py, 3), round(z, 3)],
                                     "rotationMatrix": [round(v, 6) for v in rot_list_from_yaw(a)], "scale": [scx, scy, sz],
                                     "shapeName": f"/levels/italy/art/shapes/buildings/{shape}.dae", "collisionType": "Collision Mesh",
@@ -601,12 +708,146 @@ def buildings(L):
         va.collect(f"/levels/italy/art/shapes/buildings/{shp}.dae", "italy", mats)
     for k, v in mats.items():
         IMPORTED.setdefault(k, v)
-    print("edifici:", placed, "modelli:", len(used), "materiali:", len(mats))
+    print("edifici:", placed, "modelli:", len(used), "materiali:", len(mats), "scartati:", skipped)
 
 
 # ====================================================================== dettagli del piazzale: decal e sgommate
 DECALS = ["repair_patch_decal", "pothole_decal", "eca_decals_concrete_damage_decal", "italy_ground_parts_decal",
           "nat_decals_fallen_leaves_01_decal", "ind_stuff_02"]
+
+
+SKID_TEX = "/assets/materials/decalroad/treadmark/skidmark_car_single/skidmark_car_single_d.dds"
+
+
+def skid_materials():
+    out = {}
+    for name, alpha in (("ti_skid_dark", 0.9), ("ti_skid_faded", 0.5)):
+        out[name] = {"name": name, "mapTo": name, "class": "Material", "persistentId": uid("mat/" + name),
+                     "Stages": [{"colorMap": SKID_TEX, "diffuseColor": [1, 1, 1, alpha], "useAnisotropic": True}, {}, {}, {}],
+                     "alphaRef": 150, "annotation": "ASPHALT", "castShadows": False, "materialTag0": "RoadAndPath",
+                     "materialTag1": "beamng", "translucent": True, "translucentZWrite": True}
+    return out
+
+
+def skids(L, R, asph):
+    """sgommate come le lascia un'auto vera: tracce di singoli pneumatici (coppie a 1.55 m, larghe 22-26 cm),
+    ciambelle col centro che deriva, archi di drift, un otto, partenze e frenate. Ogni traccia viene tagliata
+    dove passa a meno di 0.6 m da cordoli, isole o marciapiedi (maschera dell'asfalto della mesh)."""
+    clr = ndimage.distance_transform_edt(asph) * R.res                   # distanza dal bordo dell'asfalto (m)
+
+    def clear_at(P):
+        W = np.array([geo.model2world(x, y) for x, y in P])
+        i = np.clip(((W[:, 0] - R.x0) / R.res).astype(int), 0, R.w - 1)
+        j = np.clip(((W[:, 1] - R.y0) / R.res).astype(int), 0, R.h - 1)
+        return clr[j, i], W
+
+    def resample(P, step=0.5):
+        P = np.asarray(P, float)
+        d = np.concatenate([[0], np.cumsum(np.hypot(*np.diff(P, axis=0).T))])
+        s = np.arange(0, d[-1], step)
+        return np.stack([np.interp(s, d, P[:, 0]), np.interp(s, d, P[:, 1])], 1)
+
+    def offset(P, off):
+        t = np.gradient(P, axis=0); t /= np.linalg.norm(t, axis=1, keepdims=True) + 1e-9
+        return P + np.stack([-t[:, 1], t[:, 0]], 1) * off
+
+    n_out = [0]
+
+    def emit(P, mat, w, fade=(1.5, 1.5)):
+        c, W = clear_at(P)
+        ok = c >= w / 2 + 0.6
+        k = 0
+        while k < len(P):
+            if not ok[k]:
+                k += 1
+                continue
+            e = k
+            while e < len(P) and ok[e]:
+                e += 1
+            if (e - k) * 0.5 >= 3.0:
+                seg = W[k:e][::2]
+                if len(seg) >= 2:
+                    L.add("piazzale/sgommate", {"class": "DecalRoad", "position": [round(float(seg[0][0]), 3), round(float(seg[0][1]), 3), 0.02],
+                                                "material": mat, "nodes": [[round(float(x), 3), round(float(y), 3), 0.02, round(float(w), 3)] for x, y in seg],
+                                                "overObjects": True, "improvedSpline": True, "renderPriority": 30, "textureLength": 20,
+                                                "decalBias": 0.0015, "startEndFade": [float(fade[0]), float(fade[1])], "distanceFade": [120, 50],
+                                                "drivability": -1})
+                    n_out[0] += 1
+            k = e
+
+    def pair(C, mat, track=1.55, fade=(1.5, 1.5), jitter=0.03):
+        for side in (-1, 1):
+            P = offset(C, side * track / 2) + rng.normal(0, jitter, C.shape)
+            emit(P, mat, rng.uniform(0.22, 0.26), fade)
+
+    # centri possibili: punti dell'asfalto con almeno 6.5 m liberi attorno (una ciambella ci sta)
+    ys, xs = np.nonzero(clr > 6.5)
+    wx, wy = R.x0 + (xs + 0.5) * R.res, R.y0 + (ys + 0.5) * R.res
+    cand = np.array([geo.world2model(x, y) for x, y in zip(wx[::7], wy[::7])])
+    cand = cand[(cand[:, 0] > -95) & (cand[:, 0] < 88)]                  # non davanti all'edificio
+    used = []
+
+    def pick(min_sep=14.0, region=None):
+        for _ in range(400):
+            p = cand[rng.integers(len(cand))]
+            if region is not None and not region(p):
+                continue
+            if all(np.hypot(*(p - q)) > min_sep for q in used):
+                used.append(p)
+                return p
+        return None
+
+    # ciambelle: 2-4 giri, raggio dell'asse posteriore 3-4.5 m, centro che scivola; anteriori piu' tenui
+    for k in range(7):
+        c = pick()
+        if c is None:
+            break
+        rc = rng.uniform(3.0, 4.5); loops = rng.uniform(1.6, 3.8); dirn = rng.choice([-1, 1])
+        th = np.linspace(0, 2 * math.pi * loops, int(90 * loops))
+        drift = np.cumsum(rng.normal(0, 0.02, (len(th), 2)), 0)
+        wob = 0.25 * np.sin(th * 0.7 + rng.uniform(0, 6))
+        C = np.stack([c[0] + drift[:, 0] + (rc + wob) * np.cos(dirn * th), c[1] + drift[:, 1] + (rc + wob) * np.sin(dirn * th)], 1)
+        pair(resample(C), "ti_skid_dark" if k % 3 else "ti_skid_faded", fade=(2.5, 1.0))
+        if rng.random() < 0.6:
+            rf = math.hypot(rc, 2.7)
+            Cf = np.stack([c[0] + drift[:, 0] + (rf + wob) * np.cos(dirn * th + 0.6),
+                           c[1] + drift[:, 1] + (rf + wob) * np.sin(dirn * th + 0.6)], 1)
+            pair(resample(Cf), "ti_skid_faded", track=1.5, fade=(3, 3))
+
+    # archi di drift: raggio che si stringe e si riapre (entrata/uscita), 70-170 gradi
+    for k in range(9):
+        c = pick(10.0)
+        if c is None:
+            break
+        r0 = rng.uniform(9, 20); span = math.radians(rng.uniform(70, 170)); a0 = rng.uniform(0, 2 * math.pi)
+        dirn = rng.choice([-1, 1]); t = np.linspace(0, 1, 160)
+        rr = r0 * (1 + 0.35 * (2 * t - 1) ** 2)
+        ang = a0 + dirn * span * t
+        C = np.stack([c[0] - r0 * math.cos(a0) + rr * np.cos(ang), c[1] - r0 * math.sin(a0) + rr * np.sin(ang)], 1)
+        pair(resample(C), "ti_skid_dark" if k % 2 else "ti_skid_faded", fade=(4, 3))
+
+    # un otto nella parte libera a sud-ovest
+    c = pick(16.0, region=lambda p: p[0] < -50)
+    if c is not None:
+        a = rng.uniform(12, 15); t = np.linspace(0, 2 * math.pi * 1.8, 700); rot = rng.uniform(0, math.pi)
+        x = a * np.cos(t) / (1 + np.sin(t) ** 2); y = a * np.sin(t) * np.cos(t) / (1 + np.sin(t) ** 2)
+        C = np.stack([c[0] + x * math.cos(rot) - y * math.sin(rot), c[1] + x * math.sin(rot) + y * math.cos(rot)], 1)
+        pair(resample(C), "ti_skid_dark", fade=(3, 3))
+
+    # partenze (scure all'inizio, poi svaniscono) e frenate (tenui), lungo l'asse del piazzale
+    for k in range(10):
+        c = pick(8.0)
+        if c is None:
+            break
+        ang = math.radians(rng.choice([0, 180]) + rng.normal(0, 12))
+        Ls = rng.uniform(6, 18); t = np.linspace(0, Ls, int(Ls * 2) + 1)
+        wig = 0.12 * np.sin(t * rng.uniform(0.6, 1.2) + rng.uniform(0, 6))
+        C = np.stack([c[0] + t * math.cos(ang) - wig * math.sin(ang), c[1] + t * math.sin(ang) + wig * math.cos(ang)], 1)
+        if k % 2:
+            pair(C, "ti_skid_dark", fade=(0.3, Ls * 0.6))
+        else:
+            pair(C, "ti_skid_faded", fade=(Ls * 0.3, 0.8))
+    print("sgommate:", n_out[0], "tracce")
 
 
 def lot_details(L, meta):
@@ -618,11 +859,20 @@ def lot_details(L, meta):
     out_m = {k: v for k, v in dm.items() if v.get("mapTo", k) in need or k in need}
     d = os.path.join(LV, "art", "decals"); os.makedirs(d, exist_ok=True)
     json.dump(out_md, open(os.path.join(d, "managedDecalData.json"), "w"), indent=1)
+    out_m.update(skid_materials())
+    # i rappezzi di Italy sono cemento chiaro: sul nostro asfalto sembravano macchie bianche -> piu' scuri
+    for k, v in out_m.items():
+        if k == "m_asphalt_repair_patch_decal":
+            v["Stages"][0]["baseColorFactor"] = [0.42, 0.42, 0.41, 1]
     json.dump(out_m, open(os.path.join(d, "main.materials.json"), "w"), indent=1)
     # maschera dell'asfalto dalla mesh
     from build_terrain import dae_triangles, Raster
     R = Raster(-200, -200, 400, 400, 0.5)
-    asph = R.polys([[tuple(p[:2]) for p in tri] for mat, tri in dae_triangles(os.path.join(BUILD, "shapes", "ti_ground.dae")) if mat == "ti_asphalt"], 1) > 0
+    G = list(dae_triangles(os.path.join(BUILD, "shapes", "ti_ground.dae")))
+    asph = R.polys([[tuple(p[:2]) for p in tri] for mat, tri in G if mat == "ti_asphalt"], 1) > 0
+    # l'asfalto della mesh continua sotto isole e marciapiedi (rialzati di 10 cm): li tolgo dalla maschera
+    other = R.polys([[tuple(p[:2]) for p in tri] for mat, tri in G if mat != "ti_asphalt"], 1) > 0
+    asph &= ~ndimage.binary_dilation(other, iterations=1)
     asph_full = asph.copy()
     asph = ndimage.binary_erosion(asph, iterations=6)          # almeno 3 m dai cordoli
     ys, xs = np.nonzero(asph)
@@ -636,14 +886,22 @@ def lot_details(L, meta):
         a = rng.uniform(0, 2 * math.pi)
         inst.setdefault(name, []).append([int(rect), round(float(size), 3), 0, round(float(x), 3), round(float(y), 3), z, 0, 0, 1,
                                           round(math.cos(a), 5), round(math.sin(a), 5), 0, int(rng.integers(1, 2 ** 31))])
-    for x, y in zip(*rnd_pts(60)):
+    for x, y in zip(*rnd_pts(25)):
         dec("repair_patch_decal", x, y, rng.uniform(2.2, 5.5), rng.integers(0, 4))
     for x, y in zip(*rnd_pts(14)):
         dec("pothole_decal", x, y, rng.uniform(0.7, 1.5), rng.integers(0, 4))
     for x, y in zip(*rnd_pts(6)):
         dec("eca_decals_concrete_damage_decal", x, y, rng.uniform(3, 6))
-    for x, y in zip(*rnd_pts(40)):
-        dec("ind_stuff_02", x, y, rng.uniform(1.5, 3.5))                # macchie d'olio
+    for x, y in zip(*rnd_pts(10)):
+        dec("ind_stuff_02", x, y, rng.uniform(1.0, 2.5))                # macchie d'olio sparse
+    # macchie d'olio dove si fermavano i bus: lungo il lato nord dell'isola delle pensiline
+    for mx in np.arange(-14, 72, 4.5):
+        if rng.random() < 0.35:
+            continue
+        x, y = geo.model2world(mx + rng.normal(0, 0.8), -14.8 + rng.normal(0, 0.5))
+        i, j = int((x - R.x0) / R.res), int((y - R.y0) / R.res)
+        if asph_full[j, i]:
+            dec("ind_stuff_02", x, y, rng.uniform(1.2, 2.4))
     for x, y in zip(*rnd_pts(8)):
         dec("italy_ground_parts_decal", x, y, 0.9, rng.integers(0, 4))   # tombini/caditoie
     for t in meta["trees"]:
@@ -666,46 +924,33 @@ def lot_details(L, meta):
         a = rng.uniform(0, math.pi); Lc = rng.uniform(8, 26)
         P = [[x + math.cos(a) * t + rng.normal(0, 0.4), y + math.sin(a) * t + rng.normal(0, 0.4)] for t in np.linspace(0, Lc, 5)]
         crack(P, rng.uniform(0.9, 1.6))
-    # sgommate: cerchi, otto e archi nelle zone libere (DecalRoad sopra la mesh)
-    def ring(cx, cy, r, turns=1.0, wobble=0.6, n=40):
-        t = np.linspace(0, 2 * math.pi * turns, int(n * turns) + 1)
-        rr = r + wobble * np.sin(t * 2.3 + rng.uniform(0, 6))
-        return np.stack([cx + rr * np.cos(t), cy + rr * np.sin(t), np.full_like(t, 0.02)], 1)
-    spots = [(20, -8), (60, 8), (-30, -20), (-70, -10), (5, 22)]
-    for i, (mx, my) in enumerate(spots):
-        cx, cy = geo.model2world(mx, my)
-        for k in range(3):
-            P = ring(cx + rng.normal(0, 0.8), cy + rng.normal(0, 0.8), rng.uniform(6.5, 9.5), turns=rng.uniform(0.7, 1.6))
-            mat = "skidmarks_01" if (i + k) % 2 == 0 else "skidmarks_02"
-            L.add("piazzale/sgommate", {"class": "DecalRoad", "position": P[0].tolist(), "material": mat,
-                                        "nodes": [[*map(lambda v: round(float(v), 3), p), 1.5] for p in P], "overObjects": True,
-                                        "improvedSpline": True, "renderPriority": 30, "textureLength": 10, "decalBias": 0.0015,
-                                        "startEndFade": [3, 3], "distanceFade": [150, 60], "drivability": -1})
-    # otto lungo il piazzale
-    c0 = np.array(geo.model2world(35, -5)); c1 = np.array(geo.model2world(-5, -5))
-    for c in (c0, c1):
-        P = ring(c[0], c[1], 11, turns=1.0, wobble=1.0)
-        L.add("piazzale/sgommate", {"class": "DecalRoad", "position": P[0].tolist(), "material": "skidmarks_02",
-                                    "nodes": [[*map(lambda v: round(float(v), 3), p), 1.6] for p in P], "overObjects": True,
-                                    "improvedSpline": True, "renderPriority": 30, "textureLength": 10, "decalBias": 0.0015,
-                                    "startEndFade": [3, 3], "distanceFade": [150, 60], "drivability": -1})
+    # sgommate: vedi skids()
+    skids(L, R, asph_full)
     # strisce gialle sbiadite dei posti auto lungo il marciapiede nord-ovest (Street View 2022)
     def is_asph(mx, my):
         x, y = geo.model2world(mx, my)
         i, j = int((x - R.x0) / R.res), int((y - R.y0) / R.res)
         return 0 <= i < R.w and 0 <= j < R.h and asph_full[j, i]
-    n_st = 0
+    n_st = 0; oil = []
     for mx in np.arange(4, 104, 2.6):
         my = next((yy for yy in np.arange(46, 10, -0.25) if is_asph(mx, yy)), None)
         if my is None or rng.random() < 0.12:                          # qualche striscia ormai cancellata
             continue
         a, b = geo.model2world(mx, my - 0.4), geo.model2world(mx, my - 5.2)
+        if rng.random() < 0.45:                                        # olio perso dalle auto parcheggiate
+            ox, oy = geo.model2world(mx + 1.3 + rng.normal(0, 0.3), my - 2.6 + rng.normal(0, 0.4))
+            oil.append((ox, oy))
         L.add("piazzale/segnaletica", {"class": "DecalRoad", "position": [a[0], a[1], 0.01],
                                        "material": "italy_road_markings_line_thin_yellow",
                                        "nodes": [[a[0], a[1], 0.01, 0.12], [b[0], b[1], 0.01, 0.12]], "overObjects": True,
                                        "renderPriority": 23, "textureLength": 4, "decalBias": 0.0015, "distanceFade": [80, 40],
                                        "drivability": -1})
         n_st += 1
+    for x, y in oil:
+        dec("ind_stuff_02", x, y, rng.uniform(0.8, 1.8))
+    json.dump({"header": {"name": "DecalData File", "comments": "// Instances format: rectIdx, size, renderPriority, position.x, position.y, "
+                          "position.z, normal.x, normal.y, normal.z, tangent.x, tangent.y, tangent.z, uid", "version": 2},
+               "instances": inst}, open(os.path.join(LV, "main.decals.json"), "w"), indent=1)
     print("decal:", {k: len(v) for k, v in inst.items()}, "strisce gialle:", n_st)
 
 
@@ -730,6 +975,8 @@ def street_furniture(L, meta):
             if np.hypot(px, py) > 700 or tsample(TDLOT, px, py)[0] < 10:
                 continue
             if tsample(TDROAD, px, py)[0] < r["hw"] + 0.8:      # un'altra strada troppo vicina (incroci)
+                continue
+            if in_building(px - 0.6 * n[0], py - 0.6 * n[1])[0] or in_building(px, py)[0]:
                 continue
             d = -n                                              # verso la carreggiata
             a = math.atan2(d[0], -d[1])
@@ -775,7 +1022,9 @@ def clutter(L):
         if tilt:                               # oggetto rovesciato: ruoto l'asse Z locale verso l'orizzontale
             c, s = math.cos(a), math.sin(a)
             rot = [c, s, 0, 0, 0, 1, s, -c, 0]
-        L.add("terminal/abbandono", {"class": "TSStatic", "position": [round(float(p[0]), 3), round(float(p[1]), 3), z],
+        if not tilt:
+            z = ground_z(float(p[0]), float(p[1]))
+        L.add("terminal/abbandono", {"class": "TSStatic", "position": [round(float(p[0]), 3), round(float(p[1]), 3), round(z, 3)],
                                      "rotationMatrix": [round(v, 6) for v in rot], "scale": [scale] * 3, "shapeName": B + shape + ".dae",
                                      "collisionType": "Collision Mesh", "useInstanceRenderData": True})
         return shape
@@ -788,7 +1037,7 @@ def clutter(L):
     for (mx, my, yaw, shp) in [(70, 34, 44.5, "italy_clutter_dumpster"), (72.5, 34.5, 10, "italy_clutter_metal_drum"),
                                (-20, 41, 44.5, "italy_clutter_dumpster"), (30, 44, 0, "italy_clutter_sorting_bin")]:
         x, y = geo.model2world(mx, my)
-        L.add("terminal/abbandono", {"class": "TSStatic", "position": [round(x, 3), round(y, 3), 0.1],
+        L.add("terminal/abbandono", {"class": "TSStatic", "position": [round(x, 3), round(y, 3), round(ground_z(x, y), 3)],
                                      "rotationMatrix": rot_list_from_yaw(math.radians(yaw)), "shapeName": B + shp + ".dae",
                                      "collisionType": "Collision Mesh", "useInstanceRenderData": True})
         used.append(shp)
@@ -796,10 +1045,10 @@ def clutter(L):
     for (mx, my, yaw, shp) in [(60, 22, 44.5, "italy_newjersey_plastic.DAE"), (61.2, 22.3, 50, "italy_newjersey_plastic.DAE"),
                                (72, -12, 10, "italy_newjersey_plastic.DAE"), (96, 26, 80, "italy_newjersey_plastic.DAE"),
                                (-5, 38, 30, "italy_newjersey_plastic.DAE"), (112, 20, 100, "italy_newjersey_plastic.DAE"),
-                               (58, -14.8, 0, "italy_clutter_fire_hydrant.DAE"), (25, 27.5, 0, "italy_clutter_fire_hydrant.DAE"),
+                               (58, -14.8, 0, "italy_clutter_fire_hydrant.DAE"), (25, 19.6, 0, "italy_clutter_fire_hydrant.DAE"),
                                (-30, -22, 0, "italy_clutter_fire_hydrant.DAE")]:
         x, y = geo.model2world(mx, my)
-        L.add("terminal/abbandono", {"class": "TSStatic", "position": [round(x, 3), round(y, 3), 0.0],
+        L.add("terminal/abbandono", {"class": "TSStatic", "position": [round(x, 3), round(y, 3), round(ground_z(x, y), 3)],
                                      "rotationMatrix": rot_list_from_yaw(math.radians(yaw)), "shapeName": B + shp,
                                      "collisionType": "Collision Mesh", "useInstanceRenderData": True})
         used.append(shp)
@@ -813,7 +1062,7 @@ def clutter(L):
 # ====================================================================== cielo, luce, terreno, spawn
 def environment(L):
     L.add("Level_objects", {"name": "theLevelInfo", "class": "LevelInfo", "canvasClearColor": [1, 1, 1, 255],
-                            "fogAtmosphereHeight": 600, "fogColor": [0.66, 0.74, 0.84, 1], "fogDensity": 0.00012,
+                            "fogAtmosphereHeight": 320, "fogColor": [0.64, 0.78, 0.94, 1], "fogDensity": 0.00009,
                             "globalEnviromentMap": "cubemap_italy_reflection", "gravity": -9.81, "visibleDistance": 16000,
                             "temperatureCurveC": [0, 16, 0.25, 12, 0.5, 8, 0.75, 10, 1, 16]})
     # ora reale: 12 ottobre, 15:30 (time 0 = mezzogiorno), sole calcolato da lat/lon di Isernia
@@ -831,9 +1080,12 @@ def environment(L):
                             "occlusionScale": 0.025, "shadowDarkenColor": [0, 0, 0, 0], "shadowDistance": 1600, "shadowSoftness": 0.15,
                             "logWeight": 0.98, "texSize": 4096, "lastSplitTerrainOnly": False, "skyBrightness": 40,
                             "sunScale": [0.996, 0.80, 0.66, 1], "sunScaleGradientFile": "art/sky_gradients/default/gradient_sunscale.png",
-                            "useNightCubemap": True})
-    L.add("Level_objects", {"name": "clouds1", "class": "CloudLayer", "position": [0, 0, 0], "Textures": [{}, {}, {}], "coverage": 0.55,
-                            "exposure": 1.3, "height": 7, "texture": "levels/italy/art/skies/SkyNormals_05.dds", "windSpeed": 0.12})
+                            "useNightCubemap": True,
+                            # cielo notturno: stelle e luna come in Italy (senza starVisibility la notte era nera)
+                            "starVisibility": 1, "starLatitude": round(math.radians(geo.LAT0), 5), "meteorRate": 0.1,
+                            "moonEnabled": True, "moonAngularSize": 0.67, "moonLightColor": [0.75, 0.8, 1, 1]})
+    L.add("Level_objects", {"name": "clouds1", "class": "CloudLayer", "position": [0, 0, 0], "Textures": [{}, {}, {}], "coverage": 0.95,
+                            "exposure": 1.35, "height": 8, "texture": "levels/italy/art/skies/SkyNormals_05.dds", "windSpeed": 0.12})
     L.add("Level_objects", {"class": "ForestWindEmitter", "position": [0, 0, 0], "strength": 0.6, "windDirection": [0.7, 0.3, 0]})
     L.add("Level_objects", {"name": "theForest", "class": "Forest", "lodReflectScalar": 0})
     mi = TINFO["main"]
@@ -898,7 +1150,8 @@ def info_and_misc():
 def minimap():
     from PIL import Image
     b = Image.open(os.path.join(LV, "art", "terrains", "t_ti_terrain_base_b.png")).resize((1024, 1024), Image.LANCZOS)
-    b.save(os.path.join(LV, "terminal_isernia_minimap.png"), optimize=True)
+    from build_textures import save_atomic
+    save_atomic(b, os.path.join(LV, "terminal_isernia_minimap.png"), optimize=True)
 
 
 def main():
@@ -906,10 +1159,10 @@ def main():
     environment(L)
     meta = place_terminal(L)
     write_forest_defs()
+    buildings(L)                 # prima della vegetazione: alberi e lampioni evitano le impronte degli edifici
     make_forest(meta)
     groundcover(L)
     roads(L)
-    buildings(L)
     street_furniture(L, meta)
     clutter(L)
     lot_details(L, meta)

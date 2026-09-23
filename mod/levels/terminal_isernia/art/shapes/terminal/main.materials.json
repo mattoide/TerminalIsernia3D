@@ -10,12 +10,13 @@
     "normalMap": "/levels/terminal_isernia/art/textures/t_ti_asphalt_nm.normal.png",
     "roughnessMap": "/levels/terminal_isernia/art/textures/t_ti_asphalt_r.data.png",
     "ambientOcclusionMap": "/levels/terminal_isernia/art/textures/t_ti_asphalt_ao.data.png",
-    "detailNormalMap": "/assets/materials/breakup/m_asphalt_02/t_asphalt_detail_01_nm.normal.png",
-    "detailNormalMapStrength": 0.6,
+    "detailMap": "/levels/terminal_isernia/art/textures/t_ti_asphalt_macro_detail_b.data.png",
+    "detailMapUseUV": 1,
     "detailScale": [
-     0.35,
-     0.35
-    ]
+     1,
+     1
+    ],
+    "detailBaseColorMapStrength": 1.0
    },
    {
     "baseColorMap": "/levels/terminal_isernia/art/textures/t_ti_asphalt_cracked_b.color.png",
@@ -158,13 +159,13 @@
     "baseColorMap": "/assets/materials/tileable/metal/metal_paint_peeling/paint_peeling_d.dds",
     "normalMap": "/assets/materials/tileable/metal/metal_paint_peeling/paint_peeling_n.dds",
     "baseColorFactor": [
-     0.42,
-     0.22,
-     0.13,
+     0.19,
+     0.085,
+     0.05,
      1
     ],
-    "roughnessFactor": 0.75,
-    "metallicFactor": 0.3
+    "roughnessFactor": 0.82,
+    "metallicFactor": 0.1
    },
    {},
    {},
@@ -532,15 +533,15 @@
   "Stages": [
    {
     "baseColorFactor": [
-     0.84,
-     0.86,
-     0.8,
-     0.72
+     0.5,
+     0.55,
+     0.5,
+     0.58
     ],
-    "roughnessFactor": 0.35,
+    "roughnessFactor": 0.55,
     "metallicFactor": 0,
     "detailMap": "/assets/materials/breakup/t_detail_concrete_02/t_detail_concrete_02_detail_b.data.png",
-    "detailBaseColorMapStrength": 0.5,
+    "detailBaseColorMapStrength": 0.8,
     "detailScale": [
      1,
      1
@@ -644,6 +645,136 @@
   "materialTag1": "terminal_isernia",
   "translucentBlendOp": "None"
  },
+ "ti_willow_leaves": {
+  "name": "ti_willow_leaves",
+  "mapTo": "ti_willow_leaves",
+  "class": "Material",
+  "persistentId": "ac3ee271-7a0b-5866-8b61-4544335c8938",
+  "version": 1.5,
+  "Stages": [
+   {
+    "baseColorMap": "/levels/terminal_isernia/art/textures/t_ti_willow_leaves_b.color.png",
+    "opacityMap": "/levels/terminal_isernia/art/textures/t_ti_willow_leaves_o.data.png",
+    "normalMap": "/levels/terminal_isernia/art/textures/t_ti_willow_leaves_nm.normal.png",
+    "roughnessMap": "/levels/terminal_isernia/art/textures/t_ti_willow_leaves_r.data.png"
+   },
+   {},
+   {},
+   {}
+  ],
+  "alphaRef": 90,
+  "alphaTest": true,
+  "doubleSided": true,
+  "invertBackFaceNormals": true,
+  "subSurface": true,
+  "subSurfaceIntensity": 1,
+  "groundType": "GRASS",
+  "annotation": "NATURE",
+  "materialTag0": "beamng",
+  "translucentBlendOp": "None"
+ },
+ "ti_willow_bark": {
+  "name": "ti_willow_bark",
+  "mapTo": "ti_willow_bark",
+  "class": "Material",
+  "persistentId": "bb3c76aa-dc11-5eb6-821d-d1ea55067202",
+  "Stages": [
+   {
+    "baseColorMap": "/assets/materials/tree/poplar/t_poplar_bark/t_poplar_bark_b.color.dds",
+    "normalMap": "/assets/materials/tree/poplar/t_poplar_bark/t_poplar_bark_nm.normal.dds",
+    "roughnessMap": "/assets/materials/tree/poplar/t_poplar_bark/t_poplar_bark_r.data.dds",
+    "ambientOcclusionMap": "/assets/materials/tree/poplar/t_poplar_bark/t_poplar_bark_ao.data.dds"
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "WOOD",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_grille": {
+  "name": "ti_grille",
+  "mapTo": "ti_grille",
+  "class": "Material",
+  "persistentId": "0527c606-075e-58d4-87e9-003e2ac43ab8",
+  "Stages": [
+   {
+    "baseColorMap": "/assets/materials/tileable/metal/metal_paint_peeling/paint_peeling_d.dds",
+    "normalMap": "/assets/materials/tileable/metal/metal_paint_peeling/paint_peeling_n.dds",
+    "baseColorFactor": [
+     0.09,
+     0.075,
+     0.065,
+     1
+    ],
+    "roughnessFactor": 0.7,
+    "metallicFactor": 0.25
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "METAL",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_bridge_concrete": {
+  "name": "ti_bridge_concrete",
+  "mapTo": "ti_bridge_concrete",
+  "class": "Material",
+  "persistentId": "b4fe5b1e-c7c2-55f0-8559-5b93cc85f466",
+  "Stages": [
+   {
+    "baseColorMap": "/levels/terminal_isernia/art/textures/t_ti_curb_b.color.png",
+    "normalMap": "/levels/terminal_isernia/art/textures/t_ti_curb_nm.normal.png",
+    "roughnessMap": "/levels/terminal_isernia/art/textures/t_ti_curb_r.data.png",
+    "ambientOcclusionMap": "/levels/terminal_isernia/art/textures/t_ti_curb_ao.data.png",
+    "detailMap": "/assets/materials/breakup/t_detail_concrete_02/t_detail_concrete_02_detail_b.data.png",
+    "detailBaseColorMapStrength": 0.35,
+    "detailNormalMap": "/assets/materials/breakup/t_detail_concrete/t_detail_concrete_nm.normal.png",
+    "detailNormalMapStrength": 0.35,
+    "detailScale": [
+     3,
+     3
+    ]
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "ASPHALT",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_bridge_deck": {
+  "name": "ti_bridge_deck",
+  "mapTo": "ti_bridge_deck",
+  "class": "Material",
+  "persistentId": "25852543-eac2-5d95-a8f2-b895271e8c78",
+  "Stages": [
+   {
+    "baseColorMap": "/levels/terminal_isernia/art/textures/t_ti_asphalt_b.color.png",
+    "normalMap": "/levels/terminal_isernia/art/textures/t_ti_asphalt_nm.normal.png",
+    "roughnessMap": "/levels/terminal_isernia/art/textures/t_ti_asphalt_r.data.png",
+    "ambientOcclusionMap": "/levels/terminal_isernia/art/textures/t_ti_asphalt_ao.data.png"
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "ASPHALT",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
  "ti_reeds": {
   "name": "ti_reeds",
   "mapTo": "ti_reeds",
@@ -689,9 +820,9 @@
    {
     "baseColorMap": "/assets/materials/foliage/grass/t_grass_dry_long_01/t_grass_dry_long_01_b.color.png",
     "baseColorFactor": [
-     0.78,
-     0.74,
      0.62,
+     0.63,
+     0.52,
      1
     ],
     "opacityMap": "/assets/materials/foliage/grass/t_grass_green_long_01/t_grass_green_long_01_o.data.png",

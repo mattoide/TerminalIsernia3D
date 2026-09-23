@@ -2,7 +2,8 @@
 
 Il file src/osm/isernia_osm.json e' l'output grezzo di Overpass (out body; >; out skel qt).
 """
-import json, os
+import json, os, math
+import numpy as np
 from geo import ll2en
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -74,3 +75,25 @@ def _join_rings(ways):
         if cur[0] == cur[-1]:
             rings.append(cur)
     return rings
+
+
+def obb(pts):
+    """rettangolo orientato minimo di un poligono: (angolo, lato lungo, lato corto, centro)."""
+    P = np.asarray(pts)[:-1] if np.allclose(pts[0], pts[-1]) else np.asarray(pts)
+    best = None
+    for i in range(len(P)):
+        e = P[(i + 1) % len(P)] - P[i]
+        if np.hypot(*e) < 0.5:
+            continue
+        a = math.atan2(e[1], e[0]); c, s = math.cos(a), math.sin(a)
+        R = np.array([[c, s], [-s, c]]); Q = P @ R.T
+        mn, mx = Q.min(0), Q.max(0); area = np.prod(mx - mn)
+        if best is None or area < best[0]:
+            ctr = ((mn + mx) / 2) @ R
+            best = (area, a, mx - mn, ctr)
+    if best is None:
+        return None
+    area, a, (L, W), ctr = best
+    if W > L:
+        L, W, a = W, L, a + math.pi / 2
+    return a, L, W, ctr

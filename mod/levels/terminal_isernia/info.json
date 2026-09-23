@@ -2,10 +2,7 @@
   "title": "Terminal Isernia",
   "description": "L'ex terminal bus di Isernia (localita' Le Piane), ricostruito in scala reale: altimetria vera, strade e boschi da OpenStreetMap, materiali PBR fotografici. Perfetto per sgommare.",
   "previews": [
-    "terminal_isernia_preview.jpg",
-    "terminal_isernia_preview_aereo.jpg",
-    "terminal_isernia_preview_piazzale.jpg",
-    "terminal_isernia_preview_notte.jpg"
+    "terminal_isernia_preview.jpg"
   ],
   "size": [
     4096,

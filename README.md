@@ -8,7 +8,28 @@ reale e georeferenziato. Pagina della mod: https://www.beamng.com/resources/term
 | | |
 |---|---|
 | ![Facciata con pensilina](docs/screenshot.jpg) | ![Vista aerea](docs/screenshot_aereo.jpg) |
-| ![Notte](docs/screenshot_notte.jpg) | |
+| ![Notte](docs/screenshot_notte.jpg) | ![Il salice piangente (v1.0.1)](docs/screenshot_salice.jpg) |
+| ![Archi con le grate (v1.0.1)](docs/screenshot_archi.jpg) | |
+
+## Novità della v1.0.1
+
+Correzioni dopo una nuova analisi della mappa (script `tools/analyze_level.py` + giro in gioco, riferimento Street View 2022):
+
+- **Il grande salice piangente** oltre il marciapiede nord-ovest, fatto su misura (nel gioco non c'è): chioma a cupola di
+  ~13 m con centinaia di "tende" di rametti pendenti, come elemento forest con il vento.
+- **Asfalto**: roughness da asfalto asciutto (prima sembrava bagnato), variazione macro su tutto il piazzale,
+  corsie consumate dai bus e bordi più sporchi.
+- **Sgommate vere**: tracce dei singoli pneumatici (ciambelle col centro che scivola, archi di drift, un otto,
+  partenze e frenate), tagliate automaticamente dove passerebbero su marciapiedi, isole e cordoli.
+- Macchie d'olio negli stalli e alle fermate dei bus invece che sparse a caso.
+- **Grate metalliche** nei tre archi della facciata; facciata ripulita dalle macchie dipinte della v0.3.
+- Ringhiera marrone scuro arrugginita, pannelli delle pensiline in policarbonato sporco, marciapiedi grigio-rossastri.
+- Canneto più verde, con varchi di cespugli (prima da lontano sembrava mais).
+- **Dintorni**: edifici su piazzole in piano (prima in pendenza erano mezzi sepolti), niente doppioni né case sulla
+  carreggiata; alberi e lampioni non spuntano più dentro le case; arredo appoggiato al suolo vero.
+- **Strade**: agli incroci tutte le vie arrivano alla stessa quota (prima gradini fino al 400%), ponti corti
+  percorribili, viadotti della SS650 con impalcato, cordoli e pile.
+- **Cielo**: meno foschia sulle colline, più nuvole, stelle e luna di notte.
 
 ## Novità della v1.0 (rispetto alla 0.3)
 
@@ -59,12 +80,14 @@ python tools/build_all.py --zip    # Blender -> texture -> terreno -> livello ->
 |---|---|
 | `geo.py` | georeferenziazione: sistema del livello = metri est/nord dal centro del terminal |
 | `blender_export.py` | esporta il modello in `.dae` (writer Collada proprio: Blender 5 non lo ha più), UV in metri, asfalto tagliato al perimetro reale |
-| `blender_props.py` | genera pensiline a denti di sega, ciuffi di canne e lampione a due globi |
+| `blender_props.py` | genera pensiline a denti di sega, ciuffi di canne, lampione a due globi, grate degli archi e il salice piangente |
+| `build_bridges.py` | viadotti (ponti OSM oltre 70 m): impalcato, cordoli e pile, con i DecalRoad sopra |
 | `build_backdrop.py` | mesh di sfondo delle colline fino a 16 km |
 | `build_textures.py` | converte le texture CC0 nel formato BeamNG, ricostruisce le foto dell'edificio, invecchia la facciata |
 | `build_terrain.py` | terreni `.ter`, strati materiali da OSM/pendenza, mappe base 4096 |
 | `build_level.py` | assembla il livello: cielo, luci, alberi, erba, strade, edifici, decal, spawn |
 | `validate.py` | controlla json e che ogni file referenziato esista nella mod o nel gioco |
+| `analyze_level.py` | controlli di qualità: edifici sovrapposti/sepolti/sulla strada, alberi e lampioni dentro le case, strade troppo ripide |
 | `bng.py` | client del server MCP integrato in BeamNG, per i test automatici (caricamento, camere, screenshot) |
 
 ## Crediti e licenze delle fonti

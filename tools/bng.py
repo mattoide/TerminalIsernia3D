@@ -53,6 +53,19 @@ def cam_bookmark(name, fov=60):
     return text("set_free_camera", {"pos": dict(zip("xyz", d["p"])), "rot": dict(zip("xyzw", d["q"])), "fov": fov})
 
 
+def look(pos, target, fov=60):
+    """camera libera in pos che guarda verso target (la camera guarda lungo +Y locale)."""
+    import math
+    f = [t - p for t, p in zip(target, pos)]; n = math.sqrt(sum(v * v for v in f)); f = [v / n for v in f]
+    a = math.atan2(-f[0], f[1]); p = math.asin(max(-1, min(1, f[2])))
+    qz = (0, 0, math.sin(a / 2), math.cos(a / 2)); qx = (math.sin(p / 2), 0, 0, math.cos(p / 2))
+    x1, y1, z1, w1 = qz; x2, y2, z2, w2 = qx
+    q = (w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2, w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2,
+         w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2, w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2)
+    q = (-q[0], -q[1], -q[2], q[3])          # set_free_camera vuole la rotazione inversa (verificato con core_camera.getForward)
+    return text("set_free_camera", {"pos": dict(zip("xyz", pos)), "rot": dict(zip("xyzw", q)), "fov": fov})
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1]
     if cmd == "call":

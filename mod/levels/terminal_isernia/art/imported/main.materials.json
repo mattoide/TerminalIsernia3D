@@ -1497,69 +1497,32 @@
   "translucentZWrite": true,
   "version": 1.5
  },
- "italy_bld_ind_windows": {
-  "name": "italy_bld_ind_windows",
-  "mapTo": "Italy_bld_ind_windows",
+ "it_concrete_roadside_walls": {
+  "name": "it_concrete_roadside_walls",
+  "mapTo": "it_concrete_roadside_walls",
   "class": "Material",
-  "persistentId": "18209761-a1b1-42ea-8047-f65f67e56056",
+  "persistentId": "eff15c8f-7476-4094-842a-817fceb2d6bd",
   "Stages": [
    {
-    "colorMap": "levels/italy/art/shapes/buildings/Italy_bld_ind_windows_d.dds",
-    "detailNormalMapStrength": 0.5,
+    "colorMap": "levels/italy/art/shapes/buildings/it_concrete_roadside_walls_d.dds",
     "detailScale": [
-     8,
-     8
+     0.300000012,
+     0.300000012
     ],
-    "diffuseColor": [
-     0.996078014,
-     0.996078014,
-     0.996078014,
-     0.867999971
-    ],
-    "normalMap": "levels/italy/art/shapes/buildings/Italy_bld_ind_windows_n.dds",
-    "reflectivityMap": "levels/italy/art/shapes/buildings/Italy_bld_ind_windows_r.dds",
-    "roughnessFactor": 0.690170348,
-    "specular": [
-     0.996078014,
-     0.996078014,
-     0.996078014,
-     1
-    ],
-    "specularMap": "levels/italy/art/shapes/buildings/Italy_bld_ind_windows_s.dds",
+    "normalMap": "levels/italy/art/shapes/buildings/it_concrete_roadside_walls_n.dds",
+    "specularMap": "levels/italy/art/shapes/buildings/it_concrete_roadside_walls_s.dds",
+    "useAnisotropic": true,
     "vertColor": true
    },
-   {
-    "detailNormalMapStrength": null,
-    "detailScale": null,
-    "diffuseColor": null,
-    "roughnessFactor": null,
-    "specular": null,
-    "vertColor": null
-   },
-   {
-    "detailNormalMapStrength": null,
-    "detailScale": null,
-    "diffuseColor": null,
-    "roughnessFactor": null,
-    "specular": null,
-    "vertColor": null
-   },
-   {
-    "detailNormalMapStrength": null,
-    "detailScale": null,
-    "diffuseColor": null,
-    "roughnessFactor": null,
-    "specular": null,
-    "vertColor": null
-   }
+   {},
+   {},
+   {}
   ],
-  "alphaRef": 197,
-  "alphaTest": true,
-  "dynamicCubemap": true,
-  "groundType": "PLASTIC",
+  "annotation": "BUILDINGS",
+  "groundType": "ASPHALT_OLD",
   "materialTag0": "beamng",
   "materialTag1": "italy",
-  "specularStrength0": "0.490196"
+  "translucentBlendOp": "None"
  },
  "italy_bld_decals": {
   "name": "italy_bld_decals",
@@ -1650,33 +1613,6 @@
   "specularStrength0": "0.490196",
   "translucentBlendOp": "None"
  },
- "it_concrete_roadside_walls": {
-  "name": "it_concrete_roadside_walls",
-  "mapTo": "it_concrete_roadside_walls",
-  "class": "Material",
-  "persistentId": "eff15c8f-7476-4094-842a-817fceb2d6bd",
-  "Stages": [
-   {
-    "colorMap": "levels/italy/art/shapes/buildings/it_concrete_roadside_walls_d.dds",
-    "detailScale": [
-     0.300000012,
-     0.300000012
-    ],
-    "normalMap": "levels/italy/art/shapes/buildings/it_concrete_roadside_walls_n.dds",
-    "specularMap": "levels/italy/art/shapes/buildings/it_concrete_roadside_walls_s.dds",
-    "useAnisotropic": true,
-    "vertColor": true
-   },
-   {},
-   {},
-   {}
-  ],
-  "annotation": "BUILDINGS",
-  "groundType": "ASPHALT_OLD",
-  "materialTag0": "beamng",
-  "materialTag1": "italy",
-  "translucentBlendOp": "None"
- },
  "italy_medieval_stone_wall_decals": {
   "name": "italy_medieval_stone_wall_decals",
   "mapTo": "italy_medieval_stone_wall_decals",
@@ -1718,30 +1654,66 @@
   "materialTag1": "italy",
   "specularStrength0": "0.490196"
  },
- "italy_mesh_fence": {
-  "name": "italy_mesh_fence",
-  "mapTo": "italy_mesh_fence",
+ "italy_bld_ind_windows": {
+  "name": "italy_bld_ind_windows",
+  "mapTo": "Italy_bld_ind_windows",
   "class": "Material",
-  "persistentId": "3b915875-5f5f-4d2a-ae1d-5d61c4fa19b5",
+  "persistentId": "18209761-a1b1-42ea-8047-f65f67e56056",
   "Stages": [
    {
-    "colorMap": "levels/italy/art/shapes/buildings/italy_mesh_fence_d.dds",
+    "colorMap": "levels/italy/art/shapes/buildings/Italy_bld_ind_windows_d.dds",
+    "detailNormalMapStrength": 0.5,
     "detailScale": [
-     6,
-     6
+     8,
+     8
     ],
-    "normalMap": "levels/italy/art/shapes/buildings/italy_mesh_fence_n.dds",
-    "specularMap": "levels/italy/art/shapes/buildings/italy_mesh_fence_s.dds",
-    "useAnisotropic": true
+    "diffuseColor": [
+     0.996078014,
+     0.996078014,
+     0.996078014,
+     0.867999971
+    ],
+    "normalMap": "levels/italy/art/shapes/buildings/Italy_bld_ind_windows_n.dds",
+    "reflectivityMap": "levels/italy/art/shapes/buildings/Italy_bld_ind_windows_r.dds",
+    "roughnessFactor": 0.690170348,
+    "specular": [
+     0.996078014,
+     0.996078014,
+     0.996078014,
+     1
+    ],
+    "specularMap": "levels/italy/art/shapes/buildings/Italy_bld_ind_windows_s.dds",
+    "vertColor": true
    },
-   {},
-   {},
-   {}
+   {
+    "detailNormalMapStrength": null,
+    "detailScale": null,
+    "diffuseColor": null,
+    "roughnessFactor": null,
+    "specular": null,
+    "vertColor": null
+   },
+   {
+    "detailNormalMapStrength": null,
+    "detailScale": null,
+    "diffuseColor": null,
+    "roughnessFactor": null,
+    "specular": null,
+    "vertColor": null
+   },
+   {
+    "detailNormalMapStrength": null,
+    "detailScale": null,
+    "diffuseColor": null,
+    "roughnessFactor": null,
+    "specular": null,
+    "vertColor": null
+   }
   ],
-  "alphaRef": 63,
+  "alphaRef": 197,
   "alphaTest": true,
-  "annotation": "OBSTACLES",
-  "groundType": "METAL",
+  "dynamicCubemap": true,
+  "groundType": "PLASTIC",
   "materialTag0": "beamng",
   "materialTag1": "italy",
   "specularStrength0": "0.490196"
@@ -1771,6 +1743,34 @@
   "materialTag2": "east_coast_usa",
   "specularStrength0": "0.490196",
   "translucentBlendOp": "None"
+ },
+ "italy_mesh_fence": {
+  "name": "italy_mesh_fence",
+  "mapTo": "italy_mesh_fence",
+  "class": "Material",
+  "persistentId": "3b915875-5f5f-4d2a-ae1d-5d61c4fa19b5",
+  "Stages": [
+   {
+    "colorMap": "levels/italy/art/shapes/buildings/italy_mesh_fence_d.dds",
+    "detailScale": [
+     6,
+     6
+    ],
+    "normalMap": "levels/italy/art/shapes/buildings/italy_mesh_fence_n.dds",
+    "specularMap": "levels/italy/art/shapes/buildings/italy_mesh_fence_s.dds",
+    "useAnisotropic": true
+   },
+   {},
+   {},
+   {}
+  ],
+  "alphaRef": 63,
+  "alphaTest": true,
+  "annotation": "OBSTACLES",
+  "groundType": "METAL",
+  "materialTag0": "beamng",
+  "materialTag1": "italy",
+  "specularStrength0": "0.490196"
  },
  "italy_poles_lights_etc": {
   "name": "italy_poles_lights_etc",

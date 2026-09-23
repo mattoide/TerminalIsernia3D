@@ -13,6 +13,21 @@
   "detailFreq": 0.9,
   "mass": 1
  },
+ "ti_willow": {
+  "name": "ti_willow",
+  "internalName": "ti_willow_int",
+  "class": "ForestItemData",
+  "persistentId": "0a6c954c-548c-5e13-a3d0-984bb75f10cf",
+  "annotation": "NATURE",
+  "shapeFile": "/levels/terminal_isernia/art/shapes/terminal/ti_willow.dae",
+  "windScale": 0.7,
+  "trunkBendScale": 0.006,
+  "branchAmp": 0.12,
+  "detailAmp": 0.25,
+  "detailFreq": 0.6,
+  "mass": 5000,
+  "radius": 0.4
+ },
  "holm_oak_city_small": {
   "name": "holm_oak_city_small",
   "internalName": "holm_oak_city_small",
