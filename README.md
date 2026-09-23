@@ -30,6 +30,9 @@ Correzioni dopo una nuova analisi della mappa (script `tools/analyze_level.py` +
 - **Strade**: agli incroci tutte le vie arrivano alla stessa quota (prima gradini fino al 400%), ponti corti
   percorribili, viadotti della SS650 con impalcato, cordoli e pile.
 - **Cielo**: meno foschia sulle colline, più nuvole, stelle e luna di notte.
+- **Confronto con Street View (set 2022)**: graffiti sulla fascia bassa della facciata ad archi, lucernario a piramide sul
+  tetto, pennacchi sul canneto, linea elettrica con pali di cemento lungo il lato sud-est, marciapiede lungo la ringhiera
+  in autobloccanti grigi, lampioni del piazzale a pastorale (braccio curvo), alberi dei campi a gruppi e filari.
 
 ## Novità della v1.0 (rispetto alla 0.3)
 

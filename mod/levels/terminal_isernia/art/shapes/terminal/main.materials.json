@@ -97,6 +97,156 @@
   "materialTag1": "terminal_isernia",
   "translucentBlendOp": "None"
  },
+ "ti_pavers_grey": {
+  "name": "ti_pavers_grey",
+  "mapTo": "ti_pavers_grey",
+  "class": "Material",
+  "persistentId": "eb6b867f-3bd7-50e2-bd9e-0dcfe649bbea",
+  "Stages": [
+   {
+    "baseColorMap": "/levels/terminal_isernia/art/textures/t_ti_pavers_grey_b.color.png",
+    "normalMap": "/levels/terminal_isernia/art/textures/t_ti_pavers_grey_nm.normal.png",
+    "roughnessMap": "/levels/terminal_isernia/art/textures/t_ti_pavers_grey_r.data.png",
+    "ambientOcclusionMap": "/levels/terminal_isernia/art/textures/t_ti_pavers_grey_ao.data.png",
+    "detailMap": "/assets/materials/breakup/t_detail_concrete_02/t_detail_concrete_02_detail_b.data.png",
+    "detailBaseColorMapStrength": 0.35,
+    "detailNormalMap": "/assets/materials/breakup/t_detail_concrete/t_detail_concrete_nm.normal.png",
+    "detailNormalMapStrength": 0.35,
+    "detailScale": [
+     3,
+     3
+    ]
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "COBBLESTONE",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_reed_plume": {
+  "name": "ti_reed_plume",
+  "mapTo": "ti_reed_plume",
+  "class": "Material",
+  "persistentId": "22f8c5be-d5d2-5b8c-8a91-54838a5e4fdd",
+  "version": 1.5,
+  "Stages": [
+   {
+    "baseColorMap": "/levels/terminal_isernia/art/textures/t_ti_reed_plume_b.color.png",
+    "opacityMap": "/levels/terminal_isernia/art/textures/t_ti_reed_plume_o.data.png",
+    "roughnessFactor": 0.8
+   },
+   {},
+   {},
+   {}
+  ],
+  "alphaRef": 70,
+  "alphaTest": true,
+  "doubleSided": true,
+  "invertBackFaceNormals": true,
+  "subSurface": true,
+  "subSurfaceIntensity": 1,
+  "groundType": "GRASS",
+  "annotation": "GRASS",
+  "materialTag0": "beamng",
+  "translucentBlendOp": "None"
+ },
+ "ti_skylight_glass": {
+  "name": "ti_skylight_glass",
+  "mapTo": "ti_skylight_glass",
+  "class": "Material",
+  "persistentId": "e47ef508-14ec-5d50-852f-ecbea7e8e201",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.78,
+     0.82,
+     0.82,
+     0.55
+    ],
+    "roughnessFactor": 0.2,
+    "metallicFactor": 0,
+    "detailMap": "/assets/materials/breakup/t_detail_concrete_02/t_detail_concrete_02_detail_b.data.png",
+    "detailBaseColorMapStrength": 0.6,
+    "detailScale": [
+     1,
+     1
+    ]
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "GLASS",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "LerpAlpha",
+  "translucent": true,
+  "translucentZWrite": false,
+  "doubleSided": true
+ },
+ "ti_skylight_frame": {
+  "name": "ti_skylight_frame",
+  "mapTo": "ti_skylight_frame",
+  "class": "Material",
+  "persistentId": "91b64c97-d3dd-5ad1-b364-2b33f9f9444f",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.55,
+     0.57,
+     0.55,
+     1
+    ],
+    "baseColorMap": "/assets/materials/tileable/metal/metal_paint/metal_paint_d.color.png",
+    "normalMap": "/assets/materials/tileable/metal/metal_paint/metal_paint_nm.normal.png",
+    "roughnessFactor": 0.6,
+    "metallicFactor": 0
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "METAL",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_pole_concrete": {
+  "name": "ti_pole_concrete",
+  "mapTo": "ti_pole_concrete",
+  "class": "Material",
+  "persistentId": "192acf65-0e45-5954-bb08-b001b8902f49",
+  "Stages": [
+   {
+    "baseColorMap": "/levels/terminal_isernia/art/textures/t_ti_pillar_b.color.png",
+    "normalMap": "/levels/terminal_isernia/art/textures/t_ti_pillar_nm.normal.png",
+    "roughnessMap": "/levels/terminal_isernia/art/textures/t_ti_pillar_r.data.png",
+    "ambientOcclusionMap": "/levels/terminal_isernia/art/textures/t_ti_pillar_ao.data.png",
+    "detailMap": "/assets/materials/breakup/t_detail_concrete_02/t_detail_concrete_02_detail_b.data.png",
+    "detailBaseColorMapStrength": 0.35,
+    "detailNormalMap": "/assets/materials/breakup/t_detail_concrete/t_detail_concrete_nm.normal.png",
+    "detailNormalMapStrength": 0.35,
+    "detailScale": [
+     3,
+     3
+    ]
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "ASPHALT",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
  "ti_curb": {
   "name": "ti_curb",
   "mapTo": "ti_curb",

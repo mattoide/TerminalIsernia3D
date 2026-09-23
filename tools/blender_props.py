@@ -117,6 +117,12 @@ for i in range(30):
     mat = "ti_reeds_dry" if random.random() < 0.12 else "ti_reeds"
     n = d.cross(UP).normalized().lerp(UP, 0.5).normalized()      # normali "morbide" verso l'alto, come l'erba vanilla
     quad(rmd, mat, p0, p1, p2, p3, uvs=[(u0, v0), (u1, v0), (u1, v1), (u0, v1)], n=n)
+    if random.random() < 0.35:                                  # pennacchio in cima (Arundo in autunno, Street View 2022)
+        k2 = random.randrange(4); pu0, pu1 = k2 / 4, (k2 + 1) / 4
+        top = base + UP * H + lean; pw = random.uniform(0.3, 0.45); ph = random.uniform(0.45, 0.7)
+        q0 = top - d * pw / 2 - UP * 0.1; q1 = top + d * pw / 2 - UP * 0.1
+        quad(rmd, "ti_reed_plume", q0, q1, q1 + UP * ph + lean * 0.1, q0 + UP * ph + lean * 0.1,
+             uvs=[(pu0, 0.0), (pu1, 0.0), (pu1, 1.0), (pu0, 1.0)], n=n)
 write_dae(os.path.join(OUT, "ti_reeds.dae"), [rmd], Matrix.Identity(4))
 
 # ----------------------------------------------------------------------------- lampione a due globi
@@ -299,5 +305,41 @@ for i in range(4):
     quad(pmd, "ti_lamp_pole", c[i], c[j], c[j + 4], c[i + 4], ref=hc)
 quad(pmd, "ti_lamp_head", c[3], c[2], c[1], c[0], ref=hc)                                     # diffusore (sotto)
 write_dae(os.path.join(OUT, "ti_lamp_pastorale.dae"), [pmd], Matrix.Identity(4))
+
+# ----------------------------------------------------------------------------- lucernario a piramide sul tetto
+# Street View set 2022: piramide di vetro chiaro al centro della copertura (tetto a z 5.2, centro x 98.75 y -8.3)
+smd = MeshData("skylight")
+sc, sb, sh = Vector((98.75, -8.3, 5.2)), 1.7, 3.6            # la punta supera i denti delle pensiline (foto)
+base4 = [sc + Vector((sx * sb, sy * sb, 0)) for sx, sy in ((-1, -1), (1, -1), (1, 1), (-1, 1))]
+apex = sc + Vector((0, 0, sh))
+for i in range(4):
+    a, b = base4[i], base4[(i + 1) % 4]
+    n = (b - a).cross(apex - a).normalized()
+    if n.dot((a + b + apex) / 3 - sc) < 0:
+        a, b, n = b, a, -n
+    smd.add_tri("ti_skylight_glass", [(a.copy(), n, (0, 0), (0.0, 0.0)), (b.copy(), n, (1, 0), (0.0, 0.0)), (apex.copy(), n, (0.5, 1), (0.0, 0.0))])
+    box(smd, "ti_skylight_frame", a, apex, 0.07)                       # costoloni
+    box(smd, "ti_skylight_frame", a, b, 0.09)                          # telaio di base
+    for t in (0.33, 0.66):                                             # traversi intermedi
+        box(smd, "ti_skylight_frame", a.lerp(apex, t), b.lerp(apex, t), 0.04)
+box(smd, "ti_skylight_frame", sc + Vector((0, 0, -0.3)), sc + Vector((0, 0, 0.05)), 3.5, 3.5)   # zoccolo
+write_dae(os.path.join(OUT, "ti_skylight.dae"), [smd], GEO)
+
+# ----------------------------------------------------------------------------- linea elettrica lungo il lato sud-est
+# Street View set 2022: pali di cemento chiari appena oltre la ringhiera sud-est, un cavo solo
+emd = MeshData("powerline")
+tops = []
+for x in [-30 + 37.0 * k for k in range(5)]:
+    b = Vector((x, -49.6, -0.4))
+    tube(emd, "ti_pole_concrete", b, b + Vector((0, 0, 9.4)), 0.13, 0.08, 8)
+    box(emd, "ti_pole_concrete", b + Vector((-0.02, -0.45, 9.0)), b + Vector((-0.02, 0.45, 9.0)), 0.08)   # mensola
+    for off in (-0.35, 0.35):
+        tube(emd, "ti_lamp_black", b + Vector((0, off, 9.04)), b + Vector((0, off, 9.2)), 0.03, 0.03, 6)   # isolatori
+    tops.append(b + Vector((0, 0.35, 9.18)))
+for a, b in zip(tops, tops[1:]):                                       # catenaria
+    pts = [a.lerp(b, t) - Vector((0, 0, 0.55 * 4 * t * (1 - t))) for t in [i / 12 for i in range(13)]]
+    for p, q in zip(pts, pts[1:]):
+        tube(emd, "ti_lamp_black", p, q, 0.012, 0.012, 4)
+write_dae(os.path.join(OUT, "ti_powerline.dae"), [emd], GEO)
 
 print("PROPS_OK", cmd.tri_count(), rmd.tri_count(), lmd.tri_count(), wmd.tri_count(), "tende", n_str, "grate", gmd.tri_count(), "lampione", pmd.tri_count())

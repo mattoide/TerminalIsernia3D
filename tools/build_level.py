@@ -186,6 +186,15 @@ def terminal_materials():
                          opacityMap=T + "t_ti_asphalt_breakup_o.data.png", opacityMapUseUV=1, opacityFactor=0.8)),
         pbr("ti_pavers_moss", T + "t_ti_pavers_moss", "COBBLESTONE", **det_concrete),
         pbr("ti_pavers", T + "t_ti_pavers", "COBBLESTONE", **det_concrete),
+        pbr("ti_pavers_grey", T + "t_ti_pavers_grey", "COBBLESTONE", **det_concrete),
+        ("ti_reed_plume", dict(reeds_mat("ti_reed_plume", "t_grass_dry_long_01", [1, 1, 1, 1])[1],
+                               Stages=[{"baseColorMap": T + "t_ti_reed_plume_b.color.png", "opacityMap": T + "t_ti_reed_plume_o.data.png",
+                                        "roughnessFactor": 0.8}, {}, {}, {}], alphaRef=70)),
+        pbr("ti_skylight_glass", None, "GLASS", baseColorFactor=[0.78, 0.82, 0.82, 0.55], roughnessFactor=0.2, metallicFactor=0,
+            detailMap=AS + "breakup/t_detail_concrete_02/t_detail_concrete_02_detail_b.data.png", detailBaseColorMapStrength=0.6,
+            detailScale=[1, 1], m_translucent=True, m_translucentBlendOp="LerpAlpha", m_translucentZWrite=False, m_doubleSided=True),
+        pbr("ti_skylight_frame", None, "METAL", baseColorFactor=[0.55, 0.57, 0.55, 1], **dict(paint, roughnessFactor=0.6)),
+        pbr("ti_pole_concrete", T + "t_ti_pillar", "ASPHALT", **det_concrete),
         pbr("ti_curb", T + "t_ti_curb", "ASPHALT", **det_concrete),
         pbr("ti_planter_soil", None, "DIRT",
             baseColorMap=AS + "terrain/forest/t_forest_ground/t_forest_ground_b.png", normalMap=AS + "terrain/forest/t_forest_ground/t_forest_ground_nm.png",
@@ -244,7 +253,7 @@ def place_terminal(L):
         tmp = os.path.join(BUILD, "tmp_save", os.path.basename(f)); os.makedirs(os.path.dirname(tmp), exist_ok=True)
         shutil.copy2(f, tmp); os.replace(tmp, os.path.join(shp, os.path.basename(f)))
     json.dump(terminal_materials(), open(os.path.join(shp, "main.materials.json"), "w"), indent=1)
-    for nm in ("ti_ground", "ti_building", "ti_railing", "ti_props", "ti_canopy", "ti_grilles"):
+    for nm in ("ti_ground", "ti_building", "ti_railing", "ti_props", "ti_canopy", "ti_grilles", "ti_skylight", "ti_powerline"):
         L.add("terminal", {"name": nm.replace("ti_", "terminal_"), "class": "TSStatic", "position": [0, 0, 0], "shapeName": LVP + f"art/shapes/terminal/{nm}.dae",
                            "collisionType": "Visible Mesh Final", "decalType": "Visible Mesh", "useInstanceRenderData": True})
     meta = json.load(open(os.path.join(BUILD, "export_meta.json")))

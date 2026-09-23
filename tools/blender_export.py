@@ -91,6 +91,8 @@ def extract(obj, md, xform_model=None, keep_filter=None):
         mat = me.materials[lt.material_index] if me.materials else None
         new, mode, tile = map_material(mat)
         pts = [M @ me.vertices[v].co for v in lt.vertices]
+        if new == "ti_pavers_moss" and sum(p.y for p in pts) / 3 < -40:
+            new = "ti_pavers_grey"          # Street View 2022: lungo la ringhiera sud-est autobloccanti grigi, altrove rossastri
         if keep_filter and not keep_filter(new, pts):
             continue
         fn = (Mn @ lt.normal).normalized()

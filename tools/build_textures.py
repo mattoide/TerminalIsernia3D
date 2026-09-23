@@ -235,8 +235,91 @@ def enhance_arches(src, dst_png, wall_w=22.0, wall_h=4.6, v0=0.34, v1=0.66, grai
     st = np.clip((streak - 0.72) * 5, 0, 1)[None, :] * np.clip(1 - (wall_h - zm) / (0.5 + 2.0 * length[None, :]), 0, 1)
     st = (st * (0.7 + 0.3 * n2))[..., None] * 0.3
     out = out * (1 - st) + dirt * st
+    # graffiti sulla fascia bassa, solo sul muro (non nei vani neri degli archi)
+    allow = ((col.max(-1) > 0.25) & (zm[:, :1] < 2.4) & (zm[:, :1] > 0.08)).astype(np.float32)
+    out = graffiti(out, np.broadcast_to(zm, (H, W)), W, H, ppm_u, ppm_v, wall_w, allow)
     Image.fromarray((np.clip(out, 0, 1) * 255).astype(np.uint8)).save(dst_png)
     return dst_png
+
+
+def reed_plumes(W=1024, H=1024, ncol=4, seed=23):
+    """pennacchi dell'Arundo (ottobre): pannocchie piumose beige-argento che si piegano da un lato. 4 varianti in colonna."""
+    from PIL import ImageDraw
+    rng = np.random.default_rng(seed)
+    S = 2
+    im = Image.new("RGBA", (W * S, H * S), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+    cw = W * S // ncol
+    for c in range(ncol):
+        x0 = c * cw + cw * 0.5
+        bend = rng.uniform(0.15, 0.35) * cw * rng.choice([-1, 1])
+        stem = [(x0 + bend * (t ** 1.6), H * S * (1 - t)) for t in np.linspace(0, 0.95, 40)]   # dal basso verso l'alto
+        d.line(stem, fill=(150, 140, 110, 255), width=3 * S)
+        for k in range(900):                              # fili della pannocchia, piu' fitti in alto
+            t = rng.uniform(0.25, 0.97) ** 0.7
+            i = min(int(t * 39), 39)
+            px, py = stem[i]
+            L = rng.uniform(0.05, 0.16) * H * S * (1.1 - 0.5 * t)
+            a = math.radians(rng.uniform(-60, 60)) + (0.4 if bend > 0 else -0.4)
+            ex, ey = px + math.sin(a) * L, py - math.cos(a) * L * 0.6 + L * 0.35
+            col = np.array([172, 158, 124]) * rng.uniform(0.8, 1.08)          # beige spento, non bianco
+            d.line([(px, py), ((px + ex) / 2 + rng.normal(0, 4 * S), (py + ey) / 2), (ex, ey)],
+                   fill=tuple(int(v) for v in np.clip(col, 0, 255)) + (int(rng.uniform(150, 255)),), width=S)
+    im = im.resize((W, H), Image.LANCZOS)
+    a = np.asarray(im).astype(np.float32) / 255
+    rgb, al = a[..., :3], a[..., 3]
+    mean = (rgb * al[..., None]).sum((0, 1)) / (al.sum() + 1e-6)
+    rgb = np.where(al[..., None] > 0.02, rgb / np.maximum(al[..., None], 1e-3), mean)
+    save(np.clip(rgb, 0, 1), "t_ti_reed_plume_b.color.png")
+    save(np.clip(al * 1.3, 0, 1), "t_ti_reed_plume_o.data.png", "L")
+    print("ok plume")
+
+
+GRAFFITI_WORDS = ["KRS", "ZENO", "MOLI", "ISE", "RAVA", "DRIFT", "OKE", "SKA", "NEMO", "TEK", "VEGA", "BOSK", "ROX", "KAOS",
+                  "IS86", "SUD", "LUPO", "RASK", "MEKA", "OTTO", "ZIO", "FREE"]
+
+
+def graffiti(out, zm, W, H, ppm_u, ppm_v, wall_w, allow, seed=31):
+    """graffiti sulla fascia bassa del muro (Street View 2022: facciata sud-est coperta di scritte fino a ~2.3 m):
+    scritte piene con contorno (throw-up, font bold) e tag a mano libera (font calligrafici), colature di vernice.
+    Si disegna in un sistema metrico (u = ppm_u px/m, v = ppm_v px/m) e si fonde sul muro solo dove allow=1."""
+    from PIL import ImageDraw, ImageFont
+    rng = np.random.default_rng(seed)
+    FD = "C:/Windows/Fonts/"
+    bold = [f for f in ("impact.ttf", "ariblk.ttf", "comicbd.ttf") if os.path.exists(FD + f)]
+    hand = [f for f in ("Inkfree.ttf", "segoescb.ttf", "segoeprb.ttf", "segoesc.ttf") if os.path.exists(FD + f)]
+    lay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    row0 = lambda z: float(np.interp(z, zm[::-1, 0], np.arange(H)[::-1]))
+    sy = ppm_v / ppm_u                                          # la texture non e' isotropa: stiro in verticale
+
+    def stamp(text, font_file, size_m, x_m, z_m, fill, stroke, stroke_w, rot):
+        size_px = max(8, int(size_m * ppm_u))
+        f = ImageFont.truetype(FD + font_file, size_px)
+        pad = stroke_w * 2 + 4
+        l, t_, r, b_ = f.getbbox(text, stroke_width=stroke_w)
+        tile = Image.new("RGBA", (r - l + 2 * pad, b_ - t_ + 2 * pad), (0, 0, 0, 0))
+        dd = ImageDraw.Draw(tile)
+        dd.text((pad - l, pad - t_), text, font=f, fill=fill + (245,), stroke_width=stroke_w, stroke_fill=stroke + (255,))
+        # colature: qualche goccia che scende dalle lettere
+        for k in range(int(rng.integers(0, 4))):
+            x = rng.uniform(pad, tile.size[0] - pad); y0 = tile.size[1] * rng.uniform(0.55, 0.8)
+            dd.line([(x, y0), (x, y0 + rng.uniform(0.1, 0.35) * size_px)], fill=fill + (200,), width=max(1, size_px // 25))
+        tile = tile.rotate(rot, expand=True, resample=Image.BICUBIC)
+        tile = tile.resize((tile.size[0], max(1, int(tile.size[1] * sy))), Image.BICUBIC)
+        x = int(x_m * ppm_u); y = int(row0(z_m)) - tile.size[1]
+        lay.alpha_composite(tile, (max(0, min(W - tile.size[0], x)), max(0, min(H - tile.size[1], y))))
+
+    fills = [(205, 205, 210), (230, 70, 60), (60, 90, 190), (235, 110, 170), (250, 250, 245), (60, 150, 80), (240, 200, 40)]
+    for k in range(9):                                           # throw-up grandi
+        stamp(rng.choice(GRAFFITI_WORDS), rng.choice(bold), rng.uniform(0.45, 0.85), rng.uniform(0.2, wall_w - 2.5),
+              rng.uniform(0.25, 0.9), fills[int(rng.integers(len(fills)))], (15, 15, 20), int(rng.integers(3, 7)), rng.uniform(-8, 8))
+    for k in range(38):                                          # tag a mano
+        col = [(20, 20, 24), (30, 50, 140), (190, 30, 40), (210, 210, 215), (40, 120, 60), (220, 90, 160)][int(rng.integers(6))]
+        stamp(rng.choice(GRAFFITI_WORDS).lower() if rng.random() < 0.5 else rng.choice(GRAFFITI_WORDS), rng.choice(hand),
+              rng.uniform(0.18, 0.45), rng.uniform(0.1, wall_w - 1.5), rng.uniform(0.3, 2.2), col, col, 0, rng.uniform(-15, 15))
+    g = np.asarray(lay).astype(np.float32) / 255
+    fade = 0.7 + 0.3 * fbm(max(W, H), octaves=4, base_cells=40, seed=seed)[:H, :W, None]   # vernice sbiadita a chiazze
+    a = g[..., 3:4] * allow[..., None] * fade
+    return out * (1 - a) + g[..., :3] * a
 
 
 def willow_strands(W=2048, H=2048, ncol=8, seed=17):
@@ -324,6 +407,10 @@ if __name__ == "__main__":
         cc0_set("PavingStones036", 2048, "4K", "t_ti_pavers_moss", dict(brightness=0.95, saturation=1.0, tint=(1.15, 0.86, 0.74)),
                 color_fn=pavers_moss_color)
         cc0_set("PavingStones099", 2048, "4K", "t_ti_pavers", dict(brightness=0.62, saturation=0.9, tint=(1.04, 1.0, 0.94)))
+        cc0_set("PavingStones036", 2048, "4K", "t_ti_pavers_grey", dict(brightness=0.9, saturation=0.6, tint=(1.0, 1.0, 0.97)),
+                color_fn=pavers_moss_color)
+    if run("plume"):
+        reed_plumes()
     if run("concrete"):
         cc0_set("Concrete026", 1024, "2K", "t_ti_curb", dict(brightness=1.0, saturation=0.6))
         cc0_set("Plaster007", 1024, "2K", "t_ti_pillar", dict(brightness=0.82, saturation=0.3))
