@@ -15,7 +15,7 @@ reale e georeferenziato. Pagina della mod: https://www.beamng.com/resources/term
 
 Correzioni dopo una nuova analisi della mappa (script `tools/analyze_level.py` + giro in gioco, riferimento Street View 2022):
 
-- **Il grande salice piangente** oltre il marciapiede nord-ovest, fatto su misura (nel gioco non c'è): chioma a cupola di
+- **Il grande salice piangente** sul marciapiede nord-ovest, prima della ringhiera, fatto su misura (nel gioco non c'è): chioma a cupola di
   ~13 m con centinaia di "tende" di rametti pendenti, come elemento forest con il vento.
 - **Asfalto**: roughness da asfalto asciutto (prima sembrava bagnato), variazione macro su tutto il piazzale,
   corsie consumate dai bus e bordi più sporchi.
