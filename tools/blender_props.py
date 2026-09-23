@@ -3,6 +3,8 @@
   ti_canopy.dae      pensiline a denti di sega sui due lati lunghi dell'edificio (travi verdi + pannelli traslucidi)
   ti_reeds.dae       ciuffo di canne (Arundo) alto 2.4-3.8 m, card con le texture d'erba lunga del gioco
   ti_lamp_globe.dae  lampione decorativo nero a due globi
+  ti_lamp_pastorale.dae  lampione del piazzale (Street View 2022): palo conico zincato ~8.3 m, braccio curvo e
+                     corpo illuminante piatto in punta (testa a y=1.62, z=9.1 nel sistema locale, braccio verso +Y)
   ti_grilles.dae     grate metalliche nei tre archi della facciata sud-est (misurati sulla mesh: luce 1.97 m,
                      imposta 2.20 m, chiave 3.08 m, muro a y modello -14.1..-13.35)
   ti_willow.dae      grande salice piangente oltre il marciapiede nord-ovest (Street View 2022): tronco e branche
@@ -276,4 +278,26 @@ for i in range(140):                                           # riempimento int
     strand(wmd, p, random.uniform(1.5, 3.5), random.uniform(0.8, 1.2), face)
     n_str += 1
 write_dae(os.path.join(OUT, "ti_willow.dae"), [wmd], Matrix.Identity(4))
-print("PROPS_OK", cmd.tri_count(), rmd.tri_count(), lmd.tri_count(), wmd.tri_count(), "tende", n_str, "grate", gmd.tri_count())
+
+# ----------------------------------------------------------------------------- lampione a pastorale
+pmd = MeshData("lamp_pastorale")
+tube(pmd, "ti_lamp_pole", Vector((0, 0, 0)), Vector((0, 0, 0.45)), 0.13, 0.12, 12)           # collare alla base
+tube(pmd, "ti_lamp_pole", Vector((0, 0, 0.45)), Vector((0, 0, 8.3)), 0.085, 0.056, 12)        # palo conico
+arc = [Vector((0, 1.0 - math.cos(t), 8.3 + math.sin(t))) for t in [math.radians(a) for a in range(0, 86, 5)]]
+tip = arc[-1] + Vector((0, 0.62, -0.05))
+for a, b in zip(arc + [tip][:0], arc[1:]):
+    tube(pmd, "ti_lamp_pole", a, b, 0.05, 0.047, 10)
+tube(pmd, "ti_lamp_pole", arc[-1], tip, 0.047, 0.045, 10)
+# corpo illuminante: scatola piatta 0.65 x 0.28 x 0.11, sotto il diffusore emissivo
+hc = Vector((0, 1.62, 9.18))
+hx, hy, hz = 0.14, 0.33, 0.055
+V = lambda sx, sy, sz: hc + Vector((sx * hx, sy * hy, sz * hz))
+c = [V(-1, -1, -1), V(1, -1, -1), V(1, 1, -1), V(-1, 1, -1), V(-1, -1, 1), V(1, -1, 1), V(1, 1, 1), V(-1, 1, 1)]
+quad(pmd, "ti_lamp_pole", c[4], c[5], c[6], c[7], ref=hc)                                     # coperchio
+for i in range(4):
+    j = (i + 1) % 4
+    quad(pmd, "ti_lamp_pole", c[i], c[j], c[j + 4], c[i + 4], ref=hc)
+quad(pmd, "ti_lamp_head", c[3], c[2], c[1], c[0], ref=hc)                                     # diffusore (sotto)
+write_dae(os.path.join(OUT, "ti_lamp_pastorale.dae"), [pmd], Matrix.Identity(4))
+
+print("PROPS_OK", cmd.tri_count(), rmd.tri_count(), lmd.tri_count(), wmd.tri_count(), "tende", n_str, "grate", gmd.tri_count(), "lampione", pmd.tri_count())

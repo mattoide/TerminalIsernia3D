@@ -253,10 +253,11 @@ def place_terminal(L):
         rotl = [R[0][0], R[1][0], R[2][0], R[0][1], R[1][1], R[2][1], R[0][2], R[1][2], R[2][2]]
         light = f"ti_lamp_light_{i:02d}"
         L.add("terminal/lampioni", {"name": f"ti_lamp_{i:02d}", "class": "TSStatic", "position": lp["pos"], "rotationMatrix": rotl,
-                                    "shapeName": LVP + "art/shapes/terminal/ti_lamp.dae", "collisionType": "Visible Mesh Final",
+                                    "shapeName": LVP + "art/shapes/terminal/ti_lamp_pastorale.dae", "collisionType": "Visible Mesh Final",
                                     "useInstanceRenderData": True, "instanceColor": [0, 0, 0, 1], "child": light})
-        h = lp["head"]
-        L.add("terminal/lampioni", {"name": light, "class": "SpotLight", "position": [h[0], h[1], h[2] - 0.15],
+        # testa del lampione a pastorale (blender_props.py): locale (0, 1.62, 9.1), braccio lungo +Y
+        h = np.array(lp["pos"]) + np.array(R) @ np.array([0.0, 1.62, 9.1])
+        L.add("terminal/lampioni", {"name": light, "class": "SpotLight", "position": [round(float(h[0]), 3), round(float(h[1]), 3), round(float(h[2]), 3)],
                                     "rotationMatrix": [1, 0, 0, 0, 0, -1, 0, 1, 0],     # asse Y locale verso il basso
                                     "color": [1, 0.72, 0.42, 1], "brightness": 3, "range": 22, "innerAngle": 60, "outerAngle": 125,
                                     "castShadows": i % 3 == 0, "isEnabled": False, "nightLight": True})
@@ -395,9 +396,35 @@ def make_forest(meta):
     def meadow_mask(X, Y):
         lay = tsample(TLAY.astype(np.float32), X, Y, 0).astype(int)
         return np.isin(lay, [0, 1, 8]) & (tsample(TDROAD, X, Y) > tsample(TRHW, X, Y) + 4) & (tsample(TDLOT, X, Y) > 15)
-    X, Y = poisson(meadow_mask, -1700, -1700, 1700, 1700, 45)
-    for x, y, uu in zip(X, Y, rng.random(len(X))):
-        put(["oak_dry_a", "olive_tree", "tree_beech_large_c", "cork_oak_medium", "generibush"][int(uu * 5) % 5], x, y)
+    # prima: un albero ogni ~45 m sparso uniforme (dall'alto sembrava a pois). Ora come nel paesaggio vero:
+    # gruppetti di 2-8 alberi e filari/siepi lungo i confini dei campi, con varchi
+    X, Y = poisson(meadow_mask, -1700, -1700, 1700, 1700, 150)
+    for cx, cy in zip(X, Y):
+        n = int(rng.integers(2, 9)); r = rng.uniform(4, 12)
+        kinds = [["oak_dry_a", "oak_dry_b", "cork_oak_medium"], ["olive_tree"], ["tree_beech_large_c", "tree_aspen_small_a"],
+                 ["oak_dry_c", "generibush", "scraggly_bush"]][int(rng.integers(0, 4))]
+        px, py = cx + rng.normal(0, r, n), cy + rng.normal(0, r, n)
+        ok = meadow_mask(px, py)
+        for x, y in zip(px[ok], py[ok]):
+            put(kinds[int(rng.integers(len(kinds)))], x, y)
+    n_edge = 0
+    for pts, t in osm.polygons_where(lambda t: t.get("landuse") in ("farmland", "meadow", "grass", "orchard", "vineyard", "farmyard")):
+        P = np.asarray(pts)
+        if np.hypot(*P.mean(0)) > 1700:
+            continue
+        seg = np.hypot(*np.diff(P, axis=0).T); Ls = np.concatenate([[0], np.cumsum(seg)])
+        if Ls[-1] < 30:
+            continue
+        s_ = np.arange(rng.uniform(0, 7), Ls[-1], 7.0)
+        ex, ey = np.interp(s_, Ls, P[:, 0]), np.interp(s_, Ls, P[:, 1])
+        # varchi: il filare c'e' solo dove un rumore lento lungo il bordo lo permette
+        keep = (np.sin(s_ / 37.0 + P[0, 0] * 0.01) + 0.6 * np.sin(s_ / 13.0 + P[0, 1] * 0.02)) > 0.1
+        ex, ey = ex[keep] + rng.normal(0, 1.2, keep.sum()), ey[keep] + rng.normal(0, 1.2, keep.sum())
+        ok = (tsample(TDROAD, ex, ey) > tsample(TRHW, ex, ey) + 3) & (tsample(TDLOT, ex, ey) > 12)
+        for x, y, uu in zip(ex[ok], ey[ok], rng.random(ok.sum())):
+            put(["generibush", "scraggly_bush", "oak_dry_c", "tree_beech_bush_a", "oak_dry_d", "tall_plant_bush", "tree_aspen_small_a"][int(uu * 7) % 7], x, y, 0.75, 1.25)
+            n_edge += 1
+    print("filari lungo i campi:", n_edge)
     # 4) uliveti su una parte dei campi (filari 6x6 m)
     def olive_mask(X, Y):
         lay = tsample(TLAY.astype(np.float32), X, Y, 0).astype(int)
@@ -643,11 +670,13 @@ def buildings(L):
         # quota: minimo del terreno sotto l'impronta
         hx, hy = np.array([-1, 1, 1, -1, 0]) * Lseg / 2, np.array([-1, -1, 1, 1, 0]) * W / 2
         ca, sa = math.cos(yaw), math.sin(yaw)
-        z = float(tz(cx + ca * hx - sa * hy, cy + sa * hx + ca * hy).min()) - 0.1
-        # stretto tra strade a quote diverse (le strade vincono sulla piazzola): se il terreno copre piu' della
-        # fondazione del modello di oltre 3 m, l'edificio sembrerebbe sepolto -> lo salto
+        zmin = min(float(tz(cx + ca * hx - sa * hy, cy + sa * hx + ca * hy).min()), float(tz(pts[:, 0], pts[:, 1]).min()))
         zmax = float(tz(pts[:, 0], pts[:, 1]).max())
-        if zmax - z > -mn[2] * sz + 3.0:
+        # in pendio lo alzo finche' la fondazione del modello (sotto z) resta interrata a valle: meno sepolto a monte
+        base = -mn[2] * sz
+        z = min(zmax, zmin + max(0.0, base - 0.3)) - 0.1
+        # stretto tra strade a quote diverse (le strade vincono sulla piazzola): se resta sepolto di oltre 2.5 m lo salto
+        if zmax - z > 2.5:
             skipped["sepolti"] = skipped.get("sepolti", 0) + 1
             BLD_POLYS.pop(); grid[(int(cx // 20), int(cy // 20))].pop()
             return
