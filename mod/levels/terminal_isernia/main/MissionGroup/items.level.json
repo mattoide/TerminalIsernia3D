@@ -1,0 +1,10 @@
+{"name": "CameraBookmarks", "class": "SimGroup", "persistentId": "5322bd9c-4477-5926-9072-737142bdd1f6", "__parent": "MissionGroup"}
+{"name": "Level_objects", "class": "SimGroup", "persistentId": "a5c98456-9f98-5496-867d-2133efc0b68c", "__parent": "MissionGroup"}
+{"name": "PlayerDropPoints", "class": "SimGroup", "persistentId": "aa69536b-efc7-53d3-8d52-feca552bb84e", "__parent": "MissionGroup"}
+{"name": "dintorni", "class": "SimGroup", "persistentId": "7ed3d6ae-c39e-5177-8eb5-5a5f24621c50", "__parent": "MissionGroup"}
+{"name": "piazzale", "class": "SimGroup", "persistentId": "1e029f51-0f2d-5d76-b32a-9a836c3fc782", "__parent": "MissionGroup"}
+{"name": "roads", "class": "SimGroup", "persistentId": "5d21d400-ace6-54cb-921c-ad48df973718", "__parent": "MissionGroup"}
+{"name": "terminal", "class": "SimGroup", "persistentId": "5de3e636-002e-55bb-baa7-bfd6fd558f8e", "__parent": "MissionGroup"}
+{"name": "terrain", "class": "SimGroup", "persistentId": "d99f0b8d-daaa-5874-9c80-d691af70ce7e", "__parent": "MissionGroup"}
+{"name": "vegetation", "class": "SimGroup", "persistentId": "f41e4e9c-5977-5d7d-b9e0-5eb0f198bd81", "__parent": "MissionGroup"}
+{"name": "veicoli", "class": "SimGroup", "persistentId": "82f59471-5e8d-569d-a45e-a76f0b300cba", "__parent": "MissionGroup"}

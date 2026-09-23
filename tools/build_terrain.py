@@ -6,7 +6,7 @@ Il piazzale (mesh) resta a Z=0: il terreno ci passa sotto e si raccorda ai bordi
 Strade, boschi, campi e zone industriali arrivano da OpenStreetMap (ODbL).
 
 Uscite (mod/levels/terminal_isernia):
-  terrain_main.ter/.terrain.json, terrain_far.ter/.terrain.json, art/terrains/*.png, art/terrains/main.materials.json
+  terrain_main.ter/.terrain.json, art/terrains/*.png (anche la mappa colore dello sfondo), art/terrains/main.materials.json
   build/terrain_masks.npz (maschere per vegetazione e oggetti)
 """
 import os, sys, json, math, struct, re, io, zipfile
@@ -333,36 +333,44 @@ def main():
     XF, YF = np.meshgrid(xf, xf)
     ZF = dem12(XF.ravel(), YF.ravel()).reshape(NF, NF) - H0
     cheb = np.maximum(np.abs(XF), np.abs(YF))
-    ZF = ZF - 40 * (1 - smoothstep(2000, 2150, cheb)) + 0.6 * smoothstep(2000, 2150, cheb)
+    # (niente abbassamento: lo sfondo ora e' una mesh, vedi build_backdrop.py)
     zfmin = float(ZF.min()) - 1; zfmax = float(ZF.max() - zfmin) + 1
     slopef = np.degrees(np.arctan(np.hypot(*np.gradient(ZF, SQF))))
-    layf = np.where(slopef > 28, 2, np.where(ZF > 900 - H0, 1, 0)).astype(np.uint8)     # 0 bosco/colline, 1 pascolo alto, 2 roccia
+    # un solo materiale: con piu' strati BeamNG disegna i blocchi da 32 m con i colori dei singoli strati
+    layf = np.zeros((NF, NF), np.uint8)
     namesf = ["ti_t_far_hills", "ti_t_far_pasture", "ti_t_far_rock"]
-    write_ter(os.path.join(LEVEL, "terrain_far.ter"), ZF - zfmin, layf, namesf, zfmax)
-    write_terrain_json(os.path.join(LEVEL, "terrain_far.terrain.json"), "/levels/terminal_isernia/terrain_far.ter", NF, namesf)
-    write_heightmap_png(os.path.join(LEVEL, "terrain_far.ter"))
+    for f in ("terrain_far.ter", "terrain_far.terrain.json", "terrain_far.terrainheightmap.png"):
+        if os.path.exists(os.path.join(LEVEL, f)):
+            os.remove(os.path.join(LEVEL, f))
     # colore sfondo 2048: boschi scuri, campi in valle, pascoli e roccia in quota
     Zf2 = ndimage.zoom(ZF, 2, order=1); s2 = ndimage.zoom(slopef, 2, order=1)
     nf = fbm(2048, octaves=6, base_cells=16, seed=21)
     valley = smoothstep(80, 0, Zf2 - 0) * (s2 < 8)
     colf = np.zeros((2048, 2048, 3), np.float32)
-    forest_c = np.array([0.20, 0.27, 0.14]); field_c = np.array([0.52, 0.50, 0.33]); past_c = np.array([0.45, 0.47, 0.30]); rock_c = np.array([0.55, 0.53, 0.50])
-    wf = np.clip(nf * 1.4 - 0.2 + s2 / 30, 0, 1)
+    forest_c = np.array([0.20, 0.27, 0.14]); field_c = np.array([0.43, 0.43, 0.28]); past_c = np.array([0.36, 0.39, 0.24]); rock_c = np.array([0.47, 0.46, 0.43])
+    wf = np.clip(nf * 1.4 - 0.05 + s2 / 22, 0, 1)
     colf[:] = forest_c * wf[..., None] + field_c * (1 - wf[..., None])
     hi = smoothstep(1100 - H0, 1500 - H0, Zf2)[..., None]
     colf = colf * (1 - hi) + past_c * hi
-    rk = smoothstep(26, 40, s2)[..., None]
+    rk = smoothstep(34, 48, s2)[..., None] * 0.7
     colf = colf * (1 - rk) + rock_c * rk
-    colf *= (0.85 + 0.3 * fbm(2048, octaves=4, base_cells=64, seed=22))[..., None]
+    colf *= (0.85 + 0.3 * fbm(2048, octaves=4, base_cells=64, seed=22))[..., None] * 0.78   # piu' scuro: la foschia schiarisce gia' molto
     save_img(colf[::-1], "t_ti_far_base_b.png", "RGB")
-    save_img(flat_normal(1024, 0.25, seed=32), "t_ti_far_base_nm.png", "RGB")
+    save_img(flat_normal(2048, 0.25, seed=32), "t_ti_far_base_nm.png", "RGB")
+    save_img(np.full((2048, 2048), 0.95, np.float32), "t_ti_far_base_r.png", "L")
+    save_img(np.full((2048, 2048), 1.0, np.float32), "t_ti_far_base_ao.png", "L")
+    save_img(((Zf2 - Zf2.min()) / np.ptp(Zf2))[::-1], "t_ti_far_base_h.png", "L")
 
     # --- materiali terreno (json)
     write_materials(zmin, maxh)
     json.dump({"main": {"position": [X0, Y0, zmin], "maxHeight": maxh, "squareSize": SQ, "size": N},
                "far": {"position": [XF0, YF0, zfmin], "maxHeight": zfmax, "squareSize": SQF, "size": NF},
                "roads": roads_out}, open(os.path.join(BUILD, "terrain_info.json"), "w"))
+    # boschi dell'orizzonte (stessa logica della mappa colore, alla risoluzione del terreno di sfondo)
+    nfs = fbm(NF, octaves=6, base_cells=8, seed=21)
+    far_forest = ((np.clip(nfs * 1.4 - 0.2 + slopef / 30, 0, 1) > 0.5) & (slopef < 38) & (ZF < 1350 - H0))
     np.savez_compressed(os.path.join(BUILD, "terrain_masks.npz"), z=Zf.astype(np.float32), lay=lay, forest=forest,
+                        zf=ZF.astype(np.float32), far_forest=far_forest, xf0=XF0, sqf=SQF,
                         d_lot=np.minimum(D_out, 1e4).astype(np.float32), d_road=dr.astype(np.float32),
                         road_hw=RHW.astype(np.float32), x0=X0, y0=Y0, sq=SQ)
     print("TERRAIN_OK")
@@ -392,21 +400,6 @@ def write_materials(zmin, maxh):
             "macroSize": 60, "baseColorMacroTexSize": 60, "normalMacroTexSize": 60, "roughnessMacroTexSize": 60,
             "aoMacroTexSize": 60, "heightMacroTexSize": 60,
             "detailStrength": 0.6, "macroStrength": 0.2, "detailDistance": 60, "macroDistance": 1500,
-        }
-    F = "/levels/terminal_isernia/art/terrains/t_ti_far_base"
-    for name, det, mac in [("ti_t_far_hills", A + "forest/t_forest_ground/t_forest_ground", A + "forest/t_macro_forest/t_macro_forest"),
-                           ("ti_t_far_pasture", A + "grass/t_dirt_dry_grass/t_dirt_dry_grass", A + "grass/t_macro_grass/t_macro_grass"),
-                           ("ti_t_far_rock", A + "rock/t_dirt_rocky/t_dirt_rocky", A + "rock/macro_rocky/t_macro_rocky")]:
-        mats[name] = {
-            "internalName": name, "class": "TerrainMaterial", "persistentId": _uuid(name),
-            "annotation": "GRASS", "groundmodelName": "GRASS",
-            "baseColorBaseTex": F + "_b.png", "baseColorBaseTexSize": 32768,
-            "normalBaseTex": F + "_nm.png", "normalBaseTexSize": 32768,
-            "baseColorDetailTex": det + "_b.png", "normalDetailTex": det + "_nm.png", "roughnessDetailTex": det + "_r.png",
-            "baseColorMacroTex": mac + "_b.png", "normalMacroTex": mac + "_nm.png",
-            "detailSize": 4, "diffuseSize": 32768, "detailDistances": [0, 0, 30, 80], "macroDistances": [0, 100, 300, 4000],
-            "baseColorDetailStrength": [0.3, 0.3], "normalDetailStrength": [0.6, 0.3], "baseColorMacroStrength": [0.2, 0.2],
-            "normalMacroStrength": [0.4, 0.4], "macroSize": 200, "baseColorMacroTexSize": 200, "normalMacroTexSize": 200,
         }
     mats["ti_TerrainMaterialTextureSet"] = {"name": "ti_TerrainMaterialTextureSet", "class": "TerrainMaterialTextureSet",
                                             "persistentId": _uuid("tset"), "baseTexSize": [4096, 4096],

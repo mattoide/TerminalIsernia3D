@@ -21,7 +21,8 @@ TEXSET = {"ti_asphalt": "t_ti_asphalt", "ti_pavers_moss": "t_ti_pavers_moss", "t
           "ti_bld_wall_front": "t_ti_bld_front", "ti_bld_graffiti": "t_ti_bld_graffiti", "ti_bld_roof": "t_ti_roof"}
 FLAT = {"ti_planter_soil": (0.18, 0.13, 0.09, 0.95, 0), "ti_railing": (0.6, 0.6, 0.62, 0.45, 1), "ti_lamp_pole": (0.55, 0.56, 0.58, 0.4, 1),
         "ti_lamp_head": (0.9, 0.9, 0.85, 0.2, 0), "ti_bench": (0.05, 0.16, 0.11, 0.5, 0), "ti_shelter": (0.04, 0.18, 0.13, 0.5, 0),
-        "ti_bld_frame": (0.16, 0.12, 0.10, 0.7, 0.2)}
+        "ti_bld_frame": (0.62, 0.62, 0.60, 0.8, 0), "ti_canopy_steel": (0.06, 0.20, 0.12, 0.5, 0.3),
+        "ti_canopy_panel": (0.8, 0.82, 0.78, 0.3, 0), "ti_lamp_black": (0.02, 0.02, 0.02, 0.4, 0.5), "ti_lamp_globe": (0.95, 0.95, 0.9, 0.2, 0)}
 
 
 def make_mat(name):
@@ -91,7 +92,7 @@ bpy.ops.wm.read_factory_settings(use_empty=True)
 sc = bpy.context.scene
 sc.render.engine = "BLENDER_EEVEE"
 sc.render.resolution_x, sc.render.resolution_y = 1600, 900
-for f in ("ti_ground", "ti_building", "ti_railing", "ti_props"):
+for f in ("ti_ground", "ti_building", "ti_railing", "ti_props", "ti_canopy"):
     load_dae(os.path.join(SHAPES, f + ".dae"))
 # lampioni (istanze)
 import json
@@ -109,7 +110,7 @@ so.rotation_euler = (-d).to_track_quat("-Z", "Y").to_euler()
 w = bpy.data.worlds.new("w"); sc.world = w; w.use_nodes = True
 w.node_tree.nodes["Background"].inputs[0].default_value = (0.55, 0.65, 0.85, 1); w.node_tree.nodes["Background"].inputs[1].default_value = 0.8
 cam = bpy.data.cameras.new("cam"); co = bpy.data.objects.new("cam", cam); sc.collection.objects.link(co); sc.camera = co
-views = {"facciata": ((99, -34, 1.7), (99, -8, 2.2), 28), "piazzale": ((-40, -35, 4), (60, 5, 0), 24),
+views = {"pensilina_se": ((78, -40, 1.8), (98, -16, 3.5), 24), "pensilina_ne": ((116, -30, 1.8), (98, -8, 4.0), 24), "facciata": ((99, -34, 1.7), (99, -8, 2.2), 28), "piazzale": ((-40, -35, 4), (60, 5, 0), 24),
          "pensilina": ((55, -24, 1.7), (62.6, -13.8, 1.2), 24), "asfalto_vicino": ((20, -20, 1.4), (26, -14, 0), 35),
          "aereo": ((-60, -110, 60), (40, 0, 0), 30)}
 for name, (c, t, lens) in views.items():

@@ -40,6 +40,13 @@ def model2world(x, y):
             math.sin(t) * x + math.cos(t) * y + MODEL_OFFSET[1])
 
 
+def world2model(x, y):
+    """inverso di model2world."""
+    t = math.radians(MODEL_ROT_DEG)
+    x, y = x - MODEL_OFFSET[0], y - MODEL_OFFSET[1]
+    return math.cos(t) * x + math.sin(t) * y, -math.sin(t) * x + math.cos(t) * y
+
+
 def model_rot_matrix3():
     """matrice 3x3 (row-major, come i rotationMatrix di BeamNG) della rotazione modello->mondo."""
     t = math.radians(MODEL_ROT_DEG)

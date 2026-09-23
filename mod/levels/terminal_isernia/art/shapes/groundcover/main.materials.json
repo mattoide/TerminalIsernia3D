@@ -1,0 +1,222 @@
+{
+ "italy_bushes_bb": {
+  "Stages": [
+   {
+    "ambientOcclusionMap": "/assets/materials/foliage/bush/t_italy_bushes_bb/t_italy_bushes_bb_ao.data.png",
+    "baseColorFactor": [
+     0.972662985,
+     0.972652972,
+     0.972652972,
+     1
+    ],
+    "baseColorMap": "/assets/materials/foliage/bush/t_italy_bushes_bb/t_italy_bushes_bb_b.color.png",
+    "normalMap": "/assets/materials/foliage/bush/t_italy_bushes_bb/t_italy_bushes_bb_nm.normal.png",
+    "normalMapStrength": 3,
+    "opacityMap": "/assets/materials/foliage/bush/t_italy_bushes_bb/t_italy_bushes_bb_o.data.png",
+    "roughnessMap": "/assets/materials/foliage/bush/t_italy_bushes_bb/t_italy_bushes_bb_r.data.png"
+   },
+   {},
+   {},
+   {}
+  ],
+  "alphaRef": 88,
+  "alphaTest": true,
+  "annotation": "GRASS",
+  "class": "material",
+  "doubleSided": true,
+  "groundType": "GRASS",
+  "invertBackFaceNormals": true,
+  "mapTo": "italy_bushes_bb",
+  "materialTag0": "beamng",
+  "materialTag1": "beamng",
+  "materialTag2": "vegetation",
+  "materialTag3": "Natural",
+  "name": "italy_bushes_bb",
+  "persistentId": "8d890ab8-9b1d-49d7-a376-3a7f83ceeed7",
+  "subSurface": true,
+  "subSurfaceIntensity": 1,
+  "version": 1.5
+ },
+ "m_flowers_01": {
+  "Stages": [
+   {
+    "ambientOcclusionMap": "/assets/materials/foliage/groundcover/t_flowers_01/t_flowers_01_ao.data.png",
+    "baseColorMap": "/assets/materials/foliage/groundcover/t_flowers_01/t_flowers_01_b.color.png",
+    "normalMap": "/assets/materials/foliage/groundcover/t_flowers_01/t_flowers_01_nm.normal.png",
+    "opacityMap": "/assets/materials/foliage/groundcover/t_flowers_01/t_flowers_01_o.data.png",
+    "roughnessMap": "/assets/materials/foliage/groundcover/t_flowers_01/t_flowers_01_r.data.png"
+   },
+   {},
+   {},
+   {}
+  ],
+  "alphaRef": 5,
+  "alphaTest": true,
+  "class": "Material",
+  "doubleSided": true,
+  "dynamicCubemap": true,
+  "invertBackFaceNormals": true,
+  "mapTo": "m_flowers_01",
+  "name": "m_flowers_01",
+  "subSurface": true,
+  "subSurfaceIntensity": 1,
+  "version": 1.5
+ },
+ "m_grass_dry_01": {
+  "Stages": [
+   {
+    "ambientOcclusionMap": "/assets/materials/foliage/grass/t_grass_green_long_01/t_grass_green_long_01_ao.data.png",
+    "baseColorFactor": [
+     0.980755985,
+     0.980755985,
+     0.980755985,
+     1
+    ],
+    "baseColorMap": "/assets/materials/foliage/grass/t_grass_dry_long_01/t_grass_dry_long_01_b.color.png",
+    "normalMap": "/assets/materials/foliage/grass/t_grass_green_long_01/t_grass_green_long_01_nm.normal.png",
+    "opacityMap": "/assets/materials/foliage/grass/t_grass_green_long_01/t_grass_green_long_01_o.data.png",
+    "pixelSpecular": true,
+    "roughnessMap": "/assets/materials/foliage/grass/t_grass_green_long_01/t_grass_green_long_01_r.data.png"
+   },
+   {},
+   {},
+   {}
+  ],
+  "alphaRef": 16,
+  "alphaTest": true,
+  "annotation": "GRASS",
+  "class": "Material",
+  "doubleSided": true,
+  "groundType": "GRASS",
+  "mapTo": "m_grass_dry_01",
+  "name": "m_grass_dry_01",
+  "persistentId": "5bb18088-5ab4-467f-bb3e-b3133ceb8773",
+  "subSurface": true,
+  "subSurfaceIntensity": 1,
+  "translucentZWrite": true,
+  "version": 1.5
+ },
+ "m_grass_dry_short": {
+  "Stages": [
+   {
+    "ambientOcclusionMap": "/assets/materials/foliage/grass/t_grass_green_short_01/t_grass_green_short_01_ao.data.png",
+    "baseColorMap": "/assets/materials/foliage/grass/t_grass_dry_short_01/t_grass_dry_short_01_b.color.png",
+    "normalMap": "/assets/materials/foliage/grass/t_grass_green_short_01/t_grass_green_short_01_nm.normal.png",
+    "opacityMap": "/assets/materials/foliage/grass/t_grass_green_short_01/t_grass_green_short_01_o.data.png",
+    "roughnessMap": "/assets/materials/foliage/grass/t_grass_green_short_01/t_grass_green_short_01_r.data.png"
+   },
+   {},
+   {},
+   {}
+  ],
+  "alphaRef": 60,
+  "alphaTest": true,
+  "class": "Material",
+  "doubleSided": true,
+  "dynamicCubemap": true,
+  "mapTo": "m_grass_dry_short",
+  "name": "m_grass_dry_short",
+  "subSurface": true,
+  "subSurfaceIntensity": 1,
+  "version": 1.5
+ },
+ "m_grass_green_long_01": {
+  "Stages": [
+   {
+    "ambientOcclusionMap": "/assets/materials/foliage/grass/t_grass_green_long_01/t_grass_green_long_01_ao.data.png",
+    "baseColorMap": "/assets/materials/foliage/grass/t_grass_green_long_03/t_grass_green_long_03_b.color.png",
+    "normalMap": "/assets/materials/foliage/grass/t_grass_green_long_01/t_grass_green_long_01_nm.normal.png",
+    "opacityMap": "/assets/materials/foliage/grass/t_grass_green_long_01/t_grass_green_long_01_o.data.png",
+    "roughnessMap": "/assets/materials/foliage/grass/t_grass_green_long_01/t_grass_green_long_01_r.data.png"
+   },
+   {},
+   {},
+   {}
+  ],
+  "alphaRef": 25,
+  "alphaTest": true,
+  "class": "Material",
+  "doubleSided": true,
+  "dynamicCubemap": true,
+  "mapTo": "m_grass_green_long_01",
+  "name": "m_grass_green_long_01",
+  "subSurface": true,
+  "subSurfaceIntensity": 1,
+  "version": 1.5
+ },
+ "m_grass_green_short_01": {
+  "Stages": [
+   {
+    "ambientOcclusionMap": "/assets/materials/foliage/grass/t_grass_green_short_01/t_grass_green_short_01_ao.data.png",
+    "baseColorMap": "/assets/materials/foliage/grass/t_grass_green_short_02/t_grass_green_short_02_b.color.png",
+    "normalMap": "/assets/materials/foliage/grass/t_grass_green_short_01/t_grass_green_short_01_nm.normal.png",
+    "opacityMap": "/assets/materials/foliage/grass/t_grass_green_short_01/t_grass_green_short_01_o.data.png",
+    "roughnessMap": "/assets/materials/foliage/grass/t_grass_green_short_01/t_grass_green_short_01_r.data.png"
+   },
+   {},
+   {},
+   {}
+  ],
+  "alphaRef": 60,
+  "alphaTest": true,
+  "class": "Material",
+  "doubleSided": true,
+  "dynamicCubemap": true,
+  "mapTo": "m_grass_green_short_01",
+  "name": "m_grass_green_short_01",
+  "subSurface": true,
+  "subSurfaceIntensity": 1,
+  "version": 1.5
+ },
+ "m_jv_dry_grass": {
+  "Stages": [
+   {
+    "ambientOcclusionMap": "/assets/materials/foliage/grass/t_jv_dry_grass/t_jv_dry_grass_ao.data.png",
+    "baseColorMap": "/assets/materials/foliage/grass/t_jv_dry_grass/t_jv_dry_grass_b.color.png",
+    "normalMap": "/assets/materials/foliage/grass/t_jv_dry_grass/t_jv_dry_grass_nm.normal.png",
+    "opacityMap": "/assets/materials/foliage/grass/t_jv_dry_grass/t_jv_dry_grass_o.data.png",
+    "roughnessMap": "/assets/materials/foliage/grass/t_jv_dry_grass/t_jv_dry_grass_r.data.png"
+   },
+   {},
+   {},
+   {}
+  ],
+  "alphaRef": 76,
+  "alphaTest": true,
+  "class": "Material",
+  "doubleSided": true,
+  "dynamicCubemap": true,
+  "invertBackFaceNormals": true,
+  "mapTo": "m_jv_dry_grass",
+  "name": "m_jv_dry_grass",
+  "subSurface": true,
+  "subSurfaceIntensity": 1,
+  "version": 1.5
+ },
+ "m_utah_dry_grass": {
+  "Stages": [
+   {
+    "ambientOcclusionMap": "/assets/materials/foliage/grass/t_utah_dry_grass/t_utah_dry_grass_ao.data.png",
+    "baseColorMap": "/assets/materials/foliage/grass/t_utah_dry_grass/t_utah_dry_grass_b.color.png",
+    "normalMap": "/assets/materials/foliage/grass/t_utah_dry_grass/t_utah_dry_grass_nm.normal.png",
+    "normalMapStrength": 0.5,
+    "opacityMap": "/assets/materials/foliage/grass/t_utah_dry_grass/t_utah_dry_grass_o.data.png",
+    "roughnessMap": "/assets/materials/foliage/grass/t_utah_dry_grass/t_utah_dry_grass_r.data.png"
+   },
+   {},
+   {},
+   {}
+  ],
+  "alphaRef": 110,
+  "alphaTest": true,
+  "class": "Material",
+  "doubleSided": true,
+  "dynamicCubemap": true,
+  "invertBackFaceNormals": true,
+  "mapTo": "m_utah_dry_grass",
+  "name": "m_utah_dry_grass",
+  "subSurface": true,
+  "subSurfaceIntensity": 1,
+  "version": 1.5
+ }
+}

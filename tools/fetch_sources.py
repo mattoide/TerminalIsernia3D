@@ -13,7 +13,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 UA = {"User-Agent": "TerminalIsernia-mod-build/1.0"}
 
 CC0 = {"PavingStones036": "4K-JPG", "PavingStones099": "4K-JPG", "Asphalt031": "4K-JPG", "Asphalt026C": "2K-JPG",
-       "PaintedPlaster018": "2K-JPG", "Concrete035": "2K-JPG", "Concrete040": "2K-JPG"}
+       "PaintedPlaster018": "2K-JPG", "Concrete035": "2K-JPG", "Concrete026": "2K-JPG", "Plaster007": "2K-JPG"}
 BBOX = (41.578, 14.212, 41.631, 14.281)
 OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.private.coffee/api/interpreter",
             "https://z.overpass-api.de/api/interpreter"]

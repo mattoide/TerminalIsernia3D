@@ -32,8 +32,10 @@ def package():
 
 if __name__ == "__main__":
     run(BLENDER, "-b", "src/blender/terminal.blend", "--python", "tools/blender_export.py", "--", "build/shapes", "build/export_meta.json")
+    run(BLENDER, "-b", "--factory-startup", "--python", "tools/blender_props.py", "--", "build/shapes")
     run(PY, "tools/build_textures.py")
     run(PY, "tools/build_terrain.py")
+    run(PY, "tools/build_backdrop.py")
     run(PY, "tools/build_level.py")
     run(PY, "tools/validate.py")
     if "--zip" in sys.argv:

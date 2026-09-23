@@ -1,0 +1,228 @@
+{
+ "repair_patch_decal": {
+  "name": "repair_patch_decal",
+  "class": "DecalData",
+  "persistentId": "4515e977-c3ce-4c32-b862-a21bc879b2dd",
+  "fadeEndPixelSize": 40,
+  "fadeStartPixelSize": 35,
+  "frame": 3,
+  "material": "m_asphalt_repair_patch_decal",
+  "randomize": true,
+  "renderPriority": 50,
+  "size": 3.5,
+  "texCols": 2,
+  "texRows": 2,
+  "textureCoordCount": 3,
+  "textureCoords": [
+   [
+    0,
+    0,
+    0.5,
+    0.5
+   ],
+   [
+    0.5,
+    0,
+    0.5,
+    0.5
+   ],
+   [
+    0,
+    0.5,
+    0.5,
+    0.5
+   ],
+   [
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  ]
+ },
+ "pothole_decal": {
+  "name": "pothole_decal",
+  "class": "DecalData",
+  "persistentId": "0e989480-710b-47a6-9d96-5cd7f99cf7c4",
+  "fadeEndPixelSize": 50,
+  "fadeStartPixelSize": 45,
+  "material": "m_asphalt_pothole_decal",
+  "randomize": true,
+  "size": 2,
+  "texCols": 2,
+  "texRows": 2,
+  "textureCoordCount": 3,
+  "textureCoords": [
+   [
+    0,
+    0,
+    0.5,
+    0.5
+   ],
+   [
+    0.5,
+    0,
+    0.5,
+    0.5
+   ],
+   [
+    0,
+    0.5,
+    0.5,
+    0.5
+   ],
+   [
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ]
+  ]
+ },
+ "eca_decals_concrete_damage_decal": {
+  "name": "eca_decals_concrete_damage_decal",
+  "class": "DecalData",
+  "persistentId": "b54a99d9-16bc-437f-908d-2a0597047fa2",
+  "fadeEndPixelSize": 60,
+  "fadeStartPixelSize": 52,
+  "material": "eca_decals_concrete_damage",
+  "renderPriority": 60,
+  "size": 8.5,
+  "textureCoordCount": 0
+ },
+ "italy_ground_parts_decal": {
+  "name": "italy_ground_parts_decal",
+  "class": "DecalData",
+  "persistentId": "6338ee57-471d-40f5-92dc-4336b9721f19",
+  "fadeEndPixelSize": 60,
+  "fadeStartPixelSize": 50,
+  "frame": 2,
+  "material": "italy_ground_parts",
+  "order_simset": "-1082130432",
+  "renderPriority": 40,
+  "size": 1,
+  "texCols": 2,
+  "texRows": 2,
+  "textureCoordCount": 3,
+  "textureCoords": [
+   [
+    0,
+    0,
+    0.5,
+    0.5
+   ],
+   [
+    0.5,
+    0,
+    0.5,
+    0.5
+   ],
+   [
+    0,
+    0.5,
+    0.5,
+    0.5
+   ],
+   [
+    0.5,
+    0.5,
+    0.5,
+    0.5
+   ],
+   [
+    0,
+    0.5,
+    0.5,
+    0.25
+   ],
+   [
+    0.5,
+    0.5,
+    0.5,
+    0.25
+   ],
+   [
+    0,
+    0.75,
+    0.5,
+    0.25
+   ],
+   [
+    0.5,
+    0.75,
+    0.5,
+    0.25
+   ],
+   [
+    0,
+    0.5,
+    0.25,
+    0.25
+   ],
+   [
+    0.25,
+    0.5,
+    0.25,
+    0.25
+   ],
+   [
+    0.5,
+    0.5,
+    0.25,
+    0.25
+   ],
+   [
+    0.75,
+    0.5,
+    0.25,
+    0.25
+   ],
+   [
+    0,
+    0.75,
+    0.25,
+    0.25
+   ],
+   [
+    0.25,
+    0.75,
+    0.25,
+    0.25
+   ],
+   [
+    0.5,
+    0.75,
+    0.25,
+    0.25
+   ],
+   [
+    0.75,
+    0.75,
+    0.25,
+    0.25
+   ]
+  ]
+ },
+ "nat_decals_fallen_leaves_01_decal": {
+  "name": "nat_decals_fallen_leaves_01_decal",
+  "class": "DecalData",
+  "persistentId": "75f8fc18-32ab-4c47-9042-15f922bbc2fe",
+  "fadeEndPixelSize": 60,
+  "fadeStartPixelSize": 52,
+  "material": "nat_decals_fallen_leaves",
+  "renderPriority": 20,
+  "size": 4,
+  "textureCoordCount": 0
+ },
+ "ind_stuff_02": {
+  "name": "ind_stuff_02",
+  "class": "DecalData",
+  "persistentId": "0d448e00-1122-4983-8658-bd9b356744ab",
+  "fadeEndPixelSize": 60,
+  "fadeStartPixelSize": 50,
+  "material": "ind_decal_stuff_02",
+  "renderPriority": 30,
+  "size": 7,
+  "textureCoordCount": 0
+ }
+}

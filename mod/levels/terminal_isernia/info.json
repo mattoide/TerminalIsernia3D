@@ -1,0 +1,38 @@
+{
+  "title": "Terminal Isernia",
+  "description": "L'ex terminal bus di Isernia (localita' Le Piane), ricostruito in scala reale: altimetria vera, strade e boschi da OpenStreetMap, materiali PBR fotografici. Perfetto per sgommare.",
+  "previews": [
+    "terminal_isernia_preview.jpg",
+    "terminal_isernia_preview_aereo.jpg",
+    "terminal_isernia_preview_piazzale.jpg",
+    "terminal_isernia_preview_notte.jpg"
+  ],
+  "size": [
+    4096,
+    4096
+  ],
+  "biome": "Collina appenninica",
+  "roads": "Piazzale in asfalto, strade comunali",
+  "suitablefor": "Drift, sgommate, giro libero",
+  "features": "Terreno reale 4 km + orizzonte 33 km, luci notturne",
+  "isAuxiliary": false,
+  "authors": "Matto",
+  "defaultSpawnPointName": "spawn_default",
+  "spawnPoints": [
+    {
+      "translationId": "Piazzale",
+      "objectname": "spawn_default",
+      "preview": "terminal_isernia_preview.jpg"
+    },
+    {
+      "translationId": "Edificio",
+      "objectname": "spawn_edificio",
+      "preview": "terminal_isernia_preview.jpg"
+    },
+    {
+      "translationId": "Ingresso",
+      "objectname": "spawn_ingresso",
+      "preview": "terminal_isernia_preview.jpg"
+    }
+  ]
+}

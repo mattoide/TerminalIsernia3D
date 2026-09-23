@@ -1,0 +1,198 @@
+{
+ "eca_decals_concrete_damage": {
+  "name": "eca_decals_concrete_damage",
+  "mapTo": "eca_decals_concrete_damage",
+  "class": "Material",
+  "persistentId": "bc970bd7-f5f0-4d57-8199-ae0b8981a72f",
+  "Stages": [
+   {
+    "ambientOcclusionMap": "/levels/italy/art/decals/t_concrete_damage_decal_ao.data.png",
+    "baseColorMap": "/levels/italy/art/decals/t_concrete_damage_decal_b.color.png",
+    "normalMap": "/levels/italy/art/decals/t_concrete_damage_decal_nm.normal.png",
+    "opacityMap": "/levels/italy/art/decals/t_concrete_damage_decal_o.data.png",
+    "roughnessMap": "/levels/italy/art/decals/t_concrete_damage_decal_r.data.png"
+   },
+   {},
+   {},
+   {}
+  ],
+  "annotation": "ASPHALT",
+  "materialTag0": "decal",
+  "materialTag1": "Industrial",
+  "materialTag2": "beamng",
+  "translucent": true,
+  "translucentZWrite": true,
+  "version": 1.5
+ },
+ "ind_decal_stuff_02": {
+  "name": "ind_decal_stuff_02",
+  "mapTo": "ind_decal_stuff_02",
+  "class": "Material",
+  "persistentId": "2a593490-9c3e-4e39-94c3-0ac5847b2172",
+  "Stages": [
+   {
+    "ambientOcclusionMap": "/levels/italy/art/decals/t_industrial_stuff_02_decal_ao.data.png",
+    "baseColorMap": "/levels/italy/art/decals/t_industrial_stuff_02_decal_b.color.png",
+    "metallicFactor": 1,
+    "metallicMap": "/levels/italy/art/decals/t_industrial_stuff_02_decal_m.data.png",
+    "normalMap": "/levels/italy/art/decals/t_industrial_stuff_02_decal_nm.normal.png",
+    "opacityMap": "/levels/italy/art/decals/t_industrial_stuff_02_decal_o.data.png",
+    "roughnessMap": "/levels/italy/art/decals/t_industrial_stuff_02_decal_r.data.png"
+   },
+   {
+    "metallicFactor": null
+   },
+   {
+    "metallicFactor": null
+   },
+   {
+    "metallicFactor": null
+   }
+  ],
+  "annotation": "ASPHALT",
+  "materialTag0": "decal",
+  "materialTag1": "Industrial",
+  "materialTag2": "beamng",
+  "translucent": true,
+  "translucentZWrite": true,
+  "version": 1.5
+ },
+ "italy_ground_parts": {
+  "name": "italy_ground_parts",
+  "mapTo": "italy_ground_parts",
+  "class": "Material",
+  "persistentId": "a02dfebb-83a0-4c08-bc11-3e00b15dab83",
+  "Stages": [
+   {
+    "ambientOcclusionMap": "/levels/italy/art/decals/t_manhole_01_decal_ao.data.png",
+    "baseColorMap": "/levels/italy/art/decals/t_manhole_01_decal_b.color.png",
+    "metallicFactor": 0.5,
+    "metallicMap": "/levels/italy/art/decals/t_manhole_01_decal_m.data.png",
+    "normalMap": "/levels/italy/art/decals/t_manhole_01_decal_nm.normal.png",
+    "opacityMap": "/levels/italy/art/decals/t_manhole_01_decal_o.data.png",
+    "roughnessMap": "/levels/italy/art/decals/t_manhole_01_decal_r.data.png"
+   },
+   {
+    "metallicFactor": null
+   },
+   {
+    "metallicFactor": null
+   },
+   {
+    "metallicFactor": null
+   }
+  ],
+  "alphaRef": 114,
+  "alphaTest": true,
+  "annotation": "ASPHALT",
+  "materialTag0": "decal",
+  "materialTag1": "italy",
+  "materialTag2": "beamng",
+  "translucent": true,
+  "translucentZWrite": true,
+  "version": 1.5
+ },
+ "m_asphalt_pothole_decal": {
+  "name": "m_asphalt_pothole_decal",
+  "mapTo": "m_asphalt_pothole_decal",
+  "class": "Material",
+  "persistentId": "857b3680-7724-4d7f-b878-850886be21cc",
+  "Stages": [
+   {
+    "ambientOcclusionMap": "/levels/italy/art/decals/t_asphalt_pothole_decal_ao.data.png",
+    "baseColorMap": "/levels/italy/art/decals/t_asphalt_pothole_decal_b.color.png",
+    "normalMap": "/levels/italy/art/decals/t_asphalt_pothole_decal_nm.normal.png",
+    "opacityMap": "/levels/italy/art/decals/t_asphalt_pothole_decal_o.data.png",
+    "roughnessMap": "/levels/italy/art/decals/t_asphalt_pothole_decal_r.data.png"
+   },
+   {},
+   {},
+   {}
+  ],
+  "annotation": "ASPHALT",
+  "castShadows": false,
+  "materialTag0": "beamng",
+  "materialTag1": "decal",
+  "materialTag2": "RoadAndPath",
+  "translucent": true,
+  "translucentZWrite": true,
+  "version": 1.5
+ },
+ "m_asphalt_repair_patch_decal": {
+  "name": "m_asphalt_repair_patch_decal",
+  "mapTo": "m_asphalt_repair_patch_decal",
+  "class": "Material",
+  "persistentId": "756e6bc2-767f-4e8f-8a0e-a9cc1898bd95",
+  "Stages": [
+   {
+    "ambientOcclusionMap": "/levels/italy/art/decals/t_asphalt_repair_patch_decal_ao.data.png",
+    "baseColorFactor": [
+     0.883816004,
+     0.883807003,
+     0.883807003,
+     1
+    ],
+    "baseColorMap": "/levels/italy/art/decals/t_asphalt_repair_patch_decal_b.color.png",
+    "detailNormalMap": "/levels/italy/art/road/detailed_normals/t_asphalt_detail_02_nm.normal.png",
+    "detailScale": [
+     4,
+     4
+    ],
+    "normalMap": "/levels/italy/art/decals/t_asphalt_repair_patch_decal_nm.normal.png",
+    "opacityFactor": 0.949999988,
+    "opacityMap": "/levels/italy/art/decals/t_asphalt_repair_patch_decal_o.data.png",
+    "roughnessMap": "/levels/italy/art/decals/t_asphalt_repair_patch_decal_r.data.png"
+   },
+   {
+    "baseColorFactor": null,
+    "detailScale": null,
+    "opacityFactor": null
+   },
+   {
+    "baseColorFactor": null,
+    "detailScale": null,
+    "opacityFactor": null
+   },
+   {
+    "baseColorFactor": null,
+    "detailScale": null,
+    "opacityFactor": null
+   }
+  ],
+  "alphaRef": 255,
+  "annotation": "ASPHALT",
+  "castShadows": false,
+  "dynamicCubemap": true,
+  "materialTag0": "RoadAndPath",
+  "materialTag1": "beamng",
+  "materialTag2": "decal",
+  "translucent": true,
+  "translucentZWrite": true,
+  "version": 1.5
+ },
+ "nat_decals_fallen_leaves": {
+  "name": "nat_decals_fallen_leaves",
+  "mapTo": "nat_decals_fallen_leaves",
+  "class": "Material",
+  "persistentId": "cdef2e95-3248-4990-be48-fdc47b7d6f22",
+  "Stages": [
+   {
+    "ambientOcclusionMap": "/levels/italy/art/decals/t_fallen_leaves_decal_ao.data.png",
+    "baseColorMap": "/levels/italy/art/decals/t_fallen_leaves_decal_b.color.png",
+    "normalMap": "/levels/italy/art/decals/t_fallen_leaves_decal_nm.normal.png",
+    "opacityMap": "/levels/italy/art/decals/t_fallen_leaves_decal_o.data.png",
+    "roughnessMap": "/levels/italy/art/decals/t_fallen_leaves_decal_r.data.png"
+   },
+   {},
+   {},
+   {}
+  ],
+  "annotation": "NATURE",
+  "materialTag0": "decal",
+  "materialTag1": "beamng",
+  "materialTag2": "Natural",
+  "translucent": true,
+  "translucentZWrite": true,
+  "version": 1.5
+ }
+}

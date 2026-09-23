@@ -1,0 +1,22 @@
+{
+  "binaryFormat": "version(char), size(unsigned int), heightMap(heightMapSize * heightMapItemSize), layerMap(layerMapSize * layerMapItemSize), layerTextureMap(layerMapSize * layerMapItemSize), materialNames",
+  "datafile": "/levels/terminal_isernia/terrain_main.ter",
+  "heightMapItemSize": 2,
+  "heightMapSize": 4194304,
+  "heightmapImage": "/levels/terminal_isernia/terrain_main.terrainheightmap.png",
+  "layerMapItemSize": 1,
+  "layerMapSize": 4194304,
+  "materials": [
+    "ti_t_grass",
+    "ti_t_grass_dry",
+    "ti_t_forest",
+    "ti_t_dirt",
+    "ti_t_gravel",
+    "ti_t_asphalt",
+    "ti_t_rock",
+    "ti_t_farmland",
+    "ti_t_weeds"
+  ],
+  "size": 2048,
+  "version": 9
+}

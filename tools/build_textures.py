@@ -109,7 +109,7 @@ def pavers_moss_color(col, base, res):
 def asphalt_breakup_mask(res=2048):
     """maschera macro (UV1 sul piazzale, 230 m): zone rappezzate/crepate e macchie."""
     n = fbm(res, octaves=7, base_cells=3, seed=7)
-    patches = np.clip((n - 0.58) * 6, 0, 1)
+    patches = np.clip((n - 0.52) * 7, 0, 1)
     n2 = fbm(res, octaves=5, base_cells=12, seed=11)
     stains = np.clip((n2 - 0.7) * 5, 0, 1) * 0.5
     return np.clip(patches + stains, 0, 1)
@@ -186,14 +186,15 @@ if __name__ == "__main__":
     run = lambda k: not only or k in only
 
     if run("asphalt"):
-        cc0_set("Asphalt031", 2048, "4K", "t_ti_asphalt", dict(brightness=0.92, saturation=0.6), rough_mul=0.9, rough_add=0.08)
-        cc0_set("Asphalt026C", 2048, "2K", "t_ti_asphalt_cracked", dict(brightness=1.9, saturation=0.5, contrast=0.8), rough_add=0.02)
+        cc0_set("Asphalt031", 2048, "4K", "t_ti_asphalt", dict(brightness=0.78, saturation=0.6), rough_mul=0.9, rough_add=0.08)
+        cc0_set("Asphalt026C", 2048, "2K", "t_ti_asphalt_cracked", dict(brightness=1.3, saturation=0.5, contrast=0.85), rough_add=0.02)
         save(asphalt_breakup_mask(), "t_ti_asphalt_breakup_o.data.png", "L")
     if run("pavers"):
         cc0_set("PavingStones036", 2048, "4K", "t_ti_pavers_moss", dict(brightness=0.95, saturation=0.8), color_fn=pavers_moss_color)
-        cc0_set("PavingStones099", 2048, "4K", "t_ti_pavers", dict(brightness=0.95, saturation=0.9))
+        cc0_set("PavingStones099", 2048, "4K", "t_ti_pavers", dict(brightness=0.62, saturation=0.9, tint=(1.04, 1.0, 0.94)))
     if run("concrete"):
-        cc0_set("Concrete040", 1024, "2K", "t_ti_curb", dict(brightness=1.05, saturation=0.35))
+        cc0_set("Concrete026", 1024, "2K", "t_ti_curb", dict(brightness=1.0, saturation=0.6))
+        cc0_set("Plaster007", 1024, "2K", "t_ti_pillar", dict(brightness=0.82, saturation=0.3))
         cc0_set("Concrete035", 1024, "2K", "t_ti_roof", dict(brightness=0.9, saturation=0.6))
     if run("stone"):
         cc0_set("PaintedPlaster018", 2048, "2K", "t_ti_plaster_yellow", dict(brightness=0.95, saturation=0.75))

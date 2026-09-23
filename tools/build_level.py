@@ -21,6 +21,7 @@ T = LVP + "art/textures/"
 AS = "/assets/materials/"
 OLD_TERMINAL_OFFSET = (-0.939715743, 0.103312492, 0.165756345)   # posizione del TSStatic nel livello v0.3
 rng = np.random.default_rng(1234)
+IMPORTED = {}          # materiali copiati dai livelli ufficiali (un solo file, niente duplicati)
 
 
 def uid(s):
@@ -56,6 +57,13 @@ TDLOT, TDROAD, TRHW = M["d_lot"], M["d_road"], M["road_hw"]
 TX0, TY0, TSQ = float(M["x0"]), float(M["y0"]), float(M["sq"])
 TN = TZ.shape[0]
 TINFO = json.load(open(os.path.join(BUILD, "terrain_info.json")))
+TZF, TFARF = M["zf"], M["far_forest"]
+TXF0, TSQF = float(M["xf0"]), float(M["sqf"])
+
+
+def tzf(x, y):
+    x, y = np.atleast_1d(x), np.atleast_1d(y)
+    return ndimage.map_coordinates(TZF, [(y - TXF0) / TSQF, (x - TXF0) / TSQF], order=1, mode="nearest")
 
 
 def tsample(arr, x, y, order=1):
@@ -127,6 +135,19 @@ def pbr(name, tex=None, ground="ASPHALT", layer2=None, **kw):
     return name, m
 
 
+def reeds_mat(name, color_tex, factor):
+    G = AS + "foliage/grass/"
+    return name, {"name": name, "mapTo": name, "class": "Material", "persistentId": uid("mat/" + name), "version": 1.5,
+                  "Stages": [{"baseColorMap": G + f"{color_tex}/{color_tex}_b.color.png", "baseColorFactor": factor,
+                              "opacityMap": G + "t_grass_green_long_01/t_grass_green_long_01_o.data.png",
+                              "normalMap": G + "t_grass_green_long_01/t_grass_green_long_01_nm.normal.png",
+                              "roughnessMap": G + "t_grass_green_long_01/t_grass_green_long_01_r.data.png",
+                              "ambientOcclusionMap": G + "t_grass_green_long_01/t_grass_green_long_01_ao.data.png"}, {}, {}, {}],
+                  "alphaRef": 60, "alphaTest": True, "doubleSided": True, "invertBackFaceNormals": True, "subSurface": True,
+                  "subSurfaceIntensity": 1, "groundType": "GRASS", "annotation": "GRASS", "materialTag0": "beamng",
+                  "translucentBlendOp": "None"}
+
+
 def terminal_materials():
     det_concrete = dict(detailMap=AS + "breakup/t_detail_concrete_02/t_detail_concrete_02_detail_b.data.png",
                         detailBaseColorMapStrength=0.35, detailNormalMap=AS + "breakup/t_detail_concrete/t_detail_concrete_nm.normal.png",
@@ -148,7 +169,9 @@ def terminal_materials():
         pbr("ti_planter_soil", None, "DIRT",
             baseColorMap=AS + "terrain/forest/t_forest_ground/t_forest_ground_b.png", normalMap=AS + "terrain/forest/t_forest_ground/t_forest_ground_nm.png",
             roughnessMap=AS + "terrain/forest/t_forest_ground/t_forest_ground_r.png", ambientOcclusionMap=AS + "terrain/forest/t_forest_ground/t_forest_ground_ao.png"),
-        pbr("ti_railing", None, "METAL", **galv),
+        pbr("ti_railing", None, "METAL", baseColorMap=AS + "tileable/metal/metal_paint_peeling/paint_peeling_d.dds",
+            normalMap=AS + "tileable/metal/metal_paint_peeling/paint_peeling_n.dds", baseColorFactor=[0.42, 0.22, 0.13, 1],
+            roughnessFactor=0.75, metallicFactor=0.3),   # ringhiera verniciata marrone e arrugginita (Street View 2022)
         pbr("ti_lamp_pole", None, "METAL", baseColorFactor=[0.75, 0.76, 0.78, 1], **galv),
         pbr("ti_lamp_head", None, "METAL", baseColorFactor=[0.9, 0.88, 0.8, 1], roughnessFactor=0.25, metallicFactor=0,
             emissive=True, instanceEmissive=True, emissiveFactor=[1, 1, 1], emissiveIntensityNits=12000),
@@ -160,9 +183,19 @@ def terminal_materials():
         pbr("ti_bld_wall_front", T + "t_ti_bld_front", "ASPHALT", **det_concrete),
         pbr("ti_bld_graffiti", T + "t_ti_bld_graffiti", "ASPHALT", **det_concrete),
         pbr("ti_bld_roof", T + "t_ti_roof", "ASPHALT"),
-        pbr("ti_bld_frame", None, "METAL", baseColorMap=AS + "tileable/metal/metal_paint_peeling/paint_peeling_d.dds",
-            normalMap=AS + "tileable/metal/metal_paint_peeling/paint_peeling_n.dds", baseColorFactor=[0.42, 0.36, 0.32, 1],
-            roughnessFactor=0.7, metallicFactor=0.2),
+        pbr("ti_bld_frame", T + "t_ti_pillar", "ASPHALT", **det_concrete),   # pilastri in cemento chiaro
+        pbr("ti_canopy_steel", None, "METAL", baseColorFactor=[0.10, 0.27, 0.17, 1], **paint),
+        pbr("ti_canopy_panel", None, "PLASTIC", baseColorFactor=[0.84, 0.86, 0.80, 0.72], roughnessFactor=0.35, metallicFactor=0,
+            detailMap=AS + "breakup/t_detail_concrete_02/t_detail_concrete_02_detail_b.data.png", detailBaseColorMapStrength=0.5,
+            detailScale=[1, 1], m_translucent=True, m_translucentBlendOp="LerpAlpha", m_translucentZWrite=False,
+            m_doubleSided=True, m_castShadows=True),
+        pbr("ti_lamp_black", None, "METAL", baseColorFactor=[0.035, 0.035, 0.035, 1], **dict(paint, roughnessFactor=0.45)),
+        pbr("ti_lamp_globe", None, "PLASTIC", baseColorFactor=[0.95, 0.95, 0.92, 1], roughnessFactor=0.15, metallicFactor=0,
+            emissive=True, instanceEmissive=True, emissiveFactor=[1, 1, 1], emissiveIntensityNits=6000),
+        pbr("ti_backdrop", None, "GRASS", baseColorMap=LVP + "art/terrains/t_ti_far_base_b.png",
+            normalMap=LVP + "art/terrains/t_ti_far_base_nm.png", roughnessFactor=0.95, metallicFactor=0),
+        reeds_mat("ti_reeds", "t_grass_green_long_03", [0.58, 0.74, 0.52, 1]),
+        reeds_mat("ti_reeds_dry", "t_grass_dry_long_01", [0.78, 0.74, 0.62, 1]),
     ])
     return mats
 
@@ -174,22 +207,32 @@ def place_terminal(L):
     for f in glob.glob(os.path.join(BUILD, "shapes", "*.dae")):
         shutil.copy2(f, shp)
     json.dump(terminal_materials(), open(os.path.join(shp, "main.materials.json"), "w"), indent=1)
-    for nm in ("ti_ground", "ti_building", "ti_railing", "ti_props"):
-        L.add("terminal", {"name": nm, "class": "TSStatic", "position": [0, 0, 0], "shapeName": LVP + f"art/shapes/terminal/{nm}.dae",
-                           "collisionType": "Visible Mesh", "decalType": "Visible Mesh", "useInstanceRenderData": True})
+    for nm in ("ti_ground", "ti_building", "ti_railing", "ti_props", "ti_canopy"):
+        L.add("terminal", {"name": nm.replace("ti_", "terminal_"), "class": "TSStatic", "position": [0, 0, 0], "shapeName": LVP + f"art/shapes/terminal/{nm}.dae",
+                           "collisionType": "Visible Mesh Final", "decalType": "Visible Mesh", "useInstanceRenderData": True})
     meta = json.load(open(os.path.join(BUILD, "export_meta.json")))
     for i, lp in enumerate(meta["lamps"]):
         R = lp["rot"]
         rotl = [R[0][0], R[1][0], R[2][0], R[0][1], R[1][1], R[2][1], R[0][2], R[1][2], R[2][2]]
         light = f"ti_lamp_light_{i:02d}"
         L.add("terminal/lampioni", {"name": f"ti_lamp_{i:02d}", "class": "TSStatic", "position": lp["pos"], "rotationMatrix": rotl,
-                                    "shapeName": LVP + "art/shapes/terminal/ti_lamp.dae", "collisionType": "Visible Mesh",
+                                    "shapeName": LVP + "art/shapes/terminal/ti_lamp.dae", "collisionType": "Visible Mesh Final",
                                     "useInstanceRenderData": True, "instanceColor": [0, 0, 0, 1], "child": light})
         h = lp["head"]
         L.add("terminal/lampioni", {"name": light, "class": "SpotLight", "position": [h[0], h[1], h[2] - 0.15],
                                     "rotationMatrix": [1, 0, 0, 0, 0, -1, 0, 1, 0],     # asse Y locale verso il basso
                                     "color": [1, 0.72, 0.42, 1], "brightness": 3, "range": 22, "innerAngle": 60, "outerAngle": 125,
                                     "castShadows": i % 3 == 0, "isEnabled": False, "nightLight": True})
+    # lampioni decorativi a due globi agli angoli delle pensiline (Street View 2022)
+    for i, (mx, my, yaw) in enumerate([(88.9, -20.3, 20), (89.6, 3.9, -20)]):
+        x, y = geo.model2world(mx, my)
+        light = f"ti_globe_light_{i}"
+        L.add("terminal/lampioni", {"name": f"ti_globe_{i}", "class": "TSStatic", "position": [x, y, 0.1],
+                                    "rotationMatrix": rot_list_from_yaw(math.radians(yaw + geo.MODEL_ROT_DEG)),
+                                    "shapeName": LVP + "art/shapes/terminal/ti_lamp_globe.dae", "collisionType": "Visible Mesh Final",
+                                    "useInstanceRenderData": True, "instanceColor": [0, 0, 0, 1], "child": light})
+        L.add("terminal/lampioni", {"name": light, "class": "PointLight", "position": [x, y, 3.2], "color": [1, 0.8, 0.55, 1],
+                                    "brightness": 1.6, "radius": 12, "castShadows": False, "isEnabled": False, "nightLight": True})
     return meta
 
 
@@ -197,14 +240,18 @@ def place_terminal(L):
 FOREST_ITEMS = {
     "italy": ["holm_oak_city_small", "holm_oak_city_tall", "holm_oak_test", "cork_oak_large_1", "cork_oak_medium", "cypress_tree", "olive_tree",
               "generibush", "generibush_small", "fluffy_bush", "scraggly_bush", "scraggly_tree", "tall_plant", "tall_plant_bush", "holm_oak_bush"],
-    "east_coast_usa": ["tree_aspen_large_a", "tree_aspen_large_b", "tree_aspen_small_a", "tree_aspen_forest_a", "tree_beech_large_b",
+    "east_coast_usa": ["tree_beech_forest_group", "tree_aspen_forest_group", "tree_beech_small_forest_group", "tree_aspen_large_a", "tree_aspen_large_b", "tree_aspen_small_a", "tree_aspen_forest_a", "tree_beech_large_b",
                        "tree_beech_large_c", "tree_beech_forest_a", "tree_beech_forest_b", "tree_beech_small_b", "tree_beech_bush_a", "tree_beech_bush_b"],
-    "west_coast_usa": ["oak_dry_a", "oak_dry_b", "oak_dry_c", "oak_dry_d", "shrub_a", "shrub_c"],
+    "west_coast_usa": ["oak_a_distant", "oak_dry_a", "oak_dry_b", "oak_dry_c", "oak_dry_d", "shrub_a", "shrub_c"],
 }
 
 
 def write_forest_defs():
     items, mats = {}, {}
+    items["ti_reeds_clump"] = {"name": "ti_reeds_clump", "internalName": "ti_reeds_clump_int", "class": "ForestItemData",
+                               "persistentId": uid("fid/reeds"), "annotation": "NATURE",
+                               "shapeFile": LVP + "art/shapes/terminal/ti_reeds.dae", "windScale": 0.8, "trunkBendScale": 0.03,
+                               "branchAmp": 0.08, "detailAmp": 0.35, "detailFreq": 0.9, "mass": 1}
     for lv, names in FOREST_ITEMS.items():
         fi = va.forest_items(lv)
         for n in names:
@@ -216,7 +263,8 @@ def write_forest_defs():
     fd = os.path.join(LV, "art", "forest")
     os.makedirs(fd, exist_ok=True)
     json.dump(items, open(os.path.join(fd, "managedItemData.json"), "w"), indent=1)
-    json.dump(mats, open(os.path.join(fd, "main.materials.json"), "w"), indent=1)
+    for k, v in mats.items():
+        IMPORTED.setdefault(k, v)
     return items
 
 
@@ -254,13 +302,13 @@ def make_forest(meta):
     wpts = np.array([p for w in water for p in w]) if water else np.zeros((0, 2))
     from scipy.spatial import cKDTree
     wtree = cKDTree(wpts) if len(wpts) else None
-    lim = 1900
+    lim = 2030
     def forest_mask(X, Y):
         f = tsample(TFOREST.astype(np.float32), X, Y, 0) > 0.5
         f &= tsample(TDLOT, X, Y) > 7
         f &= tsample(TDROAD, X, Y) > tsample(TRHW, X, Y) + 2.5
         return f
-    for (r0, r1, sp) in ((0, 500, 5.5), (500, 1100, 8.0), (1100, lim, 11.0)):
+    for (r0, r1, sp) in ((0, 500, 5.5), (500, 1100, 8.0), (1100, 3000, 11.0)):
         X, Y = poisson(forest_mask, -lim, -lim, lim, lim, sp)
         d = np.hypot(X, Y); sel = (d >= r0) & (d < r1); X, Y = X[sel], Y[sel]
         dw = wtree.query(np.stack([X, Y], 1))[0] if wtree else np.full(len(X), 1e4)
@@ -308,6 +356,31 @@ def make_forest(meta):
     k = olive_mask(X, Y)
     for x, y in zip(X[k], Y[k]):
         put("olive_tree", x + rng.uniform(-0.4, 0.4), y + rng.uniform(-0.4, 0.4), 0.8, 1.1)
+    # 4b) canneto (Arundo) lungo i bordi del piazzale, come in Street View 2022
+    def reed_mask(X, Y):
+        d = tsample(TDLOT, X, Y)
+        dr = tsample(TDROAD, X, Y); hw = tsample(TRHW, X, Y)
+        mx = np.array([geo.world2model(x, y)[0] for x, y in zip(X, Y)]) if len(X) else np.zeros(0)
+        n = np.sin(X * 0.21) * np.cos(Y * 0.17) + np.sin(X * 0.05 + Y * 0.07)
+        return (d > 2.0) & (d < 11 + 4 * n) & (dr > hw + 1.2) & (mx > -45) & (n > -1.1)
+    X, Y = poisson(reed_mask, -250, -250, 250, 250, 1.6)
+    for x, y in zip(X, Y):
+        put("ti_reeds_clump", x, y, 0.8, 1.25, z_off=0.0)
+    # 5) boschi sulle colline dell'orizzonte (fuori dal terreno principale), modelli leggeri per la distanza
+    far_kinds = ["oak_a_distant", "tree_beech_forest_group", "tree_aspen_forest_group", "oak_a_distant", "tree_beech_small_forest_group"]
+    for (r0, r1, sp) in ((2040, 3200, 26.0), (3200, 5000, 42.0)):
+        X, Y = poisson(lambda X, Y: np.ones(len(X), bool), -r1, -r1, r1, r1, sp)
+        cheb = np.maximum(np.abs(X), np.abs(Y)); keep = (cheb >= max(r0, 2040)) & (cheb < r1)
+        X, Y = X[keep], Y[keep]
+        f = ndimage.map_coordinates(TFARF.astype(np.float32), [(Y - TXF0) / TSQF, (X - TXF0) / TSQF], order=0, mode="nearest") > 0.5
+        X, Y = X[f], Y[f]
+        Z = tzf(X, Y) - 0.3
+        for x, y, z, uu in zip(X, Y, Z, rng.random(len(X))):
+            k = far_kinds[int(uu * len(far_kinds)) % len(far_kinds)]
+            a = rng.uniform(0, 2 * math.pi)
+            inst.setdefault(k, []).append({"ctxid": 0, "pos": [round(float(x), 2), round(float(y), 2), round(float(z), 2)],
+                                           "rotationMatrix": [round(v, 5) for v in rot_list_from_yaw(a)],
+                                           "scale": round(float(rng.uniform(0.9, 1.3)), 3), "type": k})
     fdir = os.path.join(LV, "forest")
     if os.path.isdir(fdir):
         shutil.rmtree(fdir)
@@ -347,7 +420,7 @@ def groundcover(L):
                 d["position"] = [0, 0, 0]
                 d.pop("__parent", None); d.pop("persistentId", None)
                 mats_needed.add(d.get("material"))
-                L.add("vegetation/groundcover", d)
+                L.add("vegetation/erba", d)
     gm = json.loads(z.read("levels/italy/art/shapes/groundcover/main.materials.json"))
     out = {k: v for k, v in gm.items() if v.get("mapTo", k) in mats_needed or k in mats_needed}
     d = os.path.join(LV, "art", "shapes", "groundcover"); os.makedirs(d, exist_ok=True)
@@ -357,7 +430,7 @@ def groundcover(L):
 # ====================================================================== strade (decal su terreno)
 ROAD_MATS = ["italy_road_edge_damage_wide_grassy", "italy_road_markings_line_thin", "italy_road_markings_center_line_broken_white",
              "italy_road_cracks", "italy_asphalt_overlay_light", "m_road_variation_01", "italy_road_edge_damage", "dirt_road_edge_grassy_d",
-             "m_dirt_road_gravels", "italy_leaf_litter", "skidmarks_01", "skidmarks_02"]
+             "m_dirt_road_gravels", "italy_leaf_litter", "skidmarks_01", "skidmarks_02", "italy_road_markings_line_thin_yellow"]
 
 
 def roads(L):
@@ -399,14 +472,16 @@ def roads(L):
             road("m_dirt_road_gravels", P, hw * 2, renderPriority=6, textureLength=7, **ai)
             continue
         road("m_road_variation_01", P, hw * 2, renderPriority=25, textureLength=112, **ai)
-        road("italy_asphalt_overlay_light", P, hw * 2 - 0.4, renderPriority=20, textureLength=112)
+        near = dist < 900                     # dettagli solo vicino al terminal (tempi di caricamento)
+        if near:
+            road("italy_asphalt_overlay_light", P, hw * 2 - 0.4, renderPriority=20, textureLength=112)
         for s in (-1, 1):
             road("italy_road_edge_damage_wide_grassy", offset_line(P, s * (hw + 0.4)), 1.6, textureLength=8, distanceFade=[90, 30])
-        if r["type"] in ("primary", "secondary", "tertiary", "trunk", "unclassified") and hw >= 3:
+        if near and r["type"] in ("primary", "secondary", "tertiary", "trunk", "unclassified") and hw >= 3:
             for s in (-1, 1):
                 road("italy_road_markings_line_thin", offset_line(P, s * (hw - 0.35)), 0.15, renderPriority=23, textureLength=4, distanceFade=[80, 40])
             road("italy_road_markings_center_line_broken_white", P, 0.15, renderPriority=24, textureLength=12, distanceFade=[80, 40])
-        if rng.random() < 0.5:
+        if near and rng.random() < 0.5:
             road("italy_road_cracks", P, hw * 2 - 0.6, renderPriority=26, textureLength=16, distanceFade=[80, 40])
     print("decal roads:", cnt)
 
@@ -524,8 +599,8 @@ def buildings(L):
     mats = {}
     for shp in used:
         va.collect(f"/levels/italy/art/shapes/buildings/{shp}.dae", "italy", mats)
-    d = os.path.join(LV, "art", "shapes", "buildings"); os.makedirs(d, exist_ok=True)
-    json.dump(mats, open(os.path.join(d, "main.materials.json"), "w"), indent=1)
+    for k, v in mats.items():
+        IMPORTED.setdefault(k, v)
     print("edifici:", placed, "modelli:", len(used), "materiali:", len(mats))
 
 
@@ -548,6 +623,7 @@ def lot_details(L, meta):
     from build_terrain import dae_triangles, Raster
     R = Raster(-200, -200, 400, 400, 0.5)
     asph = R.polys([[tuple(p[:2]) for p in tri] for mat, tri in dae_triangles(os.path.join(BUILD, "shapes", "ti_ground.dae")) if mat == "ti_asphalt"], 1) > 0
+    asph_full = asph.copy()
     asph = ndimage.binary_erosion(asph, iterations=6)          # almeno 3 m dai cordoli
     ys, xs = np.nonzero(asph)
 
@@ -560,13 +636,13 @@ def lot_details(L, meta):
         a = rng.uniform(0, 2 * math.pi)
         inst.setdefault(name, []).append([int(rect), round(float(size), 3), 0, round(float(x), 3), round(float(y), 3), z, 0, 0, 1,
                                           round(math.cos(a), 5), round(math.sin(a), 5), 0, int(rng.integers(1, 2 ** 31))])
-    for x, y in zip(*rnd_pts(34)):
-        dec("repair_patch_decal", x, y, rng.uniform(2.2, 5.0), rng.integers(0, 4))
-    for x, y in zip(*rnd_pts(9)):
+    for x, y in zip(*rnd_pts(60)):
+        dec("repair_patch_decal", x, y, rng.uniform(2.2, 5.5), rng.integers(0, 4))
+    for x, y in zip(*rnd_pts(14)):
         dec("pothole_decal", x, y, rng.uniform(0.7, 1.5), rng.integers(0, 4))
     for x, y in zip(*rnd_pts(6)):
         dec("eca_decals_concrete_damage_decal", x, y, rng.uniform(3, 6))
-    for x, y in zip(*rnd_pts(22)):
+    for x, y in zip(*rnd_pts(40)):
         dec("ind_stuff_02", x, y, rng.uniform(1.5, 3.5))                # macchie d'olio
     for x, y in zip(*rnd_pts(8)):
         dec("italy_ground_parts_decal", x, y, 0.9, rng.integers(0, 4))   # tombini/caditoie
@@ -577,6 +653,19 @@ def lot_details(L, meta):
                           "position.z, normal.x, normal.y, normal.z, tangent.x, tangent.y, tangent.z, uid", "version": 2},
                "instances": inst}, open(os.path.join(LV, "main.decals.json"), "w"), indent=1)
 
+    # crepe lunghe: giunzione centrale del piazzale (Street View 2022) e crepe sparse
+    def crack(P, w=1.2):
+        L.add("piazzale/crepe", {"class": "DecalRoad", "position": P[0], "material": "italy_road_cracks",
+                                 "nodes": [[round(p[0], 3), round(p[1], 3), 0.01, w] for p in P], "overObjects": True,
+                                 "improvedSpline": True, "renderPriority": 26, "textureLength": 16, "decalBias": 0.0015,
+                                 "startEndFade": [2, 2], "distanceFade": [90, 40], "drivability": -1})
+    seam = [geo.model2world(mx, 1.5 + 0.6 * math.sin(mx / 9.0)) for mx in np.arange(-85, 112, 6)]
+    crack(seam, 1.6)
+    for k in range(26):
+        x, y = rnd_pts(1); x, y = float(x[0]), float(y[0])
+        a = rng.uniform(0, math.pi); Lc = rng.uniform(8, 26)
+        P = [[x + math.cos(a) * t + rng.normal(0, 0.4), y + math.sin(a) * t + rng.normal(0, 0.4)] for t in np.linspace(0, Lc, 5)]
+        crack(P, rng.uniform(0.9, 1.6))
     # sgommate: cerchi, otto e archi nelle zone libere (DecalRoad sopra la mesh)
     def ring(cx, cy, r, turns=1.0, wobble=0.6, n=40):
         t = np.linspace(0, 2 * math.pi * turns, int(n * turns) + 1)
@@ -600,7 +689,125 @@ def lot_details(L, meta):
                                     "nodes": [[*map(lambda v: round(float(v), 3), p), 1.6] for p in P], "overObjects": True,
                                     "improvedSpline": True, "renderPriority": 30, "textureLength": 10, "decalBias": 0.0015,
                                     "startEndFade": [3, 3], "distanceFade": [150, 60], "drivability": -1})
-    print("decal:", {k: len(v) for k, v in inst.items()})
+    # strisce gialle sbiadite dei posti auto lungo il marciapiede nord-ovest (Street View 2022)
+    def is_asph(mx, my):
+        x, y = geo.model2world(mx, my)
+        i, j = int((x - R.x0) / R.res), int((y - R.y0) / R.res)
+        return 0 <= i < R.w and 0 <= j < R.h and asph_full[j, i]
+    n_st = 0
+    for mx in np.arange(4, 104, 2.6):
+        my = next((yy for yy in np.arange(46, 10, -0.25) if is_asph(mx, yy)), None)
+        if my is None or rng.random() < 0.12:                          # qualche striscia ormai cancellata
+            continue
+        a, b = geo.model2world(mx, my - 0.4), geo.model2world(mx, my - 5.2)
+        L.add("piazzale/segnaletica", {"class": "DecalRoad", "position": [a[0], a[1], 0.01],
+                                       "material": "italy_road_markings_line_thin_yellow",
+                                       "nodes": [[a[0], a[1], 0.01, 0.12], [b[0], b[1], 0.01, 0.12]], "overObjects": True,
+                                       "renderPriority": 23, "textureLength": 4, "decalBias": 0.0015, "distanceFade": [80, 40],
+                                       "drivability": -1})
+        n_st += 1
+    print("decal:", {k: len(v) for k, v in inst.items()}, "strisce gialle:", n_st)
+
+
+# ====================================================================== arredo urbano
+def street_furniture(L, meta):
+    lit = 0; poles = 0
+    types = ("residential", "tertiary", "unclassified", "secondary", "primary", "trunk_link", "primary_link", "living_street")
+    for ri, r in enumerate(TINFO["roads"]):
+        if r["type"] not in types:
+            continue
+        P = np.array(r["pts"])[:, :2]
+        if len(P) < 2 or np.hypot(P[:, 0], P[:, 1]).min() > 700:
+            continue
+        seg = np.hypot(*np.diff(P, axis=0).T); Ls = np.concatenate([[0], np.cumsum(seg)])
+        side = 1 if ri % 2 else -1
+        for s in np.arange(12, Ls[-1] - 5, 31.0):
+            x, y = np.interp(s, Ls, P[:, 0]), np.interp(s, Ls, P[:, 1])
+            k = min(np.searchsorted(Ls, s), len(P) - 1)
+            t = P[k] - P[max(k - 1, 0)]; t = t / (np.hypot(*t) + 1e-9)
+            n = np.array([-t[1], t[0]]) * side
+            px, py = x + n[0] * (r["hw"] + 1.3), y + n[1] * (r["hw"] + 1.3)
+            if np.hypot(px, py) > 700 or tsample(TDLOT, px, py)[0] < 10:
+                continue
+            if tsample(TDROAD, px, py)[0] < r["hw"] + 0.8:      # un'altra strada troppo vicina (incroci)
+                continue
+            d = -n                                              # verso la carreggiata
+            a = math.atan2(d[0], -d[1])
+            z = float(tz(px, py)[0])
+            name = f"lamp_street_{poles:03d}"
+            obj = {"name": name, "class": "TSStatic", "position": [round(px, 3), round(py, 3), round(z, 3)],
+                   "rotationMatrix": [round(v, 6) for v in rot_list_from_yaw(a)], "annotation": "POLE",
+                   "shapeName": "/levels/italy/art/shapes/buildings/italy_light_single.dae", "useInstanceRenderData": True}
+            if np.hypot(px, py) < 350:
+                light = f"lamp_street_light_{poles:03d}"
+                obj["child"] = light
+                hx, hy = px + d[0] * 0.45, py + d[1] * 0.45
+                L.add("dintorni/illuminazione", {"name": light, "class": "SpotLight", "position": [round(hx, 3), round(hy, 3), round(z + 8.1, 3)],
+                                                 "rotationMatrix": [1, 0, 0, 0, 0, -1, 0, 1, 0], "color": [1, 0.75, 0.48, 1],
+                                                 "brightness": 3, "range": 20, "innerAngle": 70, "outerAngle": 130,
+                                                 "castShadows": False, "isEnabled": False, "nightLight": True})
+                lit += 1
+            L.add("dintorni/illuminazione", obj)
+            poles += 1
+    # fermata e cestini alle pensiline del terminal
+    for i, (x, y, z) in enumerate(meta["benches"][::2]):
+        L.add("terminal/arredo", {"class": "TSStatic", "position": [x + 2.2, y + 0.4, 0.1], "shapeName": "/art/shapes/objects/s_sign_busstop.dae",
+                                  "rotationMatrix": rot_list_from_yaw(math.radians(geo.MODEL_ROT_DEG)), "annotation": "TRAFFIC_SIGNS"})
+        L.add("terminal/arredo", {"class": "TSStatic", "position": [x - 2.4, y - 0.6, 0.1],
+                                  "shapeName": "/levels/italy/art/shapes/buildings/italy_city_extras_trash_bin.dae",
+                                  "rotationMatrix": rot_list_from_yaw(math.radians(geo.MODEL_ROT_DEG + 180))})
+    mats = {}
+    for shp in ("italy_light_single", "italy_city_extras_trash_bin"):
+        va.collect(f"/levels/italy/art/shapes/buildings/{shp}.dae", "italy", mats)
+    for k, v in mats.items():
+        IMPORTED.setdefault(k, v)
+    print("lampioni stradali:", poles, "con luce:", lit)
+
+
+# ====================================================================== abbandono: rifiuti e oggetti come nella foto
+def clutter(L):
+    B = "/levels/italy/art/shapes/buildings/"
+    door = np.array([45.51, 40.98]); n = np.array([0.74, 0.67]); t = np.array([-0.67, 0.74])   # facciata della foto (NE)
+    def put(shape, along, out, yaw_deg, z=0.1, tilt=None, scale=1.0):
+        p = door + t * along + n * out
+        a = math.radians(yaw_deg)
+        rot = rot_list_from_yaw(a)
+        if tilt:                               # oggetto rovesciato: ruoto l'asse Z locale verso l'orizzontale
+            c, s = math.cos(a), math.sin(a)
+            rot = [c, s, 0, 0, 0, 1, s, -c, 0]
+        L.add("terminal/abbandono", {"class": "TSStatic", "position": [round(float(p[0]), 3), round(float(p[1]), 3), z],
+                                     "rotationMatrix": [round(v, 6) for v in rot], "scale": [scale] * 3, "shapeName": B + shape + ".dae",
+                                     "collisionType": "Collision Mesh", "useInstanceRenderData": True})
+        return shape
+    used = [put("italy_clutter_plastic_chair_a", -0.3, 1.1, 20, z=0.35, tilt=True),
+            put("italy_clutter_trashbag", 0.9, 0.6, 40), put("italy_clutter_trashbag", 1.4, 0.9, 110),
+            put("italy_clutter_trashbag", -1.6, 0.5, 200), put("italy_clutter_concbag_pile", 3.5, 0.9, 15),
+            put("italy_clutter_pallet", -3.2, 0.35, 80, z=0.1), put("italy_clutter_metal_drum", 5.0, 1.2, 0),
+            put("italy_clutter_rubble_dumpster", 9.0, 5.5, 45)]
+    # cassonetto e fusti sul piazzale, vicino al bordo nord-ovest
+    for (mx, my, yaw, shp) in [(70, 34, 44.5, "italy_clutter_dumpster"), (72.5, 34.5, 10, "italy_clutter_metal_drum"),
+                               (-20, 41, 44.5, "italy_clutter_dumpster"), (30, 44, 0, "italy_clutter_sorting_bin")]:
+        x, y = geo.model2world(mx, my)
+        L.add("terminal/abbandono", {"class": "TSStatic", "position": [round(x, 3), round(y, 3), 0.1],
+                                     "rotationMatrix": rot_list_from_yaw(math.radians(yaw)), "shapeName": B + shp + ".dae",
+                                     "collisionType": "Collision Mesh", "useInstanceRenderData": True})
+        used.append(shp)
+    # barriere New Jersey di plastica rosse e idranti (Street View 2022)
+    for (mx, my, yaw, shp) in [(60, 22, 44.5, "italy_newjersey_plastic.DAE"), (61.2, 22.3, 50, "italy_newjersey_plastic.DAE"),
+                               (72, -12, 10, "italy_newjersey_plastic.DAE"), (96, 26, 80, "italy_newjersey_plastic.DAE"),
+                               (-5, 38, 30, "italy_newjersey_plastic.DAE"), (112, 20, 100, "italy_newjersey_plastic.DAE"),
+                               (58, -14.8, 0, "italy_clutter_fire_hydrant.DAE"), (25, 27.5, 0, "italy_clutter_fire_hydrant.DAE"),
+                               (-30, -22, 0, "italy_clutter_fire_hydrant.DAE")]:
+        x, y = geo.model2world(mx, my)
+        L.add("terminal/abbandono", {"class": "TSStatic", "position": [round(x, 3), round(y, 3), 0.0],
+                                     "rotationMatrix": rot_list_from_yaw(math.radians(yaw)), "shapeName": B + shp,
+                                     "collisionType": "Collision Mesh", "useInstanceRenderData": True})
+        used.append(shp)
+    mats = {}
+    for shp in set(used):
+        va.collect(B + (shp if shp.lower().endswith(".dae") else shp + ".dae"), "italy", mats)
+    for k, v in mats.items():
+        IMPORTED.setdefault(k, v)
 
 
 # ====================================================================== cielo, luce, terreno, spawn
@@ -629,18 +836,17 @@ def environment(L):
                             "exposure": 1.3, "height": 7, "texture": "levels/italy/art/skies/SkyNormals_05.dds", "windSpeed": 0.12})
     L.add("Level_objects", {"class": "ForestWindEmitter", "position": [0, 0, 0], "strength": 0.6, "windDirection": [0.7, 0.3, 0]})
     L.add("Level_objects", {"name": "theForest", "class": "Forest", "lodReflectScalar": 0})
-    mi, fa = TINFO["main"], TINFO["far"]
+    mi = TINFO["main"]
     L.add("terrain", {"name": "theTerrain", "class": "TerrainBlock", "position": mi["position"], "maxHeight": mi["maxHeight"],
                       "squareSize": mi["squareSize"], "baseTexSize": 4096, "materialTextureSet": "ti_TerrainMaterialTextureSet",
                       "terrainFile": LVP + "terrain_main.ter", "minimapImage": LVP + "terminal_isernia_minimap.png"})
-    L.add("terrain", {"name": "farTerrain", "class": "TerrainBlock", "position": fa["position"], "maxHeight": fa["maxHeight"],
-                      "squareSize": fa["squareSize"], "baseTexSize": 2048, "materialTextureSet": "ti_TerrainMaterialTextureSet",
-                      "terrainFile": LVP + "terrain_far.ter", "castShadows": False})
+    L.add("terrain", {"name": "sfondo_colline", "class": "TSStatic", "position": [0, 0, 0], "collisionType": "None",
+                      "shapeName": LVP + "art/shapes/terminal/ti_backdrop.dae", "useInstanceRenderData": True})
 
 
 def spawns_and_vehicles(L):
     old = os.path.join(ORIG, "main", "MissionGroup")
-    for grp in ("SimGroup_n", "noi"):
+    for grp in ("SimGroup_n",):
         for l in open(os.path.join(old, grp, "items.level.json"), encoding="utf8"):
             d = json.loads(l)
             d["position"] = old_to_world(d["position"])
@@ -667,7 +873,7 @@ def spawns_and_vehicles(L):
         L.add("CameraBookmarks", {"name": name, "internalName": name, "class": "CameraBookmark", "position": [cx, cy, cam[2]],
                                   "dataBlock": "CameraBookmarkMarker", "rotationMatrix": [*r, *f, *u]})
     bookmark("foto_facciata", (99, -34, 1.7), (99, -8, 2.2))
-    bookmark("piazzale", (-40, -35, 4), (60, 5, 0))
+    bookmark("vista_piazzale", (-40, -35, 4), (60, 5, 0))
     bookmark("aereo", (-120, -150, 90), (40, 0, 0))
     bookmark("pensilina", (55, -24, 1.7), (62.6, -13.8, 1.2))
     bookmark("ingresso", (-95, 30, 2), (0, -10, 1))
@@ -684,8 +890,6 @@ def info_and_misc():
                 {"translationId": "Edificio", "objectname": "spawn_edificio", "preview": "terminal_isernia_preview.jpg"},
                 {"translationId": "Ingresso", "objectname": "spawn_ingresso", "preview": "terminal_isernia_preview.jpg"}]}
     json.dump(info, open(os.path.join(LV, "info.json"), "w"), indent=2)
-    json.dump({"header": {"name": "DecalData File", "comments": "", "version": 2}, "instances": {}},
-              open(os.path.join(LV, "main.decals.json"), "w"), indent=2)
     for f in ("terminal_isernia_preview.jpg",):
         if not os.path.exists(os.path.join(LV, f)):
             shutil.copy2(os.path.join(ORIG, f), os.path.join(LV, f))
@@ -706,10 +910,23 @@ def main():
     groundcover(L)
     roads(L)
     buildings(L)
+    street_furniture(L, meta)
+    clutter(L)
     lot_details(L, meta)
     spawns_and_vehicles(L)
     info_and_misc()
     minimap()
+    # materiali importati: un unico file (le cartelle vecchie vengono rimosse)
+    for old in ("art/forest/main.materials.json", "art/shapes/buildings", "art/shapes/arredo"):
+        p = os.path.join(LV, old)
+        if os.path.isdir(p): shutil.rmtree(p)
+        elif os.path.exists(p): os.remove(p)
+    d = os.path.join(LV, "art", "imported"); os.makedirs(d, exist_ok=True)
+    cub = json.loads(va.read("/levels/italy/art/cubemaps/cubemap_italy_reflection/main.materials.json"))
+    for k, v in cub.items():
+        IMPORTED.setdefault(k, v)
+    json.dump(IMPORTED, open(os.path.join(d, "main.materials.json"), "w"), indent=1)
+    print("materiali importati:", len(IMPORTED))
     L.write()
     print("LEVEL_OK", {g: len(o) for g, o in L.groups.items()})
 
