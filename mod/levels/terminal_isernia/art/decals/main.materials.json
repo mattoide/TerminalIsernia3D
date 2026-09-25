@@ -127,9 +127,9 @@
    {
     "ambientOcclusionMap": "/levels/italy/art/decals/t_asphalt_repair_patch_decal_ao.data.png",
     "baseColorFactor": [
-     0.42,
-     0.42,
-     0.41,
+     0.58,
+     0.58,
+     0.57,
      1
     ],
     "baseColorMap": "/levels/italy/art/decals/t_asphalt_repair_patch_decal_b.color.png",

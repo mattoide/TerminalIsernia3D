@@ -9,6 +9,7 @@ from scipy import ndimage
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import geo
+import lot_layout as LL
 import vanilla_assets as va
 from osm import OSM, obb
 
@@ -235,6 +236,7 @@ def terminal_materials():
             normalMap=AS + "tree/poplar/t_poplar_bark/t_poplar_bark_nm.normal.dds", roughnessMap=AS + "tree/poplar/t_poplar_bark/t_poplar_bark_r.data.dds",
             ambientOcclusionMap=AS + "tree/poplar/t_poplar_bark/t_poplar_bark_ao.data.dds"),
         pbr("ti_island_soil", None, "GRASS", baseColorMap=AS + "terrain/grass/t_dirt_dry_grass/t_dirt_dry_grass_b.png",
+            baseColorFactor=[0.40, 0.37, 0.25, 1],   # texture in scala di grigi: terra secca bruno-olivastra (Street View 2022)
             normalMap=AS + "terrain/grass/t_dirt_dry_grass/t_dirt_dry_grass_nm.png", roughnessMap=AS + "terrain/grass/t_dirt_dry_grass/t_dirt_dry_grass_r.png",
             ambientOcclusionMap=AS + "terrain/grass/t_dirt_dry_grass/t_dirt_dry_grass_ao.png"),
         pbr("ti_carwash_roof", None, "METAL", baseColorFactor=[0.86, 0.87, 0.88, 1], **dict(paint, roughnessFactor=0.5)),
@@ -245,6 +247,15 @@ def terminal_materials():
             roughnessFactor=0.7, metallicFactor=0.25),   # grate verniciate scure, arrugginite
         pbr("ti_bridge_concrete", T + "t_ti_curb", "ASPHALT", **det_concrete),
         pbr("ti_bridge_deck", T + "t_ti_asphalt", "ASPHALT"),
+        pbr("ti_slab", T + "t_ti_asphalt", "ASPHALT", baseColorFactor=[0.78, 0.78, 0.77, 1]),   # lastra a SE dell'edificio
+        pbr("ti_kiosk_grey", None, "METAL", baseColorFactor=[0.60, 0.61, 0.60, 1], **dict(paint, roughnessFactor=0.7)),
+        pbr("ti_kiosk_cream", None, "METAL", baseColorFactor=[0.72, 0.66, 0.52, 1], **dict(paint, roughnessFactor=0.7)),
+        pbr("ti_kiosk_roof", None, "METAL", baseColorFactor=[0.78, 0.78, 0.76, 1], **galv),
+        pbr("ti_kiosk_trim", None, "METAL", baseColorFactor=[0.42, 0.42, 0.41, 1], **dict(paint, roughnessFactor=0.6)),
+        pbr("ti_kiosk_door", None, "METAL", baseColorFactor=[0.12, 0.13, 0.14, 1], **dict(paint, roughnessFactor=0.5)),
+        pbr("ti_kiosk_window", None, "GLASS", baseColorFactor=[0.05, 0.06, 0.07, 1], roughnessFactor=0.08, metallicFactor=0.4),
+        pbr("ti_notice_panel", None, "PLASTIC", baseColorFactor=[0.80, 0.80, 0.76, 1], roughnessFactor=0.85, metallicFactor=0,
+            **dict(det_concrete, detailBaseColorMapStrength=0.6)),   # pannello bianco sbiadito della bacheca
         reeds_mat("ti_reeds", "t_grass_green_long_03", [0.58, 0.74, 0.52, 1]),
         reeds_mat("ti_reeds_dry", "t_grass_dry_long_01", [0.62, 0.63, 0.52, 1]),
     ])
@@ -259,11 +270,12 @@ def place_terminal(L):
         tmp = os.path.join(BUILD, "tmp_save", os.path.basename(f)); os.makedirs(os.path.dirname(tmp), exist_ok=True)
         shutil.copy2(f, tmp); os.replace(tmp, os.path.join(shp, os.path.basename(f)))
     json.dump(terminal_materials(), open(os.path.join(shp, "main.materials.json"), "w"), indent=1)
-    for nm in ("ti_ground", "ti_building", "ti_railing", "ti_props", "ti_canopy", "ti_grilles", "ti_skylight", "ti_powerline"):
+    for nm in ("ti_ground", "ti_building", "ti_railing", "ti_props", "ti_canopy", "ti_grilles", "ti_skylight", "ti_powerline", "ti_kiosks"):
         L.add("terminal", {"name": nm.replace("ti_", "terminal_"), "class": "TSStatic", "position": [0, 0, 0], "shapeName": LVP + f"art/shapes/terminal/{nm}.dae",
                            "collisionType": "Visible Mesh Final", "decalType": "Visible Mesh", "useInstanceRenderData": True})
     meta = json.load(open(os.path.join(BUILD, "export_meta.json")))
     for i, lp in enumerate(meta["lamps"]):
+        lp["pos"][2] = round(ground_z(lp["pos"][0], lp["pos"][1]) - 0.02, 3)
         R = lp["rot"]
         rotl = [R[0][0], R[1][0], R[2][0], R[0][1], R[1][1], R[2][1], R[0][2], R[1][2], R[2][2]]
         light = f"ti_lamp_light_{i:02d}"
@@ -278,9 +290,13 @@ def place_terminal(L):
                                     "castShadows": i % 3 == 0, "isEnabled": False, "nightLight": True})
     # lampioni decorativi a due globi agli angoli delle pensiline (Street View 2022)
     for i, (mx, my, yaw) in enumerate([(88.9, -20.3, 20), (89.6, 3.9, -20)]):
+        for k in range(20):                             # sulla piattaforma dell'edificio, non sull'asfalto accanto
+            if ground_z(*geo.model2world(mx, my)) > 0.05:
+                break
+            mx, my = mx + (100 - mx) * 0.04, my + (-8 - my) * 0.04
         x, y = geo.model2world(mx, my)
         light = f"ti_globe_light_{i}"
-        L.add("terminal/lampioni", {"name": f"ti_globe_{i}", "class": "TSStatic", "position": [x, y, 0.1],
+        L.add("terminal/lampioni", {"name": f"ti_globe_{i}", "class": "TSStatic", "position": [x, y, round(ground_z(x, y), 3)],
                                     "rotationMatrix": rot_list_from_yaw(math.radians(yaw + geo.MODEL_ROT_DEG)),
                                     "shapeName": LVP + "art/shapes/terminal/ti_lamp_globe.dae", "collisionType": "Visible Mesh Final",
                                     "useInstanceRenderData": True, "instanceColor": [0, 0, 0, 1], "child": light})
@@ -338,7 +354,7 @@ def poisson(mask_fn, x0, y0, x1, y1, spacing, max_tries=1):
 
 # coordinate modello del tronco: sul marciapiede nord-ovest, 1.2 m prima della ringhiera (non oltre).
 # Street View set 2022 (41.60392 N 14.24645 E): salice a 306 gradi, base al cordolo a ~70 m; chioma ~16 m sull'ortofoto
-WILLOW_MODEL = (14.0, 23.3)
+WILLOW_MODEL = LL.WILLOW
 
 
 def make_forest(meta):
@@ -359,7 +375,7 @@ def make_forest(meta):
     for t in meta["trees"]:
         x, y = t["pos"]; h = t["height"]
         kind = "tree_aspen_small_a" if h > 5 else "holm_oak_city_small"      # Street View 2022: latifoglie giovani, foglie giallo-verdi
-        z = 0.1
+        z = round(ground_z(x, y) - 0.05, 3)
         a = rng.uniform(0, 2 * math.pi)
         inst.setdefault(kind, []).append({"ctxid": 0, "pos": [x, y, z], "rotationMatrix": rot_list_from_yaw(a),
                                           "scale": round(min(1.25, max(0.6, h / (7.5 if h > 5 else 4.5))), 3), "type": kind})
@@ -554,6 +570,16 @@ def roads(L):
     for m in ROAD_MATS:
         key, v = mats[m]
         out[key] = v
+    # crepe del piazzale: l'asfalto rovinato di Italy e' piu' chiaro del nostro, sul piazzale sembravano strisce pallide
+    lc = json.loads(json.dumps(out["italy_road_cracks"]))
+    lc.update(name="ti_lot_cracks", mapTo="ti_lot_cracks", persistentId=uid("mat/ti_lot_cracks"))
+    lc["Stages"][0]["baseColorFactor"] = [0.5, 0.5, 0.49, 0.75]
+    out["ti_lot_cracks"] = lc
+    # velo d'asfalto della Rava con la tinta scura del piazzale (quello di Italy e' piu' chiaro e si vedeva lo stacco)
+    ro = json.loads(json.dumps(out["italy_asphalt_overlay_light"]))
+    ro.update(name="ti_rava_overlay", mapTo="ti_rava_overlay", persistentId=uid("mat/ti_rava_overlay"))
+    ro["Stages"][0]["baseColorFactor"] = [0.6, 0.6, 0.6, 0.9]
+    out["ti_rava_overlay"] = ro
     d = os.path.join(LV, "art", "road"); os.makedirs(d, exist_ok=True)
     json.dump(out, open(os.path.join(d, "main.materials.json"), "w"), indent=1)
 
@@ -597,8 +623,9 @@ def roads(L):
             continue
         road("m_road_variation_01", P, hw * 2, renderPriority=25, textureLength=112, **ai)
         near = dist < 900                     # dettagli solo vicino al terminal (tempi di caricamento)
-        if near and r.get("name") != "Strada Comunale Rava":   # la Rava continua l'asfalto del piazzale: niente velo chiaro
-            road("italy_asphalt_overlay_light", P, hw * 2 - 0.4, renderPriority=20, textureLength=112)
+        if near:                                # la Rava continua l'asfalto del piazzale: velo scuro come il piazzale
+            road("ti_rava_overlay" if r.get("name") == "Strada Comunale Rava" else "italy_asphalt_overlay_light",
+                 P, hw * 2 - 0.4, renderPriority=20, textureLength=112)
         for s in ((-1, 1) if not deck else ()):
             road("italy_road_edge_damage_wide_grassy", offset_line(P, s * (hw + 0.4)), 1.6, textureLength=8, distanceFade=[90, 30])
         if near and r["type"] in ("primary", "secondary", "tertiary", "trunk", "unclassified") and hw >= 3:
@@ -923,7 +950,7 @@ def lot_details(L, meta):
     # i rappezzi di Italy sono cemento chiaro: sul nostro asfalto sembravano macchie bianche -> piu' scuri
     for k, v in out_m.items():
         if k == "m_asphalt_repair_patch_decal":
-            v["Stages"][0]["baseColorFactor"] = [0.42, 0.42, 0.41, 1]
+            v["Stages"][0]["baseColorFactor"] = [0.58, 0.58, 0.57, 1]   # 0.42 in gioco sembravano toppe nere
     json.dump(out_m, open(os.path.join(d, "main.materials.json"), "w"), indent=1)
     # maschera dell'asfalto dalla mesh
     from build_terrain import dae_triangles, Raster
@@ -932,6 +959,8 @@ def lot_details(L, meta):
     asph = R.polys([[tuple(p[:2]) for p in tri] for mat, tri in G if mat == "ti_asphalt"], 1) > 0
     # l'asfalto della mesh continua sotto isole e marciapiedi (rialzati di 10 cm): li tolgo dalla maschera
     other = R.polys([[tuple(p[:2]) for p in tri] for mat, tri in G if mat != "ti_asphalt"], 1) > 0
+    other |= R.polys([[geo.model2world(cx + sx * KL / 2, cy + sy * KW / 2) for sx, sy in ((-1, -1), (1, -1), (1, 1), (-1, 1))]
+                      for (cx, cy), KL, KW, _ in LL.KIOSKS], 1) > 0          # casotti sull'asfalto
     asph &= ~ndimage.binary_dilation(other, iterations=1)
     asph_full = asph.copy()
     asph = ndimage.binary_erosion(asph, iterations=6)          # almeno 3 m dai cordoli
@@ -959,11 +988,11 @@ def lot_details(L, meta):
         dec("eca_decals_concrete_damage_decal", x, y, rng.uniform(3, 6))
     for x, y in zip(*rnd_pts(10, 1.6)):
         dec("ind_stuff_02", x, y, rng.uniform(1.0, 2.5))                # macchie d'olio sparse
-    # macchie d'olio dove si fermavano i bus: lungo il lato nord dell'isola delle pensiline
+    # macchie d'olio dove si fermano i bus: corsia lungo il lato strada della fascia centrale (fermata con pensilina)
     for mx in np.arange(-14, 72, 4.5):
         if rng.random() < 0.35:
             continue
-        x, y = geo.model2world(mx + rng.normal(0, 0.8), -14.8 + rng.normal(0, 0.5))
+        x, y = geo.model2world(mx + rng.normal(0, 0.8), LL.median_y(mx) - LL.MED_HALF - 2.4 + rng.normal(0, 0.4))
         i, j = int((x - R.x0) / R.res), int((y - R.y0) / R.res)
         if asph_full[j, i]:
             dec("ind_stuff_02", x, y, rng.uniform(1.2, 2.4))
@@ -994,7 +1023,7 @@ def lot_details(L, meta):
                 e += 1
             seg = Q[k:e][::6]
             if (e - k) * 0.5 >= 3.0 and len(seg) >= 2:
-                L.add("piazzale/crepe", {"class": "DecalRoad", "position": [float(seg[0][0]), float(seg[0][1]), 0.01], "material": "italy_road_cracks",
+                L.add("piazzale/crepe", {"class": "DecalRoad", "position": [float(seg[0][0]), float(seg[0][1]), 0.01], "material": "ti_lot_cracks",
                                          "nodes": [[round(float(p[0]), 3), round(float(p[1]), 3), 0.01, w] for p in seg], "overObjects": True,
                                          "improvedSpline": True, "renderPriority": 26, "textureLength": 16, "decalBias": 0.0015,
                                          "startEndFade": [2, 2], "distanceFade": [90, 40], "drivability": -1})
@@ -1008,32 +1037,10 @@ def lot_details(L, meta):
         crack(P, rng.uniform(0.9, 1.6))
     # sgommate: vedi skids()
     skids(L, R, asph_full)
-    # strisce gialle sbiadite dei posti auto lungo il marciapiede nord-ovest (Street View 2022)
-    def is_asph(mx, my):
-        x, y = geo.model2world(mx, my)
-        i, j = int((x - R.x0) / R.res), int((y - R.y0) / R.res)
-        return 0 <= i < R.w and 0 <= j < R.h and asph_full[j, i]
-    n_st = 0; oil = []
-    for mx in np.arange(4, 104, 2.6):
-        my = next((yy for yy in np.arange(46, 10, -0.25) if is_asph(mx, yy)), None)
-        if my is None or rng.random() < 0.12:                          # qualche striscia ormai cancellata
-            continue
-        a, b = geo.model2world(mx, my - 0.4), geo.model2world(mx, my - 5.2)
-        if rng.random() < 0.45:                                        # olio perso dalle auto parcheggiate
-            ox, oy = geo.model2world(mx + 1.3 + rng.normal(0, 0.3), my - 2.6 + rng.normal(0, 0.4))
-            oil.append((ox, oy))
-        L.add("piazzale/segnaletica", {"class": "DecalRoad", "position": [a[0], a[1], 0.01],
-                                       "material": "italy_road_markings_line_thin_yellow",
-                                       "nodes": [[a[0], a[1], 0.01, 0.12], [b[0], b[1], 0.01, 0.12]], "overObjects": True,
-                                       "renderPriority": 23, "textureLength": 4, "decalBias": 0.0015, "distanceFade": [80, 40],
-                                       "drivability": -1})
-        n_st += 1
-    for x, y in oil:
-        dec("ind_stuff_02", x, y, rng.uniform(0.8, 1.8))
     json.dump({"header": {"name": "DecalData File", "comments": "// Instances format: rectIdx, size, renderPriority, position.x, position.y, "
                           "position.z, normal.x, normal.y, normal.z, tangent.x, tangent.y, tangent.z, uid", "version": 2},
                "instances": inst}, open(os.path.join(LV, "main.decals.json"), "w"), indent=1)
-    print("decal:", {k: len(v) for k, v in inst.items()}, "strisce gialle:", n_st)
+    print("decal:", {k: len(v) for k, v in inst.items()})
 
 
 # ====================================================================== arredo urbano
@@ -1078,13 +1085,31 @@ def street_furniture(L, meta):
                 lit += 1
             L.add("dintorni/illuminazione", obj)
             poles += 1
-    # fermata e cestini alle pensiline del terminal
-    for i, (x, y, z) in enumerate(meta["benches"][::2]):
-        L.add("terminal/arredo", {"class": "TSStatic", "position": [x + 2.2, y + 0.4, 0.1], "shapeName": "/art/shapes/objects/s_sign_busstop.dae",
-                                  "rotationMatrix": rot_list_from_yaw(math.radians(geo.MODEL_ROT_DEG)), "annotation": "TRAFFIC_SIGNS"})
-        L.add("terminal/arredo", {"class": "TSStatic", "position": [x - 2.4, y - 0.6, 0.1],
-                                  "shapeName": "/levels/italy/art/shapes/buildings/italy_city_extras_trash_bin.dae",
-                                  "rotationMatrix": rot_list_from_yaw(math.radians(geo.MODEL_ROT_DEG + 180))})
+    # fermata e cestino accanto a ogni pensilina, solo su marciapiede/isola (mai sull'asfalto)
+    from build_terrain import dae_triangles
+    from scipy.spatial import cKDTree
+    pv = cKDTree([geo.world2model(q[0], q[1]) for m, tri in dae_triangles(os.path.join(BUILD, "shapes", "ti_props.dae")) for q in tri])
+    seen = []
+    for x, y, z in meta["benches"]:
+        mx, my = geo.world2model(x, y)
+        if any(math.hypot(mx - a, my - b) < 3 for a, b in seen):
+            continue
+        seen.append((mx, my))
+        spots = [(dx, dy) for d in (2.3, 2.8, 3.3) for dx, dy in ((d, 0), (-d, 0), (0, d * 0.5), (0, -d * 0.5))]
+        free = [(mx + dx, my + dy) for dx, dy in spots
+                if all(ground_z(*geo.model2world(mx + dx + ex, my + dy + ey)) > 0.08 for ex in (-0.4, 0, 0.4) for ey in (-0.4, 0, 0.4))
+                and pv.query((mx + dx, my + dy))[0] > 0.6]                   # non dentro la pensilina o la panchina
+        if free:
+            px, py = geo.model2world(*free[0])
+            L.add("terminal/arredo", {"class": "TSStatic", "position": [round(px, 3), round(py, 3), round(ground_z(px, py), 3)],
+                                      "shapeName": "/art/shapes/objects/s_sign_busstop.dae",
+                                      "rotationMatrix": rot_list_from_yaw(math.radians(geo.MODEL_ROT_DEG)), "annotation": "TRAFFIC_SIGNS"})
+        far = [q for q in free[1:] if math.hypot(q[0] - free[0][0], q[1] - free[0][1]) > 3.5]
+        if far:
+            px, py = geo.model2world(*far[0])
+            L.add("terminal/arredo", {"class": "TSStatic", "position": [round(px, 3), round(py, 3), round(ground_z(px, py), 3)],
+                                      "shapeName": "/levels/italy/art/shapes/buildings/italy_city_extras_trash_bin.dae",
+                                      "rotationMatrix": rot_list_from_yaw(math.radians(geo.MODEL_ROT_DEG + 180))})
     mats = {}
     for shp in ("italy_light_single", "italy_city_extras_trash_bin"):
         va.collect(f"/levels/italy/art/shapes/buildings/{shp}.dae", "italy", mats)
@@ -1113,26 +1138,15 @@ def clutter(L):
     used = [put("italy_clutter_plastic_chair_a", -0.3, 1.1, 20, z=0.35, tilt=True),
             put("italy_clutter_trashbag", 0.9, 0.6, 40), put("italy_clutter_trashbag", 1.4, 0.9, 110),
             put("italy_clutter_trashbag", -1.6, 0.5, 200), put("italy_clutter_concbag_pile", 3.5, 0.9, 15),
-            put("italy_clutter_pallet", -3.2, 0.35, 80, z=0.1), put("italy_clutter_metal_drum", 5.0, 1.2, 0),
-            put("italy_clutter_rubble_dumpster", 9.0, 5.5, 45)]
-    # cassonetto e fusti sul piazzale, vicino al bordo nord-ovest
-    for (mx, my, yaw, shp) in [(70, 34, 44.5, "italy_clutter_dumpster"), (72.5, 34.5, 10, "italy_clutter_metal_drum"),
-                               (-20, 41, 44.5, "italy_clutter_dumpster"), (30, 44, 0, "italy_clutter_sorting_bin")]:
+            put("italy_clutter_pallet", -3.2, 0.35, 80, z=0.1), put("italy_clutter_metal_drum", 5.0, 1.2, 0)]
+    # idranti sui marciapiedi (Street View 2022), mai sull'asfalto
+    for (mx, my, yaw) in [(58.0, LL.SE_RAIL_Y + 0.4, 0), (25.0, LL.nw_curb_y(25.0) + 0.15 + LL.NW_WALK - 0.45, 180),
+                          (LL.SW_X - LL.SW_WALK + 0.4, -22.0, 90)]:
         x, y = geo.model2world(mx, my)
-        L.add("terminal/abbandono", {"class": "TSStatic", "position": [round(x, 3), round(y, 3), round(ground_z(x, y), 3)],
-                                     "rotationMatrix": rot_list_from_yaw(math.radians(yaw)), "shapeName": B + shp + ".dae",
-                                     "collisionType": "Collision Mesh", "useInstanceRenderData": True})
-        used.append(shp)
-    # barriere New Jersey di plastica rosse e idranti (Street View 2022)
-    for (mx, my, yaw, shp) in [(60, 22, 44.5, "italy_newjersey_plastic.DAE"), (61.2, 22.3, 50, "italy_newjersey_plastic.DAE"),
-                               (72, -12, 10, "italy_newjersey_plastic.DAE"), (96, 26, 80, "italy_newjersey_plastic.DAE"),
-                               (-5, 38, 30, "italy_newjersey_plastic.DAE"), (112, 20, 100, "italy_newjersey_plastic.DAE"),
-                               (58, -14.8, 0, "italy_clutter_fire_hydrant.DAE"), (25, 19.6, 0, "italy_clutter_fire_hydrant.DAE"),
-                               (-30, -22, 0, "italy_clutter_fire_hydrant.DAE")]:
-        x, y = geo.model2world(mx, my)
-        L.add("terminal/abbandono", {"class": "TSStatic", "position": [round(x, 3), round(y, 3), round(ground_z(x, y), 3)],
-                                     "rotationMatrix": rot_list_from_yaw(math.radians(yaw)), "shapeName": B + shp,
-                                     "collisionType": "Collision Mesh", "useInstanceRenderData": True})
+        shp = "italy_clutter_fire_hydrant.DAE"
+        L.add("terminal/arredo", {"class": "TSStatic", "position": [round(x, 3), round(y, 3), round(ground_z(x, y), 3)],
+                                  "rotationMatrix": rot_list_from_yaw(math.radians(yaw + geo.MODEL_ROT_DEG)), "shapeName": B + shp,
+                                  "collisionType": "Collision Mesh", "useInstanceRenderData": True})
         used.append(shp)
     mats = {}
     for shp in set(used):
@@ -1178,12 +1192,29 @@ def environment(L):
                       "shapeName": LVP + "art/shapes/terminal/ti_backdrop.dae", "useInstanceRenderData": True})
 
 
+def free_parking(p):
+    """le isole ora sono al posto vero (6 m piu' a sud-est): un'auto che ci finirebbe sopra scivola sull'asfalto libero."""
+    mx, my = geo.world2model(p[0], p[1])
+    def clear(x, y):
+        return all(ground_z(*geo.model2world(x + ex, y + ey)) < 0.03 for ex in (-2.6, 0, 2.6) for ey in (-1.3, 0, 1.3))
+    if clear(mx, my):
+        return p
+    for dy in np.arange(0.5, 12, 0.5):
+        for sgn in (-1, 1):
+            if clear(mx, my + sgn * dy):
+                x, y = geo.model2world(mx, my + sgn * dy)
+                print(f"veicolo spostato da ({mx:.1f}, {my:.1f}) a ({mx:.1f}, {my + sgn * dy:.1f})")
+                return [x, y, p[2]]
+    return p
+
+
 def spawns_and_vehicles(L):
     old = os.path.join(ORIG, "main", "MissionGroup")
     for grp in ("SimGroup_n",):
         for l in open(os.path.join(old, grp, "items.level.json"), encoding="utf8"):
             d = json.loads(l)
             d["position"] = old_to_world(d["position"])
+            d["position"] = free_parking(d["position"])
             if "rotationMatrix" in d:
                 d["rotationMatrix"] = rotate_list(d["rotationMatrix"], math.radians(geo.MODEL_ROT_DEG))
             d.pop("__parent", None)
@@ -1194,7 +1225,7 @@ def spawns_and_vehicles(L):
     sp.pop("__parent", None)
     L.add("PlayerDropPoints", sp)
     # spawn extra: davanti all'edificio e all'ingresso sud-ovest
-    for name, (mx, my, yaw) in {"spawn_edificio": (78, -30, 180), "spawn_ingresso": (-24, 12, -20)}.items():
+    for name, (mx, my, yaw) in {"spawn_edificio": (80, -40, 0), "spawn_ingresso": (-24, 12, -20)}.items():
         x, y = geo.model2world(mx, my)
         L.add("PlayerDropPoints", {"name": name, "class": "SpawnSphere", "position": [x, y, 0.6], "dataBlock": "SpawnSphereMarker",
                                    "radius": 5, "rotationMatrix": rot_list_from_yaw(math.radians(yaw + geo.MODEL_ROT_DEG)),
@@ -1209,7 +1240,9 @@ def spawns_and_vehicles(L):
     bookmark("foto_facciata", (99, -34, 1.7), (99, -8, 2.2))
     bookmark("vista_piazzale", (-32, -36, 4), (60, 5, 0))
     bookmark("aereo", (-120, -150, 90), (40, 0, 0))
-    bookmark("pensilina", (55, -24, 1.7), (62.6, -13.8, 1.2))
+    bookmark("pensilina", (54, -25, 1.7), (62.4, -17.6, 1.2))
+    bookmark("fermata_centrale", (2, -41, 1.7), (8.1, -33.1, 1.3))
+    bookmark("salice", (22, 0, 1.6), (LL.WILLOW[0], LL.WILLOW[1], 5.0))
     bookmark("ingresso", (-60, -44, 2.5), (0, -20, 1))
 
 

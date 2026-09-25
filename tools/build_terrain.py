@@ -158,14 +158,14 @@ def save_img(arr, name, mode):
 
 # ================================================================== main
 def rava_to_lot(P):
-    """la Strada Comunale Rava su OSM corre ~9 m a sud-est della corsia del piazzale del modello: da x modello -110
-    la porto dolcemente sulla corsia del piazzale (y modello -38), cosi' al bordo tagliato (x -37) le due si raccordano."""
+    """la Strada Comunale Rava entra nel piazzale dall'angolo sud-ovest, tra la fine del marciapiede sud-ovest (y -34) e il
+    cordolo sud-est (y -47): da x modello -110 la porto dolcemente sul centro del varco (y -43.5, ortofoto)."""
     from geo import world2model, model2world
     Q = []
     for x, y in P:
         mx, my = world2model(x, y)
         k = smoothstep(-110, -37, mx)
-        Q.append(model2world(mx, my + (-38.0 - my) * k))
+        Q.append(model2world(mx, my + (-43.5 - my) * k))
     return np.array(Q)
 
 
@@ -385,6 +385,10 @@ def main():
     Zf = E_z - 0.02 + (Znat - (E_z - 0.02)) * k
     near_edge = (D_out < 3.0)
     Zf = np.where(near_edge, np.minimum(Zf, E_z + 0.02), Zf)
+    # subito fuori dal bordo (una cella da 2 m): il terreno interpolato non deve affiorare sull'asfalto accanto ai cordoli;
+    # dietro a cordoli e marciapiedi scende di 14 cm (li chiudono le facce posteriori), agli imbocchi delle strade di 2
+    ring = (D_out < 2.5) & ~FOOT
+    Zf = np.where(ring, np.minimum(Zf, E_z - np.where(E_z > 0.05, 0.14, 0.02)), Zf)
     # sotto la mesh: sotto la superficie
     Zf = np.where(FOOT, np.minimum(E_z, 0.0) - 0.06 - 0.25 * smoothstep(2, 8, D_in), Zf)
 
@@ -411,9 +415,11 @@ def main():
     lay[area(lambda t: "building" in t)] = GRAVEL
     slope = np.degrees(np.arctan(np.hypot(*np.gradient(Zf, SQ))))
     lay[(slope > 32) & (lay != ASPHALT)] = ROCK
-    road_core = dr < RHW
+    # un metro in piu' della carreggiata: i materiali del terreno si fondono su una cella (2 m) e la terra dei bordi
+    # arrivava fin quasi al centro delle strade senza velo d'asfalto sopra (la Rava sembrava verde)
+    road_core = dr < RHW + 1.0
     lay[road_core] = ASPHALT
-    lay[(dr >= RHW) & (dr < RHW + 1.5 + nz)] = DIRT
+    lay[(dr >= RHW + 1.0) & (dr < RHW + 2.5 + nz)] = DIRT
     lay[(D_out < 1.8) & ~FOOT] = DIRT          # terra battuta attorno ai cordoli
     lay[FOOT] = ASPHALT
     # sentieri e piste sterrate

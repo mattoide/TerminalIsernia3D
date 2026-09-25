@@ -691,5 +691,113 @@
   "translucent": true,
   "translucentZWrite": true,
   "version": 1.5
+ },
+ "ti_lot_cracks": {
+  "name": "ti_lot_cracks",
+  "mapTo": "ti_lot_cracks",
+  "class": "Material",
+  "persistentId": "633f27f3-c7c7-55ec-ac19-39b9ac9f61db",
+  "Stages": [
+   {
+    "ambientOcclusionMap": "/levels/italy/art/road/t_asphalt_decayed_ao.data.png",
+    "baseColorFactor": [
+     0.5,
+     0.5,
+     0.49,
+     0.75
+    ],
+    "baseColorMap": "/levels/italy/art/road/t_asphalt_decayed_b.color.png",
+    "detailNormalMap": "/levels/italy/art/road/detailed_normals/t_asphalt_detail_02_nm.normal.png",
+    "detailScale": [
+     2,
+     10
+    ],
+    "normalMap": "/levels/italy/art/road/t_asphalt_decayed_nm.normal.png",
+    "opacityMap": "/levels/italy/art/road/t_asphalt_decayed_o.data.png",
+    "roughnessFactor": 0.981000006,
+    "roughnessMap": "/levels/italy/art/road/t_asphalt_decayed_r.data.png"
+   },
+   {
+    "baseColorFactor": null,
+    "detailScale": null,
+    "roughnessFactor": null
+   },
+   {
+    "baseColorFactor": null,
+    "detailScale": null,
+    "roughnessFactor": null
+   },
+   {
+    "baseColorFactor": null,
+    "detailScale": null,
+    "roughnessFactor": null
+   }
+  ],
+  "alphaRef": 0,
+  "annotation": "ASPHALT",
+  "castShadows": false,
+  "groundType": "ASPHALT_OLD",
+  "materialTag0": "RoadAndPath",
+  "materialTag1": "beamng",
+  "specularStrength0": "0",
+  "translucent": true,
+  "translucentZWrite": true,
+  "version": 1.5
+ },
+ "ti_rava_overlay": {
+  "name": "ti_rava_overlay",
+  "mapTo": "ti_rava_overlay",
+  "class": "Material",
+  "persistentId": "d90efaf5-fadc-599d-9ca9-44bd55242c6c",
+  "Stages": [
+   {
+    "ambientOcclusionMap": "/levels/italy/art/road/t_asphalt_variation_02_ao.data.png",
+    "baseColorFactor": [
+     0.6,
+     0.6,
+     0.6,
+     0.9
+    ],
+    "baseColorMap": "/levels/italy/art/road/t_asphalt_variation_02_b.color.png",
+    "detailNormalMapStrength": 10,
+    "detailScale": [
+     3,
+     30
+    ],
+    "normalMap": "/levels/italy/art/road/t_asphalt_variation_02_nm.normal.png",
+    "opacityMap": "/levels/italy/art/road/t_asphalt_variation_02_o.data.png",
+    "roughnessFactor": 0.469999999,
+    "roughnessMap": "/levels/italy/art/road/t_asphalt_variation_02_r.data.png"
+   },
+   {
+    "baseColorFactor": null,
+    "detailNormalMapStrength": null,
+    "detailScale": null,
+    "roughnessFactor": null
+   },
+   {
+    "baseColorFactor": null,
+    "detailNormalMapStrength": null,
+    "detailScale": null,
+    "roughnessFactor": null
+   },
+   {
+    "baseColorFactor": null,
+    "detailNormalMapStrength": null,
+    "detailScale": null,
+    "roughnessFactor": null
+   }
+  ],
+  "alphaRef": 0,
+  "annotation": "ASPHALT",
+  "castShadows": false,
+  "dynamicCubemap": true,
+  "groundType": "ASPHALT_OLD",
+  "materialTag0": "RoadAndPath",
+  "materialTag1": "beamng",
+  "specularStrength0": "0",
+  "translucent": true,
+  "translucentZWrite": true,
+  "version": 1.5
  }
 }

@@ -11,6 +11,24 @@ reale e georeferenziato. Pagina della mod: https://www.beamng.com/resources/term
 | ![Notte](docs/screenshot_notte.jpg) | ![Il salice piangente (v1.0.1)](docs/screenshot_salice.jpg) |
 | ![Archi con le grate (v1.0.1)](docs/screenshot_archi.jpg) | |
 
+## Novità della v1.0.3
+
+Il fondo del piazzale è ricostruito da zero sulla disposizione vera (`tools/lot_layout.py`), ricalcata sull'ortofoto
+e controllata sulle foto satellitari e su Street View 2022. Il modello v0.3 aveva l'edificio al posto giusto ma il resto spostato:
+
+- **Isole diagonali** al loro posto: circa 6 m più a sud-est e ruotate di 2°, allineate agli alberi veri (scarto medio di 1 m).
+- **Fascia centrale** tra piazzale e Strada Rava larga 4,6 m (prima 10): cordolo, lato strada in autobloccanti rossastri,
+  terra ed erba secca, gli alberi sulle chiome vere e la pensilina verde dove sta davvero (a x 8, sul lato della fermata).
+- **Marciapiedi rifatti**: nord-ovest lungo il bordo vero (prima 10-15 m troppo in là), sud-est in autobloccanti grigi
+  tra cordolo e ringhiera, sud-ovest lungo il vialetto; ringhiere nuove più leggere sui due lati lunghi.
+- Tolte le **strisce gialle** degli stalli (su Street View 2022 non ci sono più) e gli oggetti in carreggiata
+  (barriere di plastica, cassonetti, fusti, cassone macerie); gli idranti stanno sui marciapiedi.
+- **Due container prefabbricati** nell'angolo nord-ovest, all'imbocco della stradina dell'autolavaggio, e la
+  **bacheca** arrugginita sul marciapiede sud-est; il salice ha il tronco a ridosso della ringhiera.
+- La linea elettrica è oltre la nuova ringhiera; lampioni, alberi e paline alla quota del fondo nuovo; le auto
+  parcheggiate non finiscono più sopra le isole.
+- **Glitch**: il terreno (celle da 2 m) non affiora più dall'asfalto lungo i cordoli; i cordoli hanno la faccia posteriore.
+
 ## Novità della v1.0.1
 
 Correzioni dopo una nuova analisi della mappa (script `tools/analyze_level.py` + giro in gioco, riferimento Street View 2022):
@@ -87,7 +105,8 @@ python tools/build_all.py --zip    # Blender -> texture -> terreno -> livello ->
 |---|---|
 | `geo.py` | georeferenziazione: sistema del livello = metri est/nord dal centro del terminal |
 | `blender_export.py` | esporta il modello in `.dae` (writer Collada proprio: Blender 5 non lo ha più), UV in metri, asfalto tagliato al perimetro reale |
-| `blender_props.py` | genera pensiline a denti di sega, ciuffi di canne, lampione a due globi, grate degli archi e il salice piangente |
+| `lot_layout.py` | disposizione reale del piazzale (contorno, cordoli, isole, fascia centrale, container, salice) usata da export e livello |
+| `blender_props.py` | genera pensiline a denti di sega, ciuffi di canne, lampione a due globi, grate degli archi, il salice piangente, container e bacheca |
 | `build_bridges.py` | viadotti (ponti OSM oltre 70 m): impalcato, cordoli e pile, con i DecalRoad sopra |
 | `build_backdrop.py` | mesh di sfondo delle colline fino a 16 km |
 | `build_textures.py` | converte le texture CC0 nel formato BeamNG, ricostruisce le foto dell'edificio, invecchia la facciata |
