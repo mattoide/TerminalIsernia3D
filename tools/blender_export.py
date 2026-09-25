@@ -368,6 +368,13 @@ for sign, x in ((1, LL.MED_X0), (-1, LL.MED_X1)):
 # marciapiede sud-est (grigio, ringhiera sul bordo esterno): polilinea verso ovest, marciapiede a sinistra
 se_line = LL.se_curb_line(LL.SE_EXT_X, LL.SE_WEST_X, 5.0)                       # da nord-est a sud-ovest: fuori a sinistra
 curb(ground, se_line, walk=(LL.SE_WALK - CURB_W, "ti_pavers_grey"))
+# caditoie a filo cordolo, sul lato dell'asfalto (Street View 2022): lungo il cordolo sud-est e quello nord-ovest
+for x_ in [v for v in range(-30, 118, 14)]:
+    yc = LL.se_curb_y(x_) + 0.32
+    add_poly(ground, "ti_grille", [(x_ - 0.3, yc - 0.18), (x_ + 0.3, yc - 0.18), (x_ + 0.3, yc + 0.18), (x_ - 0.3, yc + 0.18)], 0.004, 1.0)
+for x_ in [v for v in range(-6, 110, 18)]:
+    yc = LL.nw_curb_y(x_) - 0.32
+    add_poly(ground, "ti_grille", [(x_ - 0.3, yc - 0.18), (x_ + 0.3, yc - 0.18), (x_ + 0.3, yc + 0.18), (x_ - 0.3, yc + 0.18)], 0.004, 1.0)
 # testate del marciapiede sud-est (la strada prosegue ai due lati): chiuse fin sotto il suolo
 for p_, q_ in ((se_line[0], se_line[1]), (se_line[-1], se_line[-2])):
     t_ = Vector((q_[0] - p_[0], q_[1] - p_[1], 0)).normalized(); n_ = Vector((-t_.y, t_.x, 0))

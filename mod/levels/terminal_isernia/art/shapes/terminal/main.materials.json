@@ -881,9 +881,37 @@
   "Stages": [
    {
     "baseColorFactor": [
-     0.86,
-     0.87,
-     0.88,
+     0.8,
+     0.47,
+     0.44,
+     1
+    ],
+    "baseColorMap": "/assets/materials/tileable/metal/metal_paint/metal_paint_d.color.png",
+    "normalMap": "/assets/materials/tileable/metal/metal_paint/metal_paint_nm.normal.png",
+    "roughnessFactor": 0.55,
+    "metallicFactor": 0
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "METAL",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_carwash_fascia": {
+  "name": "ti_carwash_fascia",
+  "mapTo": "ti_carwash_fascia",
+  "class": "Material",
+  "persistentId": "7abfc13b-c518-5c9d-a036-4d5db8aec9c3",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.36,
+     0.07,
+     0.06,
      1
     ],
     "baseColorMap": "/assets/materials/tileable/metal/metal_paint/metal_paint_d.color.png",
@@ -897,6 +925,119 @@
   ],
   "version": 1.5,
   "groundType": "METAL",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_canopy_white": {
+  "name": "ti_canopy_white",
+  "mapTo": "ti_canopy_white",
+  "class": "Material",
+  "persistentId": "7295de93-68e5-56ee-802c-b238e991c257",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.9,
+     0.9,
+     0.88,
+     1
+    ],
+    "roughnessFactor": 0.6,
+    "metallicFactor": 0
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "PLASTIC",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None",
+  "doubleSided": true
+ },
+ "ti_carwash_wall": {
+  "name": "ti_carwash_wall",
+  "mapTo": "ti_carwash_wall",
+  "class": "Material",
+  "persistentId": "e69b5b0a-142a-5bc9-9c1b-ce6c3ba4ddf2",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.62,
+     0.63,
+     0.63,
+     1
+    ],
+    "detailMap": "/assets/materials/breakup/t_detail_concrete_02/t_detail_concrete_02_detail_b.data.png",
+    "detailBaseColorMapStrength": 0.35,
+    "detailNormalMap": "/assets/materials/breakup/t_detail_concrete/t_detail_concrete_nm.normal.png",
+    "detailNormalMapStrength": 0.35,
+    "detailScale": [
+     3,
+     3
+    ]
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "ASPHALT",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_carwash_door": {
+  "name": "ti_carwash_door",
+  "mapTo": "ti_carwash_door",
+  "class": "Material",
+  "persistentId": "1122f590-17d6-5885-9250-925be6dfda26",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.28,
+     0.29,
+     0.31,
+     1
+    ],
+    "baseColorMap": "/assets/materials/tileable/metal/metal_galvanized/t_metal_galvanized_01_b.color.png",
+    "roughnessMap": "/assets/materials/tileable/metal/metal_galvanized/t_metal_galvanized_02_r.data.png",
+    "metallicMap": "/assets/materials/tileable/metal/metal_galvanized/t_metal_galvanized_02_m.data.png",
+    "metallicFactor": 1
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "METAL",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_carwash_tank": {
+  "name": "ti_carwash_tank",
+  "mapTo": "ti_carwash_tank",
+  "class": "Material",
+  "persistentId": "f1f66044-d63e-5dd0-8b6b-8001b318802c",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.86,
+     0.87,
+     0.86,
+     1
+    ],
+    "roughnessFactor": 0.5,
+    "metallicFactor": 0
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "PLASTIC",
   "materialTag0": "beamng",
   "materialTag1": "terminal_isernia",
   "translucentBlendOp": "None"
@@ -1231,6 +1372,571 @@
   ],
   "version": 1.5,
   "groundType": "METAL",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_pitch_grass": {
+  "name": "ti_pitch_grass",
+  "mapTo": "ti_pitch_grass",
+  "class": "Material",
+  "persistentId": "83f9bab6-71d7-5361-8a5c-867086b56c95",
+  "Stages": [
+   {
+    "baseColorMap": "/assets/materials/tileable/soil/grass_garden/grass_garden_d.dds",
+    "baseColorFactor": [
+     0.72,
+     0.8,
+     0.62,
+     1
+    ],
+    "roughnessFactor": 0.95,
+    "metallicFactor": 0
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "GRASS",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_pitch_grass_b": {
+  "name": "ti_pitch_grass_b",
+  "mapTo": "ti_pitch_grass_b",
+  "class": "Material",
+  "persistentId": "6af496e8-2e4b-5658-9ddf-199b30326c34",
+  "Stages": [
+   {
+    "baseColorMap": "/assets/materials/tileable/soil/grass_garden/grass_garden_d.dds",
+    "baseColorFactor": [
+     0.62,
+     0.72,
+     0.52,
+     1
+    ],
+    "roughnessFactor": 0.95,
+    "metallicFactor": 0
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "GRASS",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_track": {
+  "name": "ti_track",
+  "mapTo": "ti_track",
+  "class": "Material",
+  "persistentId": "5a748f85-bfc8-589c-8432-fb85d381fe91",
+  "Stages": [
+   {
+    "baseColorMap": "/levels/terminal_isernia/art/textures/t_ti_asphalt_b.color.png",
+    "normalMap": "/levels/terminal_isernia/art/textures/t_ti_asphalt_nm.normal.png",
+    "roughnessMap": "/levels/terminal_isernia/art/textures/t_ti_asphalt_r.data.png",
+    "ambientOcclusionMap": "/levels/terminal_isernia/art/textures/t_ti_asphalt_ao.data.png",
+    "baseColorFactor": [
+     0.66,
+     0.66,
+     0.68,
+     1
+    ]
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "ASPHALT",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_tartan_red": {
+  "name": "ti_tartan_red",
+  "mapTo": "ti_tartan_red",
+  "class": "Material",
+  "persistentId": "a0fdb513-e309-5603-bc5f-f698447e499f",
+  "Stages": [
+   {
+    "baseColorMap": "/levels/terminal_isernia/art/textures/t_ti_asphalt_b.color.png",
+    "normalMap": "/levels/terminal_isernia/art/textures/t_ti_asphalt_nm.normal.png",
+    "roughnessMap": "/levels/terminal_isernia/art/textures/t_ti_asphalt_r.data.png",
+    "ambientOcclusionMap": "/levels/terminal_isernia/art/textures/t_ti_asphalt_ao.data.png",
+    "baseColorFactor": [
+     0.62,
+     0.26,
+     0.2,
+     1
+    ]
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "ASPHALT",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_sand": {
+  "name": "ti_sand",
+  "mapTo": "ti_sand",
+  "class": "Material",
+  "persistentId": "696eba63-bde5-509e-9275-5557d55df51e",
+  "Stages": [
+   {
+    "baseColorMap": "/assets/materials/terrain/sand/t_sand/t_sand_b.color.dds",
+    "roughnessFactor": 1,
+    "metallicFactor": 0
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "SAND",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_dirt_pitch": {
+  "name": "ti_dirt_pitch",
+  "mapTo": "ti_dirt_pitch",
+  "class": "Material",
+  "persistentId": "868083af-8809-551f-9c22-a7bf0ac8bdc3",
+  "Stages": [
+   {
+    "baseColorMap": "/assets/materials/terrain/sand/t_sand/t_sand_b.color.dds",
+    "baseColorFactor": [
+     0.78,
+     0.72,
+     0.6,
+     1
+    ],
+    "roughnessFactor": 1,
+    "metallicFactor": 0
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "DIRT",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_line_white": {
+  "name": "ti_line_white",
+  "mapTo": "ti_line_white",
+  "class": "Material",
+  "persistentId": "78181f59-312c-5e0b-8b8d-358094989e80",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.9,
+     0.9,
+     0.88,
+     1
+    ],
+    "roughnessFactor": 0.8,
+    "metallicFactor": 0
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "ASPHALT",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_line_faded": {
+  "name": "ti_line_faded",
+  "mapTo": "ti_line_faded",
+  "class": "Material",
+  "persistentId": "601d0b73-748c-55e3-9c85-e21f15b72883",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.82,
+     0.8,
+     0.74,
+     0.55
+    ],
+    "roughnessFactor": 0.9,
+    "metallicFactor": 0
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "DIRT",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "LerpAlpha",
+  "translucent": true,
+  "translucentZWrite": false
+ },
+ "ti_goal_white": {
+  "name": "ti_goal_white",
+  "mapTo": "ti_goal_white",
+  "class": "Material",
+  "persistentId": "ffd4a17c-552d-5f0d-a4a8-366bd6ee8db7",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.92,
+     0.92,
+     0.9,
+     1
+    ],
+    "baseColorMap": "/assets/materials/tileable/metal/metal_paint/metal_paint_d.color.png",
+    "normalMap": "/assets/materials/tileable/metal/metal_paint/metal_paint_nm.normal.png",
+    "roughnessFactor": 0.4,
+    "metallicFactor": 0
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "METAL",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_goal_net": {
+  "name": "ti_goal_net",
+  "mapTo": "ti_goal_net",
+  "class": "Material",
+  "persistentId": "2f9e2282-f2ee-553e-890e-7fee29d8b848",
+  "Stages": [
+   {
+    "baseColorMap": "/assets/materials/tileable/metal/chainlink/t_chainlink_fence_b.color.dds",
+    "opacityMap": "/assets/materials/tileable/metal/chainlink/t_chainlink_fence_o.data.dds",
+    "baseColorFactor": [
+     0.95,
+     0.95,
+     0.95,
+     1
+    ],
+    "roughnessFactor": 0.7,
+    "metallicFactor": 0
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "METAL",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None",
+  "alphaTest": true,
+  "alphaRef": 100,
+  "doubleSided": true
+ },
+ "ti_chainlink": {
+  "name": "ti_chainlink",
+  "mapTo": "ti_chainlink",
+  "class": "Material",
+  "persistentId": "b532ab65-2a43-5272-bba6-6828a7932f65",
+  "Stages": [
+   {
+    "baseColorMap": "/assets/materials/tileable/metal/chainlink/t_chainlink_fence_b.color.dds",
+    "opacityMap": "/assets/materials/tileable/metal/chainlink/t_chainlink_fence_o.data.dds",
+    "normalMap": "/assets/materials/tileable/metal/chainlink/t_chainlink_fence_nm.normal.dds",
+    "roughnessMap": "/assets/materials/tileable/metal/chainlink/t_chainlink_fence_r.data.dds",
+    "metallicMap": "/assets/materials/tileable/metal/chainlink/t_chainlink_fence_m.data.dds"
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "METAL",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None",
+  "alphaTest": true,
+  "alphaRef": 100,
+  "doubleSided": true
+ },
+ "ti_fence_post": {
+  "name": "ti_fence_post",
+  "mapTo": "ti_fence_post",
+  "class": "Material",
+  "persistentId": "050a8cea-a7a1-5288-ae28-287712bbc2ed",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.55,
+     0.58,
+     0.58,
+     1
+    ],
+    "baseColorMap": "/assets/materials/tileable/metal/metal_galvanized/t_metal_galvanized_01_b.color.png",
+    "roughnessMap": "/assets/materials/tileable/metal/metal_galvanized/t_metal_galvanized_02_r.data.png",
+    "metallicMap": "/assets/materials/tileable/metal/metal_galvanized/t_metal_galvanized_02_m.data.png",
+    "metallicFactor": 1
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "METAL",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_fence_bar": {
+  "name": "ti_fence_bar",
+  "mapTo": "ti_fence_bar",
+  "class": "Material",
+  "persistentId": "fd126d29-4612-5077-bc19-1604cafa6997",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.42,
+     0.47,
+     0.45,
+     1
+    ],
+    "baseColorMap": "/assets/materials/tileable/metal/metal_paint/metal_paint_d.color.png",
+    "normalMap": "/assets/materials/tileable/metal/metal_paint/metal_paint_nm.normal.png",
+    "roughnessFactor": 0.6,
+    "metallicFactor": 0
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "METAL",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_stadium_concrete": {
+  "name": "ti_stadium_concrete",
+  "mapTo": "ti_stadium_concrete",
+  "class": "Material",
+  "persistentId": "93ab1f06-079e-53d5-870b-906e54e91852",
+  "Stages": [
+   {
+    "baseColorMap": "/assets/materials/tileable/concrete/t_italy_bld_old_concrete/t_italy_bld_old_concrete_b.color.dds",
+    "roughnessFactor": 0.9,
+    "metallicFactor": 0
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "ASPHALT",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_stand_step": {
+  "name": "ti_stand_step",
+  "mapTo": "ti_stand_step",
+  "class": "Material",
+  "persistentId": "23da06f9-d2b7-5017-8d91-a63d8e4c9c94",
+  "Stages": [
+   {
+    "baseColorMap": "/assets/materials/tileable/concrete/concrete_plain/t_concrete_plain_b.color.dds",
+    "baseColorFactor": [
+     0.85,
+     0.85,
+     0.84,
+     1
+    ],
+    "roughnessFactor": 0.9,
+    "metallicFactor": 0
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "ASPHALT",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_stand_seat": {
+  "name": "ti_stand_seat",
+  "mapTo": "ti_stand_seat",
+  "class": "Material",
+  "persistentId": "a98bac07-6ef0-51b6-849f-6880af8e1c80",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.12,
+     0.3,
+     0.62,
+     1
+    ],
+    "roughnessFactor": 0.5,
+    "metallicFactor": 0
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "PLASTIC",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_stand_roof": {
+  "name": "ti_stand_roof",
+  "mapTo": "ti_stand_roof",
+  "class": "Material",
+  "persistentId": "fa12685c-7b5d-536b-8b4e-a0c0c43d7a81",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.3,
+     0.32,
+     0.34,
+     1
+    ],
+    "baseColorMap": "/assets/materials/tileable/metal/metal_galvanized/t_metal_galvanized_01_b.color.png",
+    "roughnessMap": "/assets/materials/tileable/metal/metal_galvanized/t_metal_galvanized_02_r.data.png",
+    "metallicMap": "/assets/materials/tileable/metal/metal_galvanized/t_metal_galvanized_02_m.data.png",
+    "metallicFactor": 1
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "METAL",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_stand_roof_light": {
+  "name": "ti_stand_roof_light",
+  "mapTo": "ti_stand_roof_light",
+  "class": "Material",
+  "persistentId": "401d781a-2637-516f-bf5e-6237ac9185f6",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.7,
+     0.72,
+     0.72,
+     1
+    ],
+    "baseColorMap": "/assets/materials/tileable/metal/metal_galvanized/t_metal_galvanized_01_b.color.png",
+    "roughnessMap": "/assets/materials/tileable/metal/metal_galvanized/t_metal_galvanized_02_r.data.png",
+    "metallicMap": "/assets/materials/tileable/metal/metal_galvanized/t_metal_galvanized_02_m.data.png",
+    "metallicFactor": 1
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "METAL",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_stand_column": {
+  "name": "ti_stand_column",
+  "mapTo": "ti_stand_column",
+  "class": "Material",
+  "persistentId": "a7222d80-93a1-55a7-99f6-6e516d32c648",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.5,
+     0.52,
+     0.53,
+     1
+    ],
+    "baseColorMap": "/assets/materials/tileable/metal/metal_paint/metal_paint_d.color.png",
+    "normalMap": "/assets/materials/tileable/metal/metal_paint/metal_paint_nm.normal.png",
+    "roughnessFactor": 0.6,
+    "metallicFactor": 0
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "METAL",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_tower_steel": {
+  "name": "ti_tower_steel",
+  "mapTo": "ti_tower_steel",
+  "class": "Material",
+  "persistentId": "823ca281-a58b-53ee-be55-fedc05d04dc8",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.6,
+     0.62,
+     0.63,
+     1
+    ],
+    "baseColorMap": "/assets/materials/tileable/metal/metal_galvanized/t_metal_galvanized_01_b.color.png",
+    "roughnessMap": "/assets/materials/tileable/metal/metal_galvanized/t_metal_galvanized_02_r.data.png",
+    "metallicMap": "/assets/materials/tileable/metal/metal_galvanized/t_metal_galvanized_02_m.data.png",
+    "metallicFactor": 1
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "METAL",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_floodlight": {
+  "name": "ti_floodlight",
+  "mapTo": "ti_floodlight",
+  "class": "Material",
+  "persistentId": "c721584e-6e89-51c7-8628-18e10c92fd12",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.85,
+     0.88,
+     0.9,
+     1
+    ],
+    "roughnessFactor": 0.15,
+    "metallicFactor": 0.3
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "GLASS",
   "materialTag0": "beamng",
   "materialTag1": "terminal_isernia",
   "translucentBlendOp": "None"

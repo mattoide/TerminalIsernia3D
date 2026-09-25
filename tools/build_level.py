@@ -239,7 +239,13 @@ def terminal_materials():
             baseColorFactor=[0.40, 0.37, 0.25, 1],   # texture in scala di grigi: terra secca bruno-olivastra (Street View 2022)
             normalMap=AS + "terrain/grass/t_dirt_dry_grass/t_dirt_dry_grass_nm.png", roughnessMap=AS + "terrain/grass/t_dirt_dry_grass/t_dirt_dry_grass_r.png",
             ambientOcclusionMap=AS + "terrain/grass/t_dirt_dry_grass/t_dirt_dry_grass_ao.png"),
-        pbr("ti_carwash_roof", None, "METAL", baseColorFactor=[0.86, 0.87, 0.88, 1], **dict(paint, roughnessFactor=0.5)),
+        pbr("ti_carwash_roof", None, "METAL", baseColorFactor=[0.80, 0.47, 0.44, 1], **dict(paint, roughnessFactor=0.55)),   # rosa (satellite 2026)
+        pbr("ti_carwash_fascia", None, "METAL", baseColorFactor=[0.36, 0.07, 0.06, 1], **dict(paint, roughnessFactor=0.5)),
+        pbr("ti_canopy_white", None, "PLASTIC", baseColorFactor=[0.90, 0.90, 0.88, 1], roughnessFactor=0.6, metallicFactor=0,
+            m_doubleSided=True),
+        pbr("ti_carwash_wall", None, "ASPHALT", baseColorFactor=[0.62, 0.63, 0.63, 1], **det_concrete),
+        pbr("ti_carwash_door", None, "METAL", baseColorFactor=[0.28, 0.29, 0.31, 1], **galv),
+        pbr("ti_carwash_tank", None, "PLASTIC", baseColorFactor=[0.86, 0.87, 0.86, 1], roughnessFactor=0.5, metallicFactor=0),
         pbr("ti_carwash_blue", None, "METAL", baseColorFactor=[0.08, 0.22, 0.55, 1], **dict(paint, roughnessFactor=0.45)),
         pbr("ti_carwash_panel", None, "PLASTIC", baseColorFactor=[0.75, 0.78, 0.8, 1], roughnessFactor=0.4, metallicFactor=0),
         pbr("ti_grille", None, "METAL", baseColorMap=AS + "tileable/metal/metal_paint_peeling/paint_peeling_d.dds",
@@ -256,6 +262,43 @@ def terminal_materials():
         pbr("ti_map_panel", None, "PLASTIC", baseColorFactor=[0.58, 0.68, 0.7, 1], roughnessFactor=0.5, metallicFactor=0,
             **dict(det_concrete, detailBaseColorMapStrength=0.8)),    # bacheche con la mappa del parco
         pbr("ti_sign_blue", None, "METAL", baseColorFactor=[0.07, 0.2, 0.48, 1], roughnessFactor=0.4, metallicFactor=0.2),
+        # stadio Mario Lancellotta (build_stadium.py)
+        pbr("ti_pitch_grass", None, "GRASS", baseColorMap=AS + "tileable/soil/grass_garden/grass_garden_d.dds",
+            baseColorFactor=[0.72, 0.8, 0.62, 1], roughnessFactor=0.95, metallicFactor=0),
+        pbr("ti_pitch_grass_b", None, "GRASS", baseColorMap=AS + "tileable/soil/grass_garden/grass_garden_d.dds",
+            baseColorFactor=[0.62, 0.72, 0.52, 1], roughnessFactor=0.95, metallicFactor=0),
+        pbr("ti_track", T + "t_ti_asphalt", "ASPHALT", baseColorFactor=[0.66, 0.66, 0.68, 1]),    # pista sbiadita (satellite)
+        pbr("ti_tartan_red", T + "t_ti_asphalt", "ASPHALT", baseColorFactor=[0.62, 0.26, 0.2, 1]),
+        pbr("ti_sand", None, "SAND", baseColorMap=AS + "terrain/sand/t_sand/t_sand_b.color.dds", roughnessFactor=1, metallicFactor=0),
+        pbr("ti_dirt_pitch", None, "DIRT", baseColorMap=AS + "terrain/sand/t_sand/t_sand_b.color.dds",
+            baseColorFactor=[0.78, 0.72, 0.6, 1], roughnessFactor=1, metallicFactor=0),
+        pbr("ti_line_white", None, "ASPHALT", baseColorFactor=[0.9, 0.9, 0.88, 1], roughnessFactor=0.8, metallicFactor=0),
+        pbr("ti_line_faded", None, "DIRT", baseColorFactor=[0.82, 0.8, 0.74, 0.55], roughnessFactor=0.9, metallicFactor=0,
+            m_translucent=True, m_translucentBlendOp="LerpAlpha", m_translucentZWrite=False),
+        pbr("ti_goal_white", None, "METAL", baseColorFactor=[0.92, 0.92, 0.9, 1], **dict(paint, roughnessFactor=0.4)),
+        # rete: la trasparenza e' nella mappa _o (senza, nel gioco la rete sembrava un pannello pieno)
+        pbr("ti_goal_net", None, "METAL", baseColorMap=AS + "tileable/metal/chainlink/t_chainlink_fence_b.color.dds",
+            opacityMap=AS + "tileable/metal/chainlink/t_chainlink_fence_o.data.dds",
+            baseColorFactor=[0.95, 0.95, 0.95, 1], roughnessFactor=0.7, metallicFactor=0, m_alphaTest=True, m_alphaRef=100,
+            m_doubleSided=True),
+        pbr("ti_chainlink", None, "METAL", baseColorMap=AS + "tileable/metal/chainlink/t_chainlink_fence_b.color.dds",
+            opacityMap=AS + "tileable/metal/chainlink/t_chainlink_fence_o.data.dds",
+            normalMap=AS + "tileable/metal/chainlink/t_chainlink_fence_nm.normal.dds",
+            roughnessMap=AS + "tileable/metal/chainlink/t_chainlink_fence_r.data.dds",
+            metallicMap=AS + "tileable/metal/chainlink/t_chainlink_fence_m.data.dds",
+            m_alphaTest=True, m_alphaRef=100, m_doubleSided=True),
+        pbr("ti_fence_post", None, "METAL", baseColorFactor=[0.55, 0.58, 0.58, 1], **galv),
+        pbr("ti_fence_bar", None, "METAL", baseColorFactor=[0.42, 0.47, 0.45, 1], **dict(paint, roughnessFactor=0.6)),  # sbarre grigio-verdi
+        pbr("ti_stadium_concrete", None, "ASPHALT", baseColorMap=AS + "tileable/concrete/t_italy_bld_old_concrete/t_italy_bld_old_concrete_b.color.dds",
+            roughnessFactor=0.9, metallicFactor=0),
+        pbr("ti_stand_step", None, "ASPHALT", baseColorMap=AS + "tileable/concrete/concrete_plain/t_concrete_plain_b.color.dds",
+            baseColorFactor=[0.85, 0.85, 0.84, 1], roughnessFactor=0.9, metallicFactor=0),
+        pbr("ti_stand_seat", None, "PLASTIC", baseColorFactor=[0.12, 0.3, 0.62, 1], roughnessFactor=0.5, metallicFactor=0),
+        pbr("ti_stand_roof", None, "METAL", baseColorFactor=[0.3, 0.32, 0.34, 1], **galv),
+        pbr("ti_stand_roof_light", None, "METAL", baseColorFactor=[0.7, 0.72, 0.72, 1], **galv),
+        pbr("ti_stand_column", None, "METAL", baseColorFactor=[0.5, 0.52, 0.53, 1], **dict(paint, roughnessFactor=0.6)),
+        pbr("ti_tower_steel", None, "METAL", baseColorFactor=[0.6, 0.62, 0.63, 1], **galv),
+        pbr("ti_floodlight", None, "GLASS", baseColorFactor=[0.85, 0.88, 0.9, 1], roughnessFactor=0.15, metallicFactor=0.3),
         pbr("ti_notice_panel", None, "PLASTIC", baseColorFactor=[0.80, 0.80, 0.76, 1], roughnessFactor=0.85, metallicFactor=0,
             **dict(det_concrete, detailBaseColorMapStrength=0.6)),   # pannello bianco sbiadito della bacheca
         reeds_mat("ti_reeds", "t_grass_green_long_03", [0.58, 0.74, 0.52, 1]),
@@ -390,11 +433,52 @@ def poisson(mask_fn, x0, y0, x1, y1, spacing, max_tries=1):
 WILLOW_MODEL = LL.WILLOW
 
 
+def tree_settler(meta):
+    """posizione degli alberelli di isole e fascia centrale: sull'asse della propria isola (PCA della sua impronta),
+    alla x vera sulla fascia centrale (Street View), lontani dai lampioni."""
+    from build_terrain import dae_triangles
+    from PIL import Image, ImageDraw
+    x0, y0, res = -60.0, -60.0, 0.1
+    W, H = int(200 / res), int(90 / res)
+    im = Image.new("L", (W, H), 0); dr = ImageDraw.Draw(im)
+    for m, tri in dae_triangles(os.path.join(BUILD, "shapes", "ti_ground.dae")):
+        if m == "ti_island_soil":
+            dr.polygon([((geo.world2model(p[0], p[1])[0] - x0) / res, (y0 + 90 - geo.world2model(p[0], p[1])[1]) / res) for p in tri], fill=255)
+    lab, nlab = ndimage.label(np.asarray(im) > 0)
+    lamps = [geo.world2model(*l["pos"][:2]) for l in meta["lamps"]]
+    ij = lambda mx, my: (int((mx - x0) / res), int((y0 + 90 - my) / res))
+
+    def settle(wx, wy):
+        mx, my = geo.world2model(wx, wy)
+        if LL.in_median(mx, my, 1.0):
+            mx = next((v for k, v in LL.MEDIAN_TREE_X.items() if abs(k - mx) < 1.0), mx)
+            my = LL.median_y(mx) + LL.MEDIAN_SOIL_OFF
+            return geo.model2world(mx, my)
+        i, j = ij(mx, my)
+        win = lab[max(0, j - 30):j + 31, max(0, i - 30):i + 31]
+        ids = [v for v in np.unique(win) if v]
+        if not ids:
+            return wx, wy
+        k = lab[j, i] if 0 <= j < H and 0 <= i < W and lab[j, i] else ids[0]
+        jj, ii = np.nonzero(lab == k)
+        P = np.stack([x0 + (ii + 0.5) * res, y0 + 90 - (jj + 0.5) * res], 1)
+        c = P.mean(0); u = np.linalg.svd(P - c, full_matrices=False)[2][0]           # asse lungo dell'isola
+        s_ = float(np.dot([mx, my] - c, u)); lo, hi = np.percentile((P - c) @ u, [8, 92])
+        for _ in range(40):                                                          # sull'asse, lontano dai pali
+            q = c + u * float(np.clip(s_, lo, hi))
+            near = [l for l in lamps if math.hypot(l[0] - q[0], l[1] - q[1]) < LL.TREE_LAMP_CLEAR]
+            if not near:
+                break
+            l = near[0]; s_ += 0.3 if np.dot(q - l, u) >= 0 else -0.3
+        return geo.model2world(float(q[0]), float(q[1]))
+    return settle
+
+
 def make_forest(meta):
     inst = {}
     def put(kind, x, y, s_lo=0.85, s_hi=1.2, z_off=-0.05):
         x, y = np.atleast_1d(x), np.atleast_1d(y)
-        ok = ~in_building(x, y) & (tsample(TDROAD, x, y) > tsample(TRHW, x, y) + 0.8)
+        ok = ~in_building(x, y) & (tsample(TDROAD, x, y) > tsample(TRHW, x, y) + 0.8) & ~in_stadium(x, y)
         x, y = x[ok], y[ok]
         if len(x) == 0:
             return
@@ -404,9 +488,10 @@ def make_forest(meta):
             inst.setdefault(kind, []).append({"ctxid": 0, "pos": [round(float(xi), 3), round(float(yi), 3), round(float(zi), 3)],
                                               "rotationMatrix": [round(v, 6) for v in rot_list_from_yaw(a)],
                                               "scale": round(float(rng.uniform(s_lo, s_hi)), 4), "type": kind})
-    # 1) aiuole del terminal: lecci da citta' al posto degli alberi originali
+    # 1) aiuole del terminal: alberelli sull'asse dell'isola (non contro il cordolo), fascia centrale nella parte in terra
+    settle = tree_settler(meta)
     for t in meta["trees"]:
-        x, y = t["pos"]; h = t["height"]
+        x, y = settle(*t["pos"]); h = t["height"]
         kind = "tree_aspen_small_a" if h > 5 else "holm_oak_city_small"      # Street View 2022: latifoglie giovani, foglie giallo-verdi
         scale = round(min(1.25, max(0.6, h / (7.5 if h > 5 else 4.5))), 3)
         mx, my = geo.world2model(x, y)
@@ -418,6 +503,18 @@ def make_forest(meta):
         a = rng.uniform(0, 2 * math.pi)
         inst.setdefault(kind, []).append({"ctxid": 0, "pos": [x, y, z], "rotationMatrix": rot_list_from_yaw(a),
                                           "scale": scale, "type": kind})
+    # erbacce e arbusti bassi alla base delle ringhiere dei marciapiedi (Street View 2022)
+    for mx in np.arange(-24, 118, 4.5):
+        if rng.random() < 0.45:
+            continue
+        for my in (LL.se_rail_y(mx) + 0.3, (LL.nw_curb_y(mx) + 0.15 + LL.NW_WALK - 0.3) if LL.NW_WALK_FROM < mx < 112 else None):
+            if my is None or rng.random() < 0.5:
+                continue
+            x, y = geo.model2world(mx + rng.normal(0, 1.2), my)
+            k = "generibush_small" if rng.random() < 0.7 else "scraggly_bush"
+            inst.setdefault(k, []).append({"ctxid": 0, "pos": [round(x, 3), round(y, 3), round(ground_z(x, y) - 0.05, 3)],
+                                           "rotationMatrix": rot_list_from_yaw(rng.uniform(0, 2 * math.pi)),
+                                           "scale": round(float(rng.uniform(0.4, 0.7)), 3), "type": k})
     for mx, my in LL.MEDIAN_EXTRA_SHRUBS:
         x, y = geo.model2world(mx, my)
         inst.setdefault("generibush", []).append({"ctxid": 0, "pos": [round(x, 3), round(y, 3), round(ground_z(x, y) - 0.05, 3)],
@@ -727,7 +824,7 @@ def buildings(L):
     from matplotlib.path import Path as MPath
     ind_paths = [MPath(p) for p in ind_area]
     used, placed = set(), 0
-    skipped = {"sovrapposti": 0, "su_strada": 0}
+    skipped = {"sovrapposti": 0, "su_strada": 0, "stadio": 0}
     from matplotlib.path import Path as MPath2
     grid = {}                                            # hash spaziale 20 m delle impronte gia' piazzate
 
@@ -741,6 +838,9 @@ def buildings(L):
         nonlocal placed
         # niente edifici doppi (OSM ha a volte building + building:part) ne' sulla carreggiata
         pts = footprint_pts(cx, cy, yaw, Lseg, W)
+        if in_stadium(cx, cy)[0]:                    # tribune e gabbiotti dello stadio: li fa build_stadium.py
+            skipped["stadio"] += 1
+            return
         near = [q for k in {(int(cx // 20) + a, int(cy // 20) + b) for a in (-2, -1, 0, 1, 2) for b in (-2, -1, 0, 1, 2)} for q in grid.get(k, [])]
         if any(q.contains_points(pts).mean() > 0.25 for q in near):
             skipped["sovrapposti"] += 1
@@ -1224,6 +1324,49 @@ def clutter(L):
 
 
 # ====================================================================== cielo, luce, terreno, spawn
+def stadium_polys():
+    """muri di cinta e centri sportivi che contengono un campo da calcio: dentro non vanno case generiche ne' alberi."""
+    if "p" not in _STAD:
+        from matplotlib.path import Path as MP
+        osm = OSM()
+        pitches = [np.array(osm.way_pts(w)).mean(0) for w, t in osm.ways_where(lambda t: t.get("leisure") == "pitch" and t.get("sport") == "soccer")]
+        polys = []
+        for w, t in osm.ways_where(lambda t: t.get("barrier") == "wall" or t.get("leisure") == "sports_centre"):
+            r = np.array(osm.way_pts(w))
+            if len(r) > 3 and np.ptp(r[:, 0]) < 320 and any(MP(r).contains_point(c) for c in pitches):
+                polys.append(MP(r))
+        _STAD["p"] = polys
+    return _STAD["p"]
+
+
+_STAD = {}
+
+
+def in_stadium(x, y):
+    X, Y = np.atleast_1d(x), np.atleast_1d(y)
+    out = np.zeros(len(X), bool)
+    for p in stadium_polys():
+        out |= p.contains_points(np.stack([X, Y], 1))
+    return out
+
+
+def stadium_objects(L):
+    """stadio Mario Lancellotta (build_stadium.py) e le luci delle quattro torri faro (di notte)."""
+    if not os.path.exists(os.path.join(BUILD, "shapes", "ti_stadium.dae")):
+        return
+    L.add("dintorni/stadio", {"name": "stadio_lancellotta", "class": "TSStatic", "position": [0, 0, 0], "shapeName": SHP("ti_stadium"),
+                              "collisionType": "Visible Mesh Final", "decalType": "Visible Mesh", "useInstanceRenderData": True})
+    info = json.load(open(os.path.join(BUILD, "stadium.json")))
+    tx, ty, tz_ = info["look"]
+    for k, (x, y, z) in enumerate(info["towers"]):
+        f = np.array([tx - x, ty - y, tz_ - z]); f /= np.linalg.norm(f)
+        r = np.cross(f, [0, 0, 1]); r /= np.linalg.norm(r); u = np.cross(r, f)
+        L.add("dintorni/stadio", {"name": f"stadio_faro_{k}", "class": "SpotLight", "position": [x, y, z],
+                                  "rotationMatrix": [round(float(v), 5) for v in (*r, *f, *u)], "color": [1, 0.97, 0.9, 1],
+                                  "brightness": 6, "range": 140, "innerAngle": 40, "outerAngle": 70, "castShadows": False,
+                                  "isEnabled": False, "nightLight": True})
+
+
 def environment(L):
     L.add("Level_objects", {"name": "theLevelInfo", "class": "LevelInfo", "canvasClearColor": [1, 1, 1, 255],
                             "fogAtmosphereHeight": 320, "fogColor": [0.64, 0.78, 0.94, 1], "fogDensity": 0.00009,
@@ -1256,6 +1399,7 @@ def environment(L):
     L.add("terrain", {"name": "theTerrain", "class": "TerrainBlock", "position": mi["position"], "maxHeight": mi["maxHeight"],
                       "squareSize": mi["squareSize"], "baseTexSize": 4096, "materialTextureSet": "ti_TerrainMaterialTextureSet",
                       "terrainFile": LVP + "terrain_main.ter", "minimapImage": LVP + "terminal_isernia_minimap.png"})
+    stadium_objects(L)
     L.add("terrain", {"name": "sfondo_colline", "class": "TSStatic", "position": [0, 0, 0], "collisionType": "None",
                       "shapeName": SHP("ti_backdrop"), "useInstanceRenderData": True})
 

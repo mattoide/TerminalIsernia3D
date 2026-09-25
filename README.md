@@ -26,6 +26,14 @@ e controllata sulle foto satellitari e su Street View 2022. Il modello v0.3 avev
   ringhiera sud-est con gli alberi più indietro, righe gialle sbiadite e paletto rosso negli stalli dei bus dell'isola a "E",
   cespuglio tondo e albero scuro accanto alla pensilina sulla fascia centrale. La testata nord-est si apre sulla strada che
   prosegue oltre il piazzale (prima un cordolo la chiudeva), con la ringhiera marrone; il marciapiede sud-est la segue.
+- **Stadio Mario Lancellotta** (600 m a nord-est, `tools/build_stadium.py`): campo in erba con righe e porte, pista
+  d'atletica a 6 corsie con la lunetta nord in tartan, tribuna ovest coperta e gradinate est, recinzione in rete attorno
+  alla pista, muretto con le sbarre sul perimetro (come su Street View 2024), quattro torri faro che si accendono di notte,
+  campo d'allenamento in terra battuta; il terreno sotto e' in piano.
+- **Autolavaggio** come dal satellite 2026: piste self-service sotto la copertura rosa a 8 moduli, seconda tettoia a
+  pannelli bianchi con le colonnine aspirapolvere, locale tecnico grigio, serbatoi, piazzale piu' ampio.
+- **Alberelli di isole e fascia centrale** sull'asse delle aiuole, lontani da cordoli, lampioni e pensilina; caditoie
+  lungo i cordoli ed erbacce alla base delle ringhiere.
 - **Angolo sud-ovest (Street View 2024)**: ringhiere a telai dipinti di colori diversi lungo la Rava, l'ingresso del
   "Parco calisthenics e fitness" con due bacheche, il cartello blu e il cestino; cubo di cemento col murale sotto la
   pensilina dell'edificio (`tools/build_extras.py`, gira dopo il terreno per appoggiare tutto alle quote vere).
@@ -117,6 +125,7 @@ python tools/build_all.py --zip    # Blender -> texture -> terreno -> livello ->
 | `blender_export.py` | esporta il modello in `.dae` (writer Collada proprio: Blender 5 non lo ha più), UV in metri, asfalto tagliato al perimetro reale |
 | `lot_layout.py` | disposizione reale del piazzale (contorno, cordoli, isole, fascia centrale, container, salice) usata da export e livello |
 | `blender_props.py` | genera pensiline a denti di sega, ciuffi di canne, lampione a due globi, grate degli archi, il salice piangente, container e bacheca |
+| `build_stadium.py` | stadio Mario Lancellotta e campo d'allenamento dalla geometria OSM (dopo il terreno) |
 | `build_extras.py` | ringhiere colorate e ingresso del parco a sud-ovest, cubo col murale: dopo il terreno, con le sue quote |
 | `build_bridges.py` | viadotti (ponti OSM oltre 70 m): impalcato, cordoli e pile, con i DecalRoad sopra |
 | `build_backdrop.py` | mesh di sfondo delle colline fino a 16 km |

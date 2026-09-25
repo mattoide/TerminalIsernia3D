@@ -139,8 +139,13 @@ MEDIAN_CROWNS = [(-16.3, -32.6), (-6.9, -32.7), (44.8, -31.2), (62.7, -30.4), (6
 # fascia centrale, da Street View 2022: a x ~63 un cespuglio tondo (non un albero); accanto alla pensilina un pruno a
 # foglia rossa (nel gioco non c'e': leccio da citta', chioma scura e compatta) con un cespuglietto ai piedi
 MEDIAN_SHRUB_AT = [62.7]
-MEDIAN_DARK_TREE_AT = [44.8]
-MEDIAN_EXTRA_SHRUBS = [(43.4, -31.9)]
+MEDIAN_DARK_TREE_AT = [42.6]
+MEDIAN_EXTRA_SHRUBS = [(41.4, -31.9)]
+# x vere degli alberi della fascia centrale (Street View 2022, direzioni dai panorami lungo la Rava): il pruno sta ~2 m a
+# ovest della pensilina, gli alberelli non stanno addosso ai lampioni
+MEDIAN_TREE_X = {-16.3: -14.6, 44.8: 42.6, 69.9: 67.9}
+MEDIAN_SOIL_OFF = 0.8      # centro della striscia in terra (lato piazzale): gli autobloccanti sono sul lato strada
+TREE_LAMP_CLEAR = 2.0      # alberelli ad almeno 2 m dai pali
 # pensilina della fascia centrale: resta alla x del modello v0.3 (~45, Street View 2022 la conferma li')
 MEDIAN_SHELTER = None
 # isola a "E" della v0.3 a sud-est dell'edificio: stalli dei bus tra i bracci (Street View 2024: righe gialle sbiadite

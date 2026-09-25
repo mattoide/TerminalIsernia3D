@@ -360,32 +360,91 @@ quad(kmd, "ti_railing", Vector((bx - 0.9, by - 0.25, 2.17)), Vector((bx + 0.9, b
 write_dae(os.path.join(OUT, "ti_bacheca.dae"), [kmd], GEO)
 
 # ----------------------------------------------------------------------------- autolavaggio (OSM way 1238868719)
-# tettoia 35.6 x 7.1 m con 6 piste (ortofoto: copertura bianca), nel sistema locale: x lungo la tettoia, centro in 0;
-# build_level la posa al centro OSM con la sua rotazione e alla quota del piazzale
+# dal satellite 2026: la tettoia delle piste self-service (35.6 x 7.1 m, OSM) ha la copertura rosa a 8 moduli piramidali
+# con la fascia rosso scuro; ~11 m a nord, in parallelo, una seconda tettoia 18.5 x 7 m a pannelli bianchi con telaio
+# rosso scuro, il locale tecnico grigio e due serbatoi bianchi. Sistema locale: x lungo la tettoia, +y verso nord,
+# centro della tettoia in 0; build_level la posa al centro OSM con la sua rotazione e alla quota del piazzale.
 cmd_ = MeshData("carwash")
-CL, CW, CH = 35.6, 7.1, 4.3
-nb = 6
+CL, CW, CH = 35.6, 7.1, 3.9
+nb = 8
+
+
+def quad2(md, mat, a, b, c, d):
+    """quad visibile dai due lati (coperture viste anche da sotto)."""
+    quad(md, mat, a, b, c, d)
+    quad(md, mat, d, c, b, a)
+
+
+def tri2(md, mat, a, b, c):
+    for P in ((a, b, c), (c, b, a)):
+        n = (P[1] - P[0]).cross(P[2] - P[0]).normalized()
+        md.add_tri(mat, [(v.copy(), n, (v.x * 0.5, v.y * 0.5), (0.0, 0.0)) for v in P])
+
+
+def cyl_at(md, mat, cx, cy, z0, z1, r, seg=16):
+    for k in range(seg):
+        a0, a1 = 2 * math.pi * k / seg, 2 * math.pi * (k + 1) / seg
+        p0 = Vector((cx + r * math.cos(a0), cy + r * math.sin(a0), z0)); p1 = Vector((cx + r * math.cos(a1), cy + r * math.sin(a1), z0))
+        quad(md, mat, p0, p1, p1 + Vector((0, 0, z1 - z0)), p0 + Vector((0, 0, z1 - z0)), n=Vector((math.cos((a0 + a1) / 2), math.sin((a0 + a1) / 2), 0)))
+        tri2(md, mat, Vector((cx, cy, z1)), p0 + Vector((0, 0, z1 - z0)), p1 + Vector((0, 0, z1 - z0)))
+
+
+# piste self-service
 for k in range(nb + 1):                                         # colonne sui due lati lunghi
     x = -CL / 2 + CL * k / nb
     for y in (-CW / 2 + 0.15, CW / 2 - 0.15):
-        box(cmd_, "ti_lamp_pole", Vector((x, y, 0)), Vector((x, y, CH)), 0.22)
+        box(cmd_, "ti_lamp_pole", Vector((x, y, 0)), Vector((x, y, CH)), 0.2)
     if 0 < k < nb:                                              # pannelli divisori tra le piste
         box(cmd_, "ti_carwash_panel", Vector((x, -CW / 2 + 0.6, 0.3)), Vector((x, CW / 2 - 0.6, 0.3)), 0.06, 0.6)
         for zz in (1.2, 2.1, 3.0):
             box(cmd_, "ti_carwash_panel", Vector((x, -CW / 2 + 0.6, zz)), Vector((x, CW / 2 - 0.6, zz)), 0.05, 0.9)
-    if k < nb:                                                  # braccio della lancia e box gettoniera per pista
+    if k < nb:                                                  # gettoniera, braccio della lancia e scarico a terra
         xc = -CL / 2 + CL * (k + 0.5) / nb
-        box(cmd_, "ti_carwash_blue", Vector((xc + 2.2, CW / 2 - 0.35, 0)), Vector((xc + 2.2, CW / 2 - 0.35, 1.5)), 0.5, 0.35)
+        box(cmd_, "ti_carwash_blue", Vector((xc + 1.5, CW / 2 - 0.35, 0)), Vector((xc + 1.5, CW / 2 - 0.35, 1.5)), 0.5, 0.35)
         box(cmd_, "ti_lamp_pole", Vector((xc, 0, CH - 0.1)), Vector((xc + 1.2, 0, CH - 0.1)), 0.06)
-roof0, roof1 = CH, CH + 0.45
-c8 = [Vector((sx * CL / 2, sy * CW / 2, z)) for z in (roof0, roof1) for sx, sy in ((-1, -1), (1, -1), (1, 1), (-1, 1))]
-ctr_ = Vector((0, 0, (roof0 + roof1) / 2))
-quad(cmd_, "ti_carwash_roof", c8[4], c8[5], c8[6], c8[7], ref=ctr_)
-quad(cmd_, "ti_carwash_roof", c8[3], c8[2], c8[1], c8[0], ref=ctr_)
-for i in range(4):
-    j = (i + 1) % 4
-    quad(cmd_, "ti_carwash_blue", c8[i], c8[j], c8[j + 4], c8[i + 4], ref=ctr_)      # fascia blu sul bordo
+        box(cmd_, "ti_grille", Vector((xc - 0.5, 0, 0.005)), Vector((xc + 0.5, 0, 0.005)), 0.35, 0.01)
+# copertura: un modulo piramidale per pista, fascia rosso scuro sul bordo
+OV = 0.25
+for k in range(nb):
+    x0, x1 = -CL / 2 + CL * k / nb - (OV if k == 0 else 0), -CL / 2 + CL * (k + 1) / nb + (OV if k == nb - 1 else 0)
+    e = [Vector((x0, -CW / 2 - OV, CH)), Vector((x1, -CW / 2 - OV, CH)), Vector((x1, CW / 2 + OV, CH)), Vector((x0, CW / 2 + OV, CH))]
+    apex = Vector(((x0 + x1) / 2, 0, CH + 1.1))
+    for i in range(4):
+        tri2(cmd_, "ti_carwash_roof", e[i], e[(i + 1) % 4], apex)
+for (xa, ya), (xb, yb) in (((-1, -1), (1, -1)), ((1, -1), (1, 1)), ((1, 1), (-1, 1)), ((-1, 1), (-1, -1))):
+    pa = Vector((xa * (CL / 2 + OV), ya * (CW / 2 + OV), CH - 0.12)); pb = Vector((xb * (CL / 2 + OV), yb * (CW / 2 + OV), CH - 0.12))
+    box(cmd_, "ti_carwash_fascia", pa, pb, 0.12, 0.36)
 box(cmd_, "ti_curb", Vector((-CL / 2 - 0.5, 0, -0.3)), Vector((CL / 2 + 0.5, 0, -0.3)), CW + 1.0, 0.36)   # platea in cemento
+# seconda tettoia a pannelli bianchi (lavaggio a mano / aspirapolvere)
+AX, AY, AL, AW, AH = -4.8, 10.8, 18.5, 7.0, 3.6
+for k in range(5):
+    x = AX - AL / 2 + AL * k / 4
+    for y in (AY - AW / 2 + 0.15, AY + AW / 2 - 0.15):
+        box(cmd_, "ti_carwash_fascia", Vector((x, y, 0)), Vector((x, y, AH)), 0.18)
+for k in range(4):
+    for j in range(2):
+        xa, xb = AX - AL / 2 + AL * k / 4 + 0.08, AX - AL / 2 + AL * (k + 1) / 4 - 0.08
+        ya, yb = AY - AW / 2 + AW * j / 2 + 0.08, AY - AW / 2 + AW * (j + 1) / 2 - 0.08
+        quad2(cmd_, "ti_canopy_white", Vector((xa, ya, AH + 0.12)), Vector((xb, ya, AH + 0.12)), Vector((xb, yb, AH + 0.12)), Vector((xa, yb, AH + 0.12)))
+for k in range(5):                                              # telaio: traverse e bordi
+    x = AX - AL / 2 + AL * k / 4
+    box(cmd_, "ti_carwash_fascia", Vector((x, AY - AW / 2, AH + 0.05)), Vector((x, AY + AW / 2, AH + 0.05)), 0.16, 0.25)
+for y in (AY - AW / 2, AY, AY + AW / 2):
+    box(cmd_, "ti_carwash_fascia", Vector((AX - AL / 2, y, AH + 0.05)), Vector((AX + AL / 2, y, AH + 0.05)), 0.16, 0.25)
+box(cmd_, "ti_curb", Vector((AX - AL / 2 - 0.3, AY, -0.3)), Vector((AX + AL / 2 + 0.3, AY, -0.3)), AW + 0.6, 0.36)
+for k in range(3):                                              # colonnine aspirapolvere
+    x = AX - AL / 2 + AL * (k + 0.5) / 3
+    box(cmd_, "ti_carwash_blue", Vector((x, AY + AW / 2 - 0.6, 0)), Vector((x, AY + AW / 2 - 0.6, 1.3)), 0.4, 0.4)
+# locale tecnico grigio con serranda e macchine sul tetto
+TX, TY, TL, TW, TH = 12.6, 10.9, 10.0, 7.0, 3.0
+box(cmd_, "ti_carwash_wall", Vector((TX - TL / 2, TY, TH / 2 - 0.2)), Vector((TX + TL / 2, TY, TH / 2 - 0.2)), TW, TH + 0.4)
+quad(cmd_, "ti_carwash_door", Vector((TX - 1.6, TY - TW / 2 - 0.02, 0)), Vector((TX + 1.6, TY - TW / 2 - 0.02, 0)),
+     Vector((TX + 1.6, TY - TW / 2 - 0.02, 2.6)), Vector((TX - 1.6, TY - TW / 2 - 0.02, 2.6)), n=Vector((0, -1, 0)))
+for dx, dy in ((-2.5, 1.0), (1.8, -1.2)):
+    box(cmd_, "ti_carwash_panel", Vector((TX + dx - 0.8, TY + dy, TH + 0.45)), Vector((TX + dx + 0.8, TY + dy, TH + 0.45)), 1.2, 0.9)
+# serbatoi bianchi all'estremita' ovest della seconda tettoia
+for cx in (-17.3, -15.1):
+    cyl_at(cmd_, "ti_carwash_tank", cx, 11.5, 0.0, 2.6, 0.95)
 write_dae(os.path.join(OUT, "ti_carwash.dae"), [cmd_], Matrix.Identity(4))
 
 print("PROPS_OK", cmd.tri_count(), rmd.tri_count(), lmd.tri_count(), wmd.tri_count(), "tende", n_str, "grate", gmd.tri_count(), "lampione", pmd.tri_count())

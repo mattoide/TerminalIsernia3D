@@ -1497,6 +1497,95 @@
   "translucentZWrite": true,
   "version": 1.5
  },
+ "italy_bld_decals": {
+  "name": "italy_bld_decals",
+  "mapTo": "italy_bld_decals",
+  "class": "Material",
+  "persistentId": "99a4e03f-efbb-42a2-b9f9-208454c89c0b",
+  "Stages": [
+   {
+    "colorMap": "levels/italy/art/shapes/buildings/italy_bld_decals.dds",
+    "detailNormalMapStrength": 0.5,
+    "detailScale": [
+     8,
+     8
+    ],
+    "diffuseColor": [
+     0.99607801437378,
+     0.99607801437378,
+     0.99607801437378,
+     0.702000022
+    ],
+    "normalMap": "levels/italy/art/shapes/buildings/italy_bld_decals_n.dds",
+    "pixelSpecular": true,
+    "specular": [
+     0.99607801437378,
+     0.99607801437378,
+     0.99607801437378,
+     1
+    ],
+    "specularPower": 26,
+    "vertColor": true
+   },
+   {},
+   {},
+   {}
+  ],
+  "alphaRef": 0,
+  "alphaTest": true,
+  "annotation": "BUILDINGS",
+  "groundType": "SOFT_COLLISION_GENERAL",
+  "materialTag0": "beamng",
+  "materialTag1": "italy",
+  "specularStrength0": "0.490196",
+  "translucent": true,
+  "translucentZWrite": true
+ },
+ "italy_bld_trim_metal": {
+  "name": "italy_bld_trim_metal",
+  "mapTo": "italy_bld_trim_metal",
+  "class": "Material",
+  "persistentId": "880141b1-c0d5-40e9-b097-89ab16f9c691",
+  "Stages": [
+   {
+    "colorMap": "levels/italy/art/shapes/buildings/italy_bld_trim_metal_d.dds",
+    "detailNormalMapStrength": 0.5,
+    "detailScale": [
+     0.5,
+     0.5
+    ],
+    "diffuseColor": [
+     0.99607801437378,
+     0.99607801437378,
+     0.99607801437378,
+     0.20000000298023
+    ],
+    "normalMap": "levels/italy/art/shapes/buildings/italy_bld_trim_metal_n.dds",
+    "pixelSpecular": true,
+    "specular": [
+     0.99607801437378,
+     0.99607801437378,
+     0.99607801437378,
+     1
+    ],
+    "specularMap": "levels/italy/art/shapes/buildings/italy_bld_trim_metal_s.dds",
+    "specularPower": 51,
+    "vertColor": true
+   },
+   {},
+   {},
+   {}
+  ],
+  "annotation": "BUILDINGS",
+  "cubemap": "global_cubemap_metalblurred",
+  "doubleSided": true,
+  "groundType": "METAL",
+  "invertBackFaceNormals": true,
+  "materialTag0": "beamng",
+  "materialTag1": "italy",
+  "specularStrength0": "0.490196",
+  "translucentBlendOp": "None"
+ },
  "italy_bld_ind_windows": {
   "name": "italy_bld_ind_windows",
   "mapTo": "Italy_bld_ind_windows",
@@ -1586,95 +1675,6 @@
   "groundType": "ASPHALT_OLD",
   "materialTag0": "beamng",
   "materialTag1": "italy",
-  "translucentBlendOp": "None"
- },
- "italy_bld_decals": {
-  "name": "italy_bld_decals",
-  "mapTo": "italy_bld_decals",
-  "class": "Material",
-  "persistentId": "99a4e03f-efbb-42a2-b9f9-208454c89c0b",
-  "Stages": [
-   {
-    "colorMap": "levels/italy/art/shapes/buildings/italy_bld_decals.dds",
-    "detailNormalMapStrength": 0.5,
-    "detailScale": [
-     8,
-     8
-    ],
-    "diffuseColor": [
-     0.99607801437378,
-     0.99607801437378,
-     0.99607801437378,
-     0.702000022
-    ],
-    "normalMap": "levels/italy/art/shapes/buildings/italy_bld_decals_n.dds",
-    "pixelSpecular": true,
-    "specular": [
-     0.99607801437378,
-     0.99607801437378,
-     0.99607801437378,
-     1
-    ],
-    "specularPower": 26,
-    "vertColor": true
-   },
-   {},
-   {},
-   {}
-  ],
-  "alphaRef": 0,
-  "alphaTest": true,
-  "annotation": "BUILDINGS",
-  "groundType": "SOFT_COLLISION_GENERAL",
-  "materialTag0": "beamng",
-  "materialTag1": "italy",
-  "specularStrength0": "0.490196",
-  "translucent": true,
-  "translucentZWrite": true
- },
- "italy_bld_trim_metal": {
-  "name": "italy_bld_trim_metal",
-  "mapTo": "italy_bld_trim_metal",
-  "class": "Material",
-  "persistentId": "880141b1-c0d5-40e9-b097-89ab16f9c691",
-  "Stages": [
-   {
-    "colorMap": "levels/italy/art/shapes/buildings/italy_bld_trim_metal_d.dds",
-    "detailNormalMapStrength": 0.5,
-    "detailScale": [
-     0.5,
-     0.5
-    ],
-    "diffuseColor": [
-     0.99607801437378,
-     0.99607801437378,
-     0.99607801437378,
-     0.20000000298023
-    ],
-    "normalMap": "levels/italy/art/shapes/buildings/italy_bld_trim_metal_n.dds",
-    "pixelSpecular": true,
-    "specular": [
-     0.99607801437378,
-     0.99607801437378,
-     0.99607801437378,
-     1
-    ],
-    "specularMap": "levels/italy/art/shapes/buildings/italy_bld_trim_metal_s.dds",
-    "specularPower": 51,
-    "vertColor": true
-   },
-   {},
-   {},
-   {}
-  ],
-  "annotation": "BUILDINGS",
-  "cubemap": "global_cubemap_metalblurred",
-  "doubleSided": true,
-  "groundType": "METAL",
-  "invertBackFaceNormals": true,
-  "materialTag0": "beamng",
-  "materialTag1": "italy",
-  "specularStrength0": "0.490196",
   "translucentBlendOp": "None"
  },
  "italy_medieval_stone_wall_decals": {

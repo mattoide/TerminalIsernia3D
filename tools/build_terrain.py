@@ -173,6 +173,42 @@ LONG_BRIDGE = 70.0          # oltre questa lunghezza il ponte e' un viadotto ver
 
 
 CARWASH_YARD = []       # (j0, j1, i0, i1, maschera) del piazzale dell'autolavaggio, per lo strato asfalto
+SPORT_COVER = []        # (j0, j1, i0, i1, maschera) dove campo e pista li fa build_stadium.py: strato asfalto (niente erba 3D)
+
+
+def sport_pads(osm, XX, YY, Z):
+    """campi da calcio OSM in piano: lo stadio fino al suo muro di cinta, il campo d'allenamento fino al suo recinto;
+    raccordo di 10 m. Registra in SPORT_COVER l'area coperta dalle mesh di build_stadium.py."""
+    from matplotlib.path import Path as MP
+    rings = [(t, np.array(osm.way_pts(w))) for w, t in osm.ways_where(lambda t: t.get("barrier") in ("wall", "fence")
+                                                                       or t.get("leisure") == "sports_centre")]
+    out = Z.copy(); n = 0
+    for w, t in osm.ways_where(lambda t: t.get("leisure") == "pitch" and t.get("sport") == "soccer"):
+        P = np.array(osm.way_pts(w)); c = P.mean(0)
+        if np.hypot(*c) > 1200 or len(P) < 4:
+            continue
+        enc = [(tt, r) for tt, r in rings if len(r) > 3 and MP(r).contains_point(c) and np.ptp(r[:, 0]) < 320]
+        walls = [r for tt, r in enc if tt.get("barrier") == "wall"]
+        centres = [r for tt, r in enc if tt.get("leisure") == "sports_centre"]
+        fences = [r for tt, r in enc if tt.get("barrier") == "fence"]
+        pad = max(walls, key=len) if walls else (centres[0] if centres else P)
+        cover = (min(fences, key=lambda r: np.ptp(r[:, 0])) if (walls and fences) else P)
+        lo, hi = pad.min(0) - 14, pad.max(0) + 14
+        i0 = max(0, int((lo[0] - X0) / SQ)); i1 = min(Z.shape[1], int((hi[0] - X0) / SQ) + 1)
+        j0 = max(0, int((lo[1] - Y0) / SQ)); j1 = min(Z.shape[0], int((hi[1] - Y0) / SQ) + 1)
+        pts = np.stack([XX[j0:j1, i0:i1].ravel(), YY[j0:j1, i0:i1].ravel()], 1)
+        ins = MP(pad).contains_points(pts).reshape(j1 - j0, i1 - i0)
+        if not ins.any():
+            continue
+        d = ndimage.distance_transform_edt(~ins) * SQ
+        zp = float(np.median(Z[j0:j1, i0:i1][ins]))
+        wgt = 1 - smoothstep(0, 10, d)
+        sub = out[j0:j1, i0:i1]; sub[:] = sub * (1 - wgt) + zp * wgt
+        cov = ndimage.binary_dilation(MP(cover).contains_points(pts).reshape(j1 - j0, i1 - i0), iterations=2)
+        SPORT_COVER.append((j0, j1, i0, i1, cov))
+        n += 1
+    print("campi sportivi in piano:", n)
+    return out
 
 
 def building_pads(osm, XX, YY, Z, D_out, margin=1.0, blend=7.0):
@@ -193,16 +229,20 @@ def building_pads(osm, XX, YY, Z, D_out, margin=1.0, blend=7.0):
         if L * W < 12:
             continue
         m_, b_ = (margin, blend)
-        if t.get("amenity") == "car_wash":                # piazzale asfaltato attorno alle piste di lavaggio
+        cw = t.get("amenity") == "car_wash"
+        if cw:                                            # piazzale asfaltato: a nord la seconda tettoia e il locale tecnico
             m_, b_ = 9.0, 6.0
-        r = math.hypot(L, W) / 2 + m_ + b_
+        r = math.hypot(L, W) / 2 + m_ + b_ + (14.0 if cw else 0.0)
         i0 = max(0, int((ctr[0] - r - X0) / SQ)); i1 = min(N, int((ctr[0] + r - X0) / SQ) + 2)
         j0 = max(0, int((ctr[1] - r - Y0) / SQ)); j1 = min(N, int((ctr[1] + r - Y0) / SQ) + 2)
         if i1 <= i0 or j1 <= j0:
             continue
         xs, ys = XX[j0:j1, i0:i1] - ctr[0], YY[j0:j1, i0:i1] - ctr[1]
         u = xs * math.cos(a) + ys * math.sin(a); v = -xs * math.sin(a) + ys * math.cos(a)
-        d = np.hypot(np.maximum(np.abs(u) - L / 2 - m_, 0), np.maximum(np.abs(v) - W / 2 - m_, 0))
+        if cw:                                            # satellite 2026: 20 m a nord, 6 a sud, 10 alle testate
+            d = np.hypot(np.maximum(np.abs(u) - L / 2 - 10.0, 0), np.maximum(np.abs(v - 7.0) - (W / 2 + 13.0), 0))
+        else:
+            d = np.hypot(np.maximum(np.abs(u) - L / 2 - m_, 0), np.maximum(np.abs(v) - W / 2 - m_, 0))
         inside = d <= 0
         foot = np.hypot(np.maximum(np.abs(u) - L / 2, 0), np.maximum(np.abs(v) - W / 2, 0)) <= 0
         if not inside.any() or not foot.any() or D_out[j0:j1, i0:i1][foot].min() < 25:   # il terminal e' la nostra mesh
@@ -376,6 +416,7 @@ def main():
     Znat = Z + detail * smoothstep(6, 60, D_out) * (1 - road_blend) + ditch
     # piazzole piane sotto gli edifici OSM (prima gli edifici in pendio restavano sepolti fino a 13 m a monte)
     Znat = building_pads(osm, XX, YY, Znat, D_out)
+    Znat = sport_pads(osm, XX, YY, Znat)
     Znat = Znat * (1 - road_blend) + RZ * road_blend
     # il piazzale dell'autolavaggio vince sulla stradina che gli passa accanto (la strada vi sale con una rampa)
     for j0, j1, i0, i1, msk, w, zp in CARWASH_YARD:
@@ -433,6 +474,8 @@ def main():
     # piazzale dell'autolavaggio asfaltato (ortofoto)
     ia = [n for n, *_ in TMATS].index("ti_t_asphalt")
     for j0, j1, i0, i1, msk, w, zp in CARWASH_YARD:
+        sub = lay[j0:j1, i0:i1]; sub[msk] = ia
+    for j0, j1, i0, i1, msk in SPORT_COVER:                  # sotto campo e pista (mesh): niente erba 3D che spunta
         sub = lay[j0:j1, i0:i1]; sub[msk] = ia
     write_ter(os.path.join(LEVEL, "terrain_main.ter"), Zf - zmin, lay, names, maxh)
     write_terrain_json(os.path.join(LEVEL, "terrain_main.terrain.json"), "/levels/terminal_isernia/terrain_main.ter", N, names)
