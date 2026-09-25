@@ -1718,32 +1718,6 @@
   "materialTag1": "italy",
   "specularStrength0": "0.490196"
  },
- "moderncorrugated_tin": {
-  "name": "moderncorrugated_tin",
-  "mapTo": "moderncorrugated_tin",
-  "class": "Material",
-  "persistentId": "09198305-ba95-4017-b1f0-f0a079fff073",
-  "Stages": [
-   {
-    "colorMap": "eca_bld_moderncorrugated_tin_d.dds",
-    "normalMap": "eca_bld_moderncorrugated_tin_n.dds",
-    "specularMap": "eca_bld_moderncorrugated_tin_s.dds",
-    "specularPower": 1,
-    "useAnisotropic": true,
-    "vertColor": true
-   },
-   {},
-   {},
-   {}
-  ],
-  "annotation": "BUILDINGS",
-  "groundType": "METAL",
-  "materialTag0": "beamng",
-  "materialTag1": "building",
-  "materialTag2": "east_coast_usa",
-  "specularStrength0": "0.490196",
-  "translucentBlendOp": "None"
- },
  "italy_mesh_fence": {
   "name": "italy_mesh_fence",
   "mapTo": "italy_mesh_fence",
@@ -1771,6 +1745,32 @@
   "materialTag0": "beamng",
   "materialTag1": "italy",
   "specularStrength0": "0.490196"
+ },
+ "moderncorrugated_tin": {
+  "name": "moderncorrugated_tin",
+  "mapTo": "moderncorrugated_tin",
+  "class": "Material",
+  "persistentId": "09198305-ba95-4017-b1f0-f0a079fff073",
+  "Stages": [
+   {
+    "colorMap": "eca_bld_moderncorrugated_tin_d.dds",
+    "normalMap": "eca_bld_moderncorrugated_tin_n.dds",
+    "specularMap": "eca_bld_moderncorrugated_tin_s.dds",
+    "specularPower": 1,
+    "useAnisotropic": true,
+    "vertColor": true
+   },
+   {},
+   {},
+   {}
+  ],
+  "annotation": "BUILDINGS",
+  "groundType": "METAL",
+  "materialTag0": "beamng",
+  "materialTag1": "building",
+  "materialTag2": "east_coast_usa",
+  "specularStrength0": "0.490196",
+  "translucentBlendOp": "None"
  },
  "italy_poles_lights_etc": {
   "name": "italy_poles_lights_etc",

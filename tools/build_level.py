@@ -247,6 +247,15 @@ def terminal_materials():
             roughnessFactor=0.7, metallicFactor=0.25),   # grate verniciate scure, arrugginite
         pbr("ti_bridge_concrete", T + "t_ti_curb", "ASPHALT", **det_concrete),
         pbr("ti_bridge_deck", T + "t_ti_asphalt", "ASPHALT"),
+        # telai della ringhiera colorata a sud-ovest (Street View 2024), vernice sbiadita e scrostata
+        *[pbr(f"ti_rail_{nm}", None, "METAL", baseColorMap=AS + "tileable/metal/metal_paint_peeling/paint_peeling_d.dds",
+              normalMap=AS + "tileable/metal/metal_paint_peeling/paint_peeling_n.dds", baseColorFactor=col, roughnessFactor=0.7,
+              metallicFactor=0.1)
+          for nm, col in (("red", [0.62, 0.12, 0.08, 1]), ("yellow", [0.85, 0.66, 0.14, 1]), ("green", [0.25, 0.5, 0.2, 1]),
+                          ("blue", [0.14, 0.34, 0.66, 1]), ("white", [0.82, 0.82, 0.78, 1]))],
+        pbr("ti_map_panel", None, "PLASTIC", baseColorFactor=[0.58, 0.68, 0.7, 1], roughnessFactor=0.5, metallicFactor=0,
+            **dict(det_concrete, detailBaseColorMapStrength=0.8)),    # bacheche con la mappa del parco
+        pbr("ti_sign_blue", None, "METAL", baseColorFactor=[0.07, 0.2, 0.48, 1], roughnessFactor=0.4, metallicFactor=0.2),
         pbr("ti_notice_panel", None, "PLASTIC", baseColorFactor=[0.80, 0.80, 0.76, 1], roughnessFactor=0.85, metallicFactor=0,
             **dict(det_concrete, detailBaseColorMapStrength=0.6)),   # pannello bianco sbiadito della bacheca
         reeds_mat("ti_reeds", "t_grass_green_long_03", [0.58, 0.74, 0.52, 1]),
@@ -294,7 +303,7 @@ def publish_shapes():
 def place_terminal(L):
     shp = os.path.join(LV, "art", "shapes", "terminal")
     json.dump(terminal_materials(), open(os.path.join(shp, "main.materials.json"), "w"), indent=1)
-    for nm in ("ti_ground", "ti_building", "ti_railing", "ti_props", "ti_canopy", "ti_grilles", "ti_skylight", "ti_powerline", "ti_bacheca"):
+    for nm in ("ti_ground", "ti_building", "ti_railing", "ti_props", "ti_canopy", "ti_grilles", "ti_skylight", "ti_powerline", "ti_bacheca", "ti_extras"):
         L.add("terminal", {"name": nm.replace("ti_", "terminal_"), "class": "TSStatic", "position": [0, 0, 0], "shapeName": SHP(nm),
                            "collisionType": "Visible Mesh Final", "decalType": "Visible Mesh", "useInstanceRenderData": True})
     meta = json.load(open(os.path.join(BUILD, "export_meta.json")))
@@ -511,8 +520,10 @@ def make_forest(meta):
         dr = tsample(TDROAD, X, Y); hw = tsample(TRHW, X, Y)
         mx = np.array([geo.world2model(x, y)[0] for x, y in zip(X, Y)]) if len(X) else np.zeros(0)
         n = np.sin(X * 0.21) * np.cos(Y * 0.17) + np.sin(X * 0.05 + Y * 0.07)
-        se = se_side(X, Y)
-        return (d > 2.0) & (d < np.where(se, 15.0, 11 + 4 * n)) & (dr > hw + 1.2) & (mx > -45) & ((n > -0.35) | se)
+        se = se_side(X, Y) & (mx > LL.SE_COLOR_FROM_X)
+        _, my = geo.world2model(np.asarray(X, float), np.asarray(Y, float))
+        park = (mx < LL.SE_COLOR_FROM_X) & (mx > -65) & (my < -52.0)              # parco fitness: prato e alberi, niente canne
+        return (d > 2.0) & (d < np.where(se, 15.0, 11 + 4 * n)) & (dr > hw + 1.2) & (mx > -45) & ((n > -0.35) | se) & ~park
     X, Y = poisson(reed_mask, -250, -250, 250, 250, 1.6)
     for x, y in zip(X, Y):
         put("ti_reeds_clump", x, y, 0.8, 1.25, z_off=0.0)
@@ -1163,6 +1174,10 @@ def street_furniture(L, meta):
             L.add("terminal/arredo", {"class": "TSStatic", "position": [round(px, 3), round(py, 3), round(ground_z(px, py), 3)],
                                       "shapeName": "/levels/italy/art/shapes/buildings/italy_city_extras_trash_bin.dae",
                                       "rotationMatrix": rot_list_from_yaw(math.radians(geo.MODEL_ROT_DEG + 180))})
+    px, py = geo.model2world(*LL.PARK_BIN)                                   # cestino all'ingresso del parco (Street View 2024)
+    L.add("terminal/arredo", {"class": "TSStatic", "position": [round(px, 3), round(py, 3), round(ground_z(px, py), 3)],
+                              "shapeName": "/levels/italy/art/shapes/buildings/italy_city_extras_trash_bin.dae",
+                              "rotationMatrix": rot_list_from_yaw(math.radians(geo.MODEL_ROT_DEG + 180))})
     mats = {}
     for shp in ("italy_light_single", "italy_city_extras_trash_bin"):
         va.collect(f"/levels/italy/art/shapes/buildings/{shp}.dae", "italy", mats)

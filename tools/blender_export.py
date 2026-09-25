@@ -366,7 +366,7 @@ for sign, x in ((1, LL.MED_X0), (-1, LL.MED_X1)):
             tri = [a_, b_, c_] if (b_ - a_).cross(c_ - a_).z > 0 else [a_, c_, b_]
             ground.add_tri("ti_island_soil", [(v, UP.copy(), *uvs_for(v, UP, 2.0)) for v in tri])
 # marciapiede sud-est (grigio, ringhiera sul bordo esterno): polilinea verso ovest, marciapiede a sinistra
-se_line = LL.se_curb_line(LL.SE_EXT_X, LL.SW_X, 5.0)                       # da nord-est a sud-ovest: fuori a sinistra
+se_line = LL.se_curb_line(LL.SE_EXT_X, LL.SE_WEST_X, 5.0)                       # da nord-est a sud-ovest: fuori a sinistra
 curb(ground, se_line, walk=(LL.SE_WALK - CURB_W, "ti_pavers_grey"))
 # testate del marciapiede sud-est (la strada prosegue ai due lati): chiuse fin sotto il suolo
 for p_, q_ in ((se_line[0], se_line[1]), (se_line[-1], se_line[-2])):
@@ -400,7 +400,7 @@ meta["shapes"]["ti_building.dae"] = {"tris": n, "materials": m}
 
 # 3) ringhiera
 rail = MeshData("railing")
-railing(rail, [(x, y - LL.SE_WALK) for x, y in LL.se_curb_line(LL.SW_X - 0.1, LL.SE_EXT_X, 5.0)])
+railing(rail, [(x, y - LL.SE_WALK) for x, y in LL.se_curb_line(LL.SE_COLOR_FROM_X, LL.SE_EXT_X, 5.0)])   # a ovest: colorata
 # ringhiera della testata nord-est, appena dietro il cordolo (Street View 2022), montanti infissi nel terreno
 ne_rail = []
 for p_ in ne_line:

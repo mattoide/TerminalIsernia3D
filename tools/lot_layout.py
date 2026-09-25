@@ -48,6 +48,16 @@ SE_CURB = [(-36.0, -51.2), (-20.0, -50.6), (0.0, -50.3), (20.0, -49.7), (40.0, -
 # ringhiera sud-est la seguono. La testata nord-est ha una ringhiera marrone davanti al canneto e si apre sulla strada.
 SE_EXT_X = 150.0           # il marciapiede sud-est continua lungo la strada fino a qui
 NE_OPEN_Y = -34.0          # varco nella testata nord-est per la strada: da qui al cordolo sud-est
+# a sud-ovest (Street View giugno 2024): il marciapiede sud-est prosegue lungo la Rava; da x -25 la sua ringhiera e' a
+# telai dipinti di colori diversi, con il varco d'ingresso al "Parco calisthenics e fitness" (bacheche e cartello blu);
+# la stessa ringhiera colorata corre sul lato nord-ovest della Rava oltre l'angolo del piazzale (build_extras.py)
+SE_WEST_X = -48.0
+SE_COLOR_FROM_X = -25.0
+PARK_GAP = (-32.6, -30.4)
+PARK_BOARDS_X = [-34.3, -35.7]
+NW_COLOR_FROM_X, NW_COLOR_TO_X = -38.5, -80.0
+# cubo di cemento col murale sotto la pensilina sud-est, all'angolo sud-ovest dell'edificio (Street View 2022)
+GRAFFITI_CUBE = (90.0, -16.3)
 SE_WALK = 2.5              # autobloccanti grigi tra cordolo e ringhiera
 
 
@@ -121,7 +131,9 @@ def lot_outline():
 # tolti su indicazione dell'utente (non fanno parte del terminal): la lista resta per le maschere dei decal
 KIOSKS = []
 WILLOW = (7.5, 16.0)       # tronco del salice sul marciapiede nord-ovest, a ridosso della ringhiera (chioma a ~(7, 16.5))
-NOTICE_BOARD = (38.0, se_rail_y(38.0) + 0.45)   # bacheca sul marciapiede sud-est (telaio arrugginito, pannello sbiadito)
+NOTICE_BOARD = (38.0, se_rail_y(38.0) + 0.45)
+PARK_SIGN = (-38.4, se_rail_y(-38.4) - 3.5)
+PARK_BIN = (-33.3, se_rail_y(-33.3) + 0.45)   # bacheca sul marciapiede sud-est (telaio arrugginito, pannello sbiadito)
 # chiome della fascia centrale sull'ortofoto (quelle delle isole coincidono entro 1 m con island_xform)
 MEDIAN_CROWNS = [(-16.3, -32.6), (-6.9, -32.7), (44.8, -31.2), (62.7, -30.4), (69.9, -29.3)]
 # fascia centrale, da Street View 2022: a x ~63 un cespuglio tondo (non un albero); accanto alla pensilina un pruno a

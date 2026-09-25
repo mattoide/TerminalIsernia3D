@@ -36,6 +36,7 @@ if __name__ == "__main__":
     run(PY, "tools/build_textures.py")
     run(PY, "tools/build_terrain.py")
     run(BLENDER, "-b", "--factory-startup", "--python", "tools/build_bridges.py", "--", "build/shapes")
+    run(BLENDER, "-b", "--factory-startup", "--python", "tools/build_extras.py", "--", "build/shapes")
     run(PY, "tools/build_backdrop.py")
     run(PY, "tools/build_level.py")
     run(PY, "tools/validate.py")
