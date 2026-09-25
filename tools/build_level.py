@@ -399,10 +399,21 @@ def make_forest(meta):
     for t in meta["trees"]:
         x, y = t["pos"]; h = t["height"]
         kind = "tree_aspen_small_a" if h > 5 else "holm_oak_city_small"      # Street View 2022: latifoglie giovani, foglie giallo-verdi
+        scale = round(min(1.25, max(0.6, h / (7.5 if h > 5 else 4.5))), 3)
+        mx, my = geo.world2model(x, y)
+        if LL.in_median(mx, my, 1.0) and any(abs(mx - v) < 1.5 for v in LL.MEDIAN_SHRUB_AT):
+            kind, scale = "fluffy_bush", 1.3
+        elif LL.in_median(mx, my, 1.0) and any(abs(mx - v) < 1.5 for v in LL.MEDIAN_DARK_TREE_AT):
+            kind, scale = "holm_oak_city_small", 0.95
         z = round(ground_z(x, y) - 0.05, 3)
         a = rng.uniform(0, 2 * math.pi)
         inst.setdefault(kind, []).append({"ctxid": 0, "pos": [x, y, z], "rotationMatrix": rot_list_from_yaw(a),
-                                          "scale": round(min(1.25, max(0.6, h / (7.5 if h > 5 else 4.5))), 3), "type": kind})
+                                          "scale": scale, "type": kind})
+    for mx, my in LL.MEDIAN_EXTRA_SHRUBS:
+        x, y = geo.model2world(mx, my)
+        inst.setdefault("generibush", []).append({"ctxid": 0, "pos": [round(x, 3), round(y, 3), round(ground_z(x, y) - 0.05, 3)],
+                                                  "rotationMatrix": rot_list_from_yaw(rng.uniform(0, 2 * math.pi)), "scale": 0.7,
+                                                  "type": "generibush"})
     # 2) boschi (dal terreno): specie in base alla vicinanza all'acqua e alla distanza
     osm = OSM()
     water = [osm.way_pts(w) for w, t in osm.ways_where(lambda t: "waterway" in t)]

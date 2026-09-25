@@ -120,6 +120,11 @@ WILLOW = (7.5, 16.0)       # tronco del salice sul marciapiede nord-ovest, a rid
 NOTICE_BOARD = (38.0, se_rail_y(38.0) + 0.45)   # bacheca sul marciapiede sud-est (telaio arrugginito, pannello sbiadito)
 # chiome della fascia centrale sull'ortofoto (quelle delle isole coincidono entro 1 m con island_xform)
 MEDIAN_CROWNS = [(-16.3, -32.6), (-6.9, -32.7), (44.8, -31.2), (62.7, -30.4), (69.9, -29.3)]
+# fascia centrale, da Street View 2022: a x ~63 un cespuglio tondo (non un albero); accanto alla pensilina un pruno a
+# foglia rossa (nel gioco non c'e': leccio da citta', chioma scura e compatta) con un cespuglietto ai piedi
+MEDIAN_SHRUB_AT = [62.7]
+MEDIAN_DARK_TREE_AT = [44.8]
+MEDIAN_EXTRA_SHRUBS = [(43.4, -31.9)]
 # pensilina della fascia centrale: resta alla x del modello v0.3 (~45, Street View 2022 la conferma li')
 MEDIAN_SHELTER = None
 # isola a "E" della v0.3 a sud-est dell'edificio: stalli dei bus tra i bracci (Street View 2024: righe gialle sbiadite

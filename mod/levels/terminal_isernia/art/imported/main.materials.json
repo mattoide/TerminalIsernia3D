@@ -1561,77 +1561,6 @@
   "materialTag1": "italy",
   "specularStrength0": "0.490196"
  },
- "italy_bld_trim_metal": {
-  "name": "italy_bld_trim_metal",
-  "mapTo": "italy_bld_trim_metal",
-  "class": "Material",
-  "persistentId": "880141b1-c0d5-40e9-b097-89ab16f9c691",
-  "Stages": [
-   {
-    "colorMap": "levels/italy/art/shapes/buildings/italy_bld_trim_metal_d.dds",
-    "detailNormalMapStrength": 0.5,
-    "detailScale": [
-     0.5,
-     0.5
-    ],
-    "diffuseColor": [
-     0.99607801437378,
-     0.99607801437378,
-     0.99607801437378,
-     0.20000000298023
-    ],
-    "normalMap": "levels/italy/art/shapes/buildings/italy_bld_trim_metal_n.dds",
-    "pixelSpecular": true,
-    "specular": [
-     0.99607801437378,
-     0.99607801437378,
-     0.99607801437378,
-     1
-    ],
-    "specularMap": "levels/italy/art/shapes/buildings/italy_bld_trim_metal_s.dds",
-    "specularPower": 51,
-    "vertColor": true
-   },
-   {},
-   {},
-   {}
-  ],
-  "annotation": "BUILDINGS",
-  "cubemap": "global_cubemap_metalblurred",
-  "doubleSided": true,
-  "groundType": "METAL",
-  "invertBackFaceNormals": true,
-  "materialTag0": "beamng",
-  "materialTag1": "italy",
-  "specularStrength0": "0.490196",
-  "translucentBlendOp": "None"
- },
- "moderncorrugated_tin": {
-  "name": "moderncorrugated_tin",
-  "mapTo": "moderncorrugated_tin",
-  "class": "Material",
-  "persistentId": "09198305-ba95-4017-b1f0-f0a079fff073",
-  "Stages": [
-   {
-    "colorMap": "eca_bld_moderncorrugated_tin_d.dds",
-    "normalMap": "eca_bld_moderncorrugated_tin_n.dds",
-    "specularMap": "eca_bld_moderncorrugated_tin_s.dds",
-    "specularPower": 1,
-    "useAnisotropic": true,
-    "vertColor": true
-   },
-   {},
-   {},
-   {}
-  ],
-  "annotation": "BUILDINGS",
-  "groundType": "METAL",
-  "materialTag0": "beamng",
-  "materialTag1": "building",
-  "materialTag2": "east_coast_usa",
-  "specularStrength0": "0.490196",
-  "translucentBlendOp": "None"
- },
  "it_concrete_roadside_walls": {
   "name": "it_concrete_roadside_walls",
   "mapTo": "it_concrete_roadside_walls",
@@ -1703,6 +1632,51 @@
   "translucent": true,
   "translucentZWrite": true
  },
+ "italy_bld_trim_metal": {
+  "name": "italy_bld_trim_metal",
+  "mapTo": "italy_bld_trim_metal",
+  "class": "Material",
+  "persistentId": "880141b1-c0d5-40e9-b097-89ab16f9c691",
+  "Stages": [
+   {
+    "colorMap": "levels/italy/art/shapes/buildings/italy_bld_trim_metal_d.dds",
+    "detailNormalMapStrength": 0.5,
+    "detailScale": [
+     0.5,
+     0.5
+    ],
+    "diffuseColor": [
+     0.99607801437378,
+     0.99607801437378,
+     0.99607801437378,
+     0.20000000298023
+    ],
+    "normalMap": "levels/italy/art/shapes/buildings/italy_bld_trim_metal_n.dds",
+    "pixelSpecular": true,
+    "specular": [
+     0.99607801437378,
+     0.99607801437378,
+     0.99607801437378,
+     1
+    ],
+    "specularMap": "levels/italy/art/shapes/buildings/italy_bld_trim_metal_s.dds",
+    "specularPower": 51,
+    "vertColor": true
+   },
+   {},
+   {},
+   {}
+  ],
+  "annotation": "BUILDINGS",
+  "cubemap": "global_cubemap_metalblurred",
+  "doubleSided": true,
+  "groundType": "METAL",
+  "invertBackFaceNormals": true,
+  "materialTag0": "beamng",
+  "materialTag1": "italy",
+  "specularStrength0": "0.490196",
+  "translucentBlendOp": "None"
+ },
  "italy_medieval_stone_wall_decals": {
   "name": "italy_medieval_stone_wall_decals",
   "mapTo": "italy_medieval_stone_wall_decals",
@@ -1771,6 +1745,32 @@
   "materialTag0": "beamng",
   "materialTag1": "italy",
   "specularStrength0": "0.490196"
+ },
+ "moderncorrugated_tin": {
+  "name": "moderncorrugated_tin",
+  "mapTo": "moderncorrugated_tin",
+  "class": "Material",
+  "persistentId": "09198305-ba95-4017-b1f0-f0a079fff073",
+  "Stages": [
+   {
+    "colorMap": "eca_bld_moderncorrugated_tin_d.dds",
+    "normalMap": "eca_bld_moderncorrugated_tin_n.dds",
+    "specularMap": "eca_bld_moderncorrugated_tin_s.dds",
+    "specularPower": 1,
+    "useAnisotropic": true,
+    "vertColor": true
+   },
+   {},
+   {},
+   {}
+  ],
+  "annotation": "BUILDINGS",
+  "groundType": "METAL",
+  "materialTag0": "beamng",
+  "materialTag1": "building",
+  "materialTag2": "east_coast_usa",
+  "specularStrength0": "0.490196",
+  "translucentBlendOp": "None"
  },
  "italy_poles_lights_etc": {
   "name": "italy_poles_lights_etc",
