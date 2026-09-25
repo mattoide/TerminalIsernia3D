@@ -420,7 +420,7 @@ def main():
     road_core = dr < RHW + 1.0
     lay[road_core] = ASPHALT
     lay[(dr >= RHW + 1.0) & (dr < RHW + 2.5 + nz)] = DIRT
-    lay[(D_out < 1.8) & ~FOOT] = DIRT          # terra battuta attorno ai cordoli
+    lay[(D_out < 1.8) & ~FOOT & ~road_core] = DIRT   # terra battuta attorno ai cordoli, ma non sopra le strade che li costeggiano
     lay[FOOT] = ASPHALT
     # sentieri e piste sterrate
     unpaved = main_r.polys([osm.way_pts(w) for w, t in osm.ways_where(lambda t: t.get("highway") == "track" or t.get("surface") in ("unpaved", "gravel", "dirt", "ground"))], 1, width=3.2) > 0

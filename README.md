@@ -26,6 +26,9 @@ e controllata sulle foto satellitari e su Street View 2022. Il modello v0.3 avev
   ringhiera sud-est con gli alberi più indietro, righe gialle sbiadite e paletto rosso negli stalli dei bus dell'isola a "E",
   cespuglio tondo e albero scuro accanto alla pensilina sulla fascia centrale. La testata nord-est si apre sulla strada che
   prosegue oltre il piazzale (prima un cordolo la chiudeva), con la ringhiera marrone; il marciapiede sud-est la segue.
+- **Angolo sud-ovest (Street View 2024)**: ringhiere a telai dipinti di colori diversi lungo la Rava, l'ingresso del
+  "Parco calisthenics e fitness" con due bacheche, il cartello blu e il cestino; cubo di cemento col murale sotto la
+  pensilina dell'edificio (`tools/build_extras.py`, gira dopo il terreno per appoggiare tutto alle quote vere).
 - Tolte le **strisce gialle** degli stalli (su Street View 2022 non ci sono più) e gli oggetti in carreggiata
   (barriere di plastica, cassonetti, fusti, cassone macerie); gli idranti stanno sui marciapiedi.
 - La **bacheca** arrugginita sul marciapiede sud-est; il salice ha il tronco a ridosso della ringhiera.
@@ -114,6 +117,7 @@ python tools/build_all.py --zip    # Blender -> texture -> terreno -> livello ->
 | `blender_export.py` | esporta il modello in `.dae` (writer Collada proprio: Blender 5 non lo ha più), UV in metri, asfalto tagliato al perimetro reale |
 | `lot_layout.py` | disposizione reale del piazzale (contorno, cordoli, isole, fascia centrale, container, salice) usata da export e livello |
 | `blender_props.py` | genera pensiline a denti di sega, ciuffi di canne, lampione a due globi, grate degli archi, il salice piangente, container e bacheca |
+| `build_extras.py` | ringhiere colorate e ingresso del parco a sud-ovest, cubo col murale: dopo il terreno, con le sue quote |
 | `build_bridges.py` | viadotti (ponti OSM oltre 70 m): impalcato, cordoli e pile, con i DecalRoad sopra |
 | `build_backdrop.py` | mesh di sfondo delle colline fino a 16 km |
 | `build_textures.py` | converte le texture CC0 nel formato BeamNG, ricostruisce le foto dell'edificio, invecchia la facciata |
