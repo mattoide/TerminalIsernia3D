@@ -39,8 +39,20 @@ for f in glob.glob(os.path.join(MOD, "**", "*.json"), recursive=True):
     for s in re.findall(r'"(/?(?:levels|assets|art)/[^"]+\.(?:png|dds|jpg|dae|ter|cdae))"', txt, re.I):
         if not resolves(s):
             missing.setdefault(s, set()).add(os.path.relpath(f, MOD))
+# nomi degli oggetti della scena: devono essere unici (i gruppi SimGroup prendono il nome della cartella). Un doppione
+# fa sparire uno dei due oggetti: e' successo con il segnalibro "autolavaggio" e il TSStatic omonimo
+from collections import Counter
+names = Counter()
+for f in glob.glob(os.path.join(MOD, "levels", "*", "main", "**", "items.level.json"), recursive=True):
+    for l in open(f, encoding="utf8"):
+        if l.strip():
+            n = json.loads(l).get("name")
+            if n:
+                names[n] += 1
+dups = sorted(n for n, c in names.items() if c > 1)
 print("json non validi:", bad_json)
+print("nomi doppi nella scena:", dups)
 print("riferimenti mancanti:", len(missing))
 for k, v in sorted(missing.items())[:60]:
     print("  ", k, "<-", sorted(v)[:2])
-sys.exit(1 if bad_json or missing else 0)
+sys.exit(1 if bad_json or missing or dups else 0)

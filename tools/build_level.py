@@ -1455,6 +1455,14 @@ def spawns_and_vehicles(L):
     bookmark("pensilina", (54, -25, 1.7), (62.4, -17.6, 1.2))
     bookmark("fermata_centrale", (2, -41, 1.7), (8.1, -33.1, 1.3))
     bookmark("salice", (22, 0, 1.6), (LL.WILLOW[0], LL.WILLOW[1], 5.0))
+    bookmark("parco_fitness", (-31.5, -46.5, 1.7), (-34, -56, 1.2))
+    bookmark("vista_autolavaggio", (-30, 55, 22), (-58, 92, 0))       # nome diverso dal TSStatic "autolavaggio"
+    sp = os.path.join(BUILD, "stadium.json")
+    if os.path.exists(sp):                                        # stadio Mario Lancellotta: dall'alto e dalla pista
+        cx_, cy_, cz_ = json.load(open(sp))["center"]
+        mx_, my_ = geo.world2model(cx_, cy_)
+        bookmark("vista_stadio", (mx_ - 150, my_ - 120, cz_ + 70), (mx_, my_, cz_))
+        bookmark("vista_stadio_tribuna", (mx_ + 12, my_ + 18, cz_ + 1.7), (mx_ + 45, my_ + 45, cz_ + 5))
     bookmark("ingresso", (-60, -44, 2.5), (0, -20, 1))
 
 
