@@ -1316,6 +1316,59 @@
   "materialTag1": "terminal_isernia",
   "translucentBlendOp": "None"
  },
+ "ti_slab_concrete": {
+  "name": "ti_slab_concrete",
+  "mapTo": "ti_slab_concrete",
+  "class": "Material",
+  "persistentId": "7045f4f4-67d3-524f-b5d3-47f61f9d5824",
+  "Stages": [
+   {
+    "baseColorMap": "/assets/materials/tileable/concrete/concrete_plain/t_concrete_plain_b.color.dds",
+    "baseColorFactor": [
+     0.86,
+     0.84,
+     0.8,
+     1
+    ],
+    "roughnessFactor": 0.9,
+    "metallicFactor": 0
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "ASPHALT",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
+ "ti_rebar": {
+  "name": "ti_rebar",
+  "mapTo": "ti_rebar",
+  "class": "Material",
+  "persistentId": "557ff64b-971f-5ff1-a172-3fe5dda2c698",
+  "Stages": [
+   {
+    "baseColorFactor": [
+     0.35,
+     0.2,
+     0.12,
+     1
+    ],
+    "roughnessFactor": 0.8,
+    "metallicFactor": 0.6
+   },
+   {},
+   {},
+   {}
+  ],
+  "version": 1.5,
+  "groundType": "METAL",
+  "materialTag0": "beamng",
+  "materialTag1": "terminal_isernia",
+  "translucentBlendOp": "None"
+ },
  "ti_map_panel": {
   "name": "ti_map_panel",
   "mapTo": "ti_map_panel",

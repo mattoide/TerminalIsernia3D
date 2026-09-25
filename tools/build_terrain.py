@@ -354,7 +354,11 @@ def main():
         zprof = zprof * smoothstep(8, 70, dl)
         nid = [n for n in w["nodes"] if n in osm.en]
         idx = np.clip(np.round(L).astype(int), 0, len(s) - 1)
-        ways.append(dict(w=w, tg=tg, P=P, s=s, z=zprof, keep=keep, nodes=list(zip(nid, idx)), hw=hw_way))
+        # la strada che dalla testata nord-est del piazzale va verso lo stadio: dal vero e' in piano (il DEM ha una gobba
+        # di 1.7 m, forse la vegetazione): profilo lineare tra i due capi e campi ai lati spianati (FLAT_ROADS)
+        from geo import world2model
+        m0 = world2model(*P[0]); flat = (not tg.get("name")) and math.hypot(m0[0] - 115, m0[1] + 40) < 15
+        ways.append(dict(w=w, tg=tg, P=P, s=s, z=zprof, keep=keep, nodes=list(zip(nid, idx)), hw=hw_way, flat=flat))
     # 2) incroci: tutte le strade che si toccano nello stesso nodo OSM ci arrivano alla stessa quota
     #    (prima ogni via era lisciata per conto suo: gradini e rampe del 40-50% agli innesti)
     from collections import defaultdict
@@ -379,6 +383,15 @@ def main():
                 h = np.clip(1 - np.abs(W_["s"] - sj) / 80.0, 0, 1)
                 num += cj * h; den += h
             W_["z"] = W_["z"] + num / np.maximum(den, 1.0)
+    for W_ in ways:                                       # strade in piano: retta tra le quote dei due capi
+        if W_["flat"]:
+            s_ = W_["s"]; W_["z"] = W_["z"][0] + (W_["z"][-1] - W_["z"][0]) * s_ / max(s_[-1], 1e-6)
+    flat_center = np.zeros((N, N), bool)
+    for W_ in ways:
+        if W_["flat"]:
+            ci = np.clip(((W_["P"][:, 0] - X0) / SQ).round().astype(int), 0, N - 1)
+            cj = np.clip(((W_["P"][:, 1] - Y0) / SQ).round().astype(int), 0, N - 1)
+            flat_center[cj, ci] = True
     # 3) raster delle carreggiate; in uscita solo i tratti dentro il terreno principale
     for W_ in ways:
         tg, P, zprof, keep = W_["tg"], W_["P"], W_["z"], W_["keep"]
@@ -410,6 +423,12 @@ def main():
     dr *= SQ
     RHW = road_hw[ridx[0], ridx[1]]; RZ = road_z[ridx[0], ridx[1]]
     road_blend = 1 - smoothstep(RHW + 0.6, RHW + 6.0, dr)
+    if flat_center.any():                                 # campi piatti ai lati della strada in piano (raccordo 15-55 m)
+        dfl, fidx = ndimage.distance_transform_edt(~flat_center, return_indices=True)
+        dfl *= SQ
+        wfl = 1 - smoothstep(15, 55, dfl)
+        Z = Z * (1 - wfl) + road_z[fidx[0], fidx[1]] * wfl
+        detail = detail * (1 - wfl)
     print("strade", len(roads_out))
 
     # --- composizione quote
@@ -451,6 +470,11 @@ def main():
     forest |= (dw < 18 + 14 * nz)
     # boschi attorno al piazzale visti in ortofoto (fascia NE-E-SE e scarpata SE)
     forest |= side_se & (D_out > 6) & (D_out < 160 + 60 * nz)
+    # i boschi OSM qui sono disegnati larghi: dal satellite lungo le strade c'e' quasi sempre una fascia di prato
+    # (l'utente: "alberi anche dove nella realta' c'e' solo prato"); lungo la strada verso lo stadio prato per 45 m
+    forest &= ~((dr < RHW + 8.0) & (np.hypot(XX, YY) < 1500))
+    if flat_center.any():
+        forest &= ~(dfl < 45.0)
     lay[forest] = FOREST
     lay[area(lambda t: t.get("amenity") == "parking" or t.get("leisure") == "pitch" and t.get("surface") in ("asphalt",))] = ASPHALT
     lay[area(lambda t: "building" in t)] = GRAVEL

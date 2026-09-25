@@ -133,6 +133,37 @@ def main():
     # 4) cubo di cemento col murale sotto la pensilina (Street View 2022), sulla piattaforma dell'edificio (z 0.1)
     cx, cy = LL.GRAFFITI_CUBE
     box(md, "ti_bld_graffiti", Vector((cx, cy, 0.05)), Vector((cx, cy, 1.9)), 1.3, 1.3, tile=1.8, top_mat="ti_curb")
+    # 5) cantiere a ovest della stradina dell'autolavaggio (satellite 2026): platea di fondazione con cordolo e travi
+    from osm import OSM, obb
+    osm = OSM()
+    best = None
+    for w, t in osm.ways_where(lambda t: "building" in t):
+        Q = np.array(osm.way_pts(w))
+        if len(Q) < 3:
+            continue
+        m = np.array([geo.world2model(*p) for p in Q]).mean(0)
+        dd = math.hypot(m[0] - LL.CANTIERE_AT[0], m[1] - LL.CANTIERE_AT[1])
+        if dd < 20 and (best is None or dd < best[0]):
+            best = (dd, obb(Q))
+    if best:
+        yaw, BL, BW, bc = best[1]                                             # obb in coordinate mondo -> modello
+        yaw -= math.radians(geo.MODEL_ROT_DEG)
+        u = Vector((math.cos(yaw), math.sin(yaw), 0)); v = Vector((-math.sin(yaw), math.cos(yaw), 0))
+        c = Vector((*geo.world2model(bc[0], bc[1]), 0))
+        zs = [tz_model(*(c + u * a + v * b).xy) for a in (-BL / 2, 0, BL / 2) for b in (-BW / 2, 0, BW / 2)]
+        z0 = float(np.median(zs)) + 0.35
+        W = lambda a, b, dz=0.0: c + u * a + v * b + Vector((0, 0, z0 + dz))
+        box(md, "ti_stadium_concrete", W(-BL / 2, 0, -0.6), W(BL / 2, 0, -0.6), BW, 1.3, tile=3.0, top_mat="ti_slab_concrete")
+        for a in np.linspace(-BL / 2 + 0.3, BL / 2 - 0.3, 7):                  # travi di fondazione e cordolo
+            box(md, "ti_stadium_concrete", W(a, -BW / 2 + 0.3, 0.2), W(a, BW / 2 - 0.3, 0.2), 0.5, 0.4, tile=2.0)
+        for b in np.linspace(-BW / 2 + 0.3, BW / 2 - 0.3, 4):
+            box(md, "ti_stadium_concrete", W(-BL / 2 + 0.3, b, 0.2), W(BL / 2 - 0.3, b, 0.2), 0.5, 0.4, tile=2.0)
+        for a in np.linspace(-BL / 2 + 0.3, BL / 2 - 0.3, 7):                  # ferri di ripresa sui pilastri
+            for b in np.linspace(-BW / 2 + 0.3, BW / 2 - 0.3, 4):
+                for dx, dy in ((-0.12, -0.12), (0.12, -0.12), (0.12, 0.12), (-0.12, 0.12)):
+                    p0 = W(a + dx, b + dy, 0.4)
+                    box(md, "ti_rebar", p0, p0 + Vector((0, 0, 1.1)), 0.025)
+        print("cantiere: platea", round(BL, 1), "x", round(BW, 1), "a quota", round(z0, 2))
     write_dae(os.path.join(OUT, "ti_extras.dae"), [md], GEO)
     print("EXTRAS_OK ringhiera sud-est", n_se, "telai, nord-ovest", n_nw, "telai, triangoli", md.tri_count())
 

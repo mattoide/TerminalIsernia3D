@@ -259,6 +259,9 @@ def terminal_materials():
               metallicFactor=0.1)
           for nm, col in (("red", [0.62, 0.12, 0.08, 1]), ("yellow", [0.85, 0.66, 0.14, 1]), ("green", [0.25, 0.5, 0.2, 1]),
                           ("blue", [0.14, 0.34, 0.66, 1]), ("white", [0.82, 0.82, 0.78, 1]))],
+        pbr("ti_slab_concrete", None, "ASPHALT", baseColorMap=AS + "tileable/concrete/concrete_plain/t_concrete_plain_b.color.dds",
+            baseColorFactor=[0.86, 0.84, 0.8, 1], roughnessFactor=0.9, metallicFactor=0),      # platea del cantiere
+        pbr("ti_rebar", None, "METAL", baseColorFactor=[0.35, 0.2, 0.12, 1], roughnessFactor=0.8, metallicFactor=0.6),
         pbr("ti_map_panel", None, "PLASTIC", baseColorFactor=[0.58, 0.68, 0.7, 1], roughnessFactor=0.5, metallicFactor=0,
             **dict(det_concrete, detailBaseColorMapStrength=0.8)),    # bacheche con la mappa del parco
         pbr("ti_sign_blue", None, "METAL", baseColorFactor=[0.07, 0.2, 0.48, 1], roughnessFactor=0.4, metallicFactor=0.2),
@@ -522,6 +525,8 @@ def make_forest(meta):
                                                   "type": "generibush"})
     # 2) boschi (dal terreno): specie in base alla vicinanza all'acqua e alla distanza
     osm = OSM()
+    osm_w = osm
+    osm_rows = lambda: [(w_, t_) for w_, t_ in osm.ways_where(lambda t: t.get("natural") == "tree_row")]
     water = [osm.way_pts(w) for w, t in osm.ways_where(lambda t: "waterway" in t)]
     wpts = np.array([p for w in water for p in w]) if water else np.zeros((0, 2))
     from scipy.spatial import cKDTree
@@ -560,22 +565,20 @@ def make_forest(meta):
             for x, y, uu in zip(Xb[s2], Yb[s2], rng.random(s2.sum())):
                 put(["tree_beech_bush_a", "tree_beech_bush_b", "generibush", "fluffy_bush", "scraggly_bush", "holm_oak_bush"][min(5, int(uu * 6))], x, y, 0.7, 1.3)
     # 3) siepi e alberi isolati lungo strade e campi (paesaggio agricolo molisano)
-    def hedge_mask(X, Y):
-        dr = tsample(TDROAD, X, Y); hw = tsample(TRHW, X, Y)
-        lay = tsample(TLAY.astype(np.float32), X, Y, 0).astype(int)
-        return (dr > hw + 3) & (dr < hw + 9) & np.isin(lay, [0, 1, 7, 8]) & (tsample(TDLOT, X, Y) > 12)
-    X, Y = poisson(hedge_mask, -1500, -1500, 1500, 1500, 9)
-    for x, y, uu in zip(X, Y, rng.random(len(X))):
-        if uu < 0.55:
-            put(["generibush", "scraggly_bush", "tall_plant_bush", "tree_beech_bush_a"][int(uu / 0.55 * 4) % 4], x, y, 0.7, 1.3)
-        elif uu < 0.72:
-            put(["oak_dry_c", "oak_dry_d", "scraggly_tree", "tree_aspen_small_a"][int((uu - 0.55) / 0.17 * 4) % 4], x, y)
+    # niente siepi e alberi inventati lungo il ciglio delle strade: dal vero ai lati c'e' quasi sempre prato (l'utente,
+    # confrontando con la realta'); restano solo i filari veri di OSM (natural=tree_row)
+    for w_, t_ in osm_rows():
+        P = np.asarray(osm_w.way_pts(w_))
+        seg = np.hypot(*np.diff(P, axis=0).T); Ls = np.concatenate([[0], np.cumsum(seg)])
+        for s_ in np.arange(2, Ls[-1], 6.5):
+            put(["tree_aspen_large_a", "oak_dry_b", "tree_beech_large_b"][int(rng.integers(0, 3))],
+                np.interp(s_, Ls, P[:, 0]) + rng.normal(0, 0.6), np.interp(s_, Ls, P[:, 1]) + rng.normal(0, 0.6))
     def meadow_mask(X, Y):
         lay = tsample(TLAY.astype(np.float32), X, Y, 0).astype(int)
-        return np.isin(lay, [0, 1, 8]) & (tsample(TDROAD, X, Y) > tsample(TRHW, X, Y) + 4) & (tsample(TDLOT, X, Y) > 15)
+        return np.isin(lay, [0, 1, 8]) & (tsample(TDROAD, X, Y) > tsample(TRHW, X, Y) + 40) & (tsample(TDLOT, X, Y) > 60)
     # prima: un albero ogni ~45 m sparso uniforme (dall'alto sembrava a pois). Ora come nel paesaggio vero:
     # gruppetti di 2-8 alberi e filari/siepi lungo i confini dei campi, con varchi
-    X, Y = poisson(meadow_mask, -1700, -1700, 1700, 1700, 150)
+    X, Y = poisson(meadow_mask, -1700, -1700, 1700, 1700, 230)
     for cx, cy in zip(X, Y):
         n = int(rng.integers(2, 9)); r = rng.uniform(4, 12)
         kinds = [["oak_dry_a", "oak_dry_b", "cork_oak_medium"], ["olive_tree"], ["tree_beech_large_c", "tree_aspen_small_a"],
@@ -597,7 +600,7 @@ def make_forest(meta):
         # varchi: il filare c'e' solo dove un rumore lento lungo il bordo lo permette
         keep = (np.sin(s_ / 37.0 + P[0, 0] * 0.01) + 0.6 * np.sin(s_ / 13.0 + P[0, 1] * 0.02)) > 0.1
         ex, ey = ex[keep] + rng.normal(0, 1.2, keep.sum()), ey[keep] + rng.normal(0, 1.2, keep.sum())
-        ok = (tsample(TDROAD, ex, ey) > tsample(TRHW, ex, ey) + 3) & (tsample(TDLOT, ex, ey) > 12)
+        ok = (tsample(TDROAD, ex, ey) > tsample(TRHW, ex, ey) + 20) & (tsample(TDLOT, ex, ey) > 25)
         for x, y, uu in zip(ex[ok], ey[ok], rng.random(ok.sum())):
             put(["generibush", "scraggly_bush", "oak_dry_c", "tree_beech_bush_a", "oak_dry_d", "tall_plant_bush", "tree_aspen_small_a"][int(uu * 7) % 7], x, y, 0.75, 1.25)
             n_edge += 1
@@ -606,7 +609,7 @@ def make_forest(meta):
     def olive_mask(X, Y):
         lay = tsample(TLAY.astype(np.float32), X, Y, 0).astype(int)
         big = np.sin(X / 170.0) * np.cos(Y / 130.0) > 0.45
-        return (lay == 7) & big & (tsample(TDROAD, X, Y) > tsample(TRHW, X, Y) + 4)
+        return (lay == 7) & big & (tsample(TDROAD, X, Y) > tsample(TRHW, X, Y) + 15) & (np.hypot(X, Y) > 900)   # vicino: nessun uliveto vero
     xs = np.arange(-1600, 1600, 6.0); X, Y = np.meshgrid(xs, xs); X, Y = X.ravel(), Y.ravel()
     k = olive_mask(X, Y)
     for x, y in zip(X[k], Y[k]):
@@ -840,6 +843,9 @@ def buildings(L):
         pts = footprint_pts(cx, cy, yaw, Lseg, W)
         if in_stadium(cx, cy)[0]:                    # tribune e gabbiotti dello stadio: li fa build_stadium.py
             skipped["stadio"] += 1
+            return
+        if math.hypot(*(np.array(geo.world2model(cx, cy)) - LL.CANTIERE_AT)) < 20:   # cantiere: platea in build_extras.py
+            skipped["cantiere"] = skipped.get("cantiere", 0) + 1
             return
         near = [q for k in {(int(cx // 20) + a, int(cy // 20) + b) for a in (-2, -1, 0, 1, 2) for b in (-2, -1, 0, 1, 2)} for q in grid.get(k, [])]
         if any(q.contains_points(pts).mean() > 0.25 for q in near):

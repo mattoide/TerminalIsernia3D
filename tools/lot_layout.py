@@ -56,6 +56,9 @@ SE_COLOR_FROM_X = -25.0
 PARK_GAP = (-32.6, -30.4)
 PARK_BOARDS_X = [-34.3, -35.7]
 NW_COLOR_FROM_X, NW_COLOR_TO_X = -38.5, -80.0
+# OSM building=yes 54 x 28 m a ovest della stradina dell'autolavaggio: dal satellite 2026 e' un cantiere, solo la platea
+# di fondazione in cemento (niente palazzi)
+CANTIERE_AT = (-104.6, 10.6)
 # cubo di cemento col murale sotto la pensilina sud-est, all'angolo sud-ovest dell'edificio (Street View 2022)
 GRAFFITI_CUBE = (90.0, -16.3)
 SE_WALK = 2.5              # autobloccanti grigi tra cordolo e ringhiera

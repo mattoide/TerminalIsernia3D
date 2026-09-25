@@ -34,6 +34,10 @@ e controllata sulle foto satellitari e su Street View 2022. Il modello v0.3 avev
   pannelli bianchi con le colonnine aspirapolvere, locale tecnico grigio, serbatoi, piazzale piu' ampio.
 - **Alberelli di isole e fascia centrale** sull'asse delle aiuole, lontani da cordoli, lampioni e pensilina; caditoie
   lungo i cordoli ed erbacce alla base delle ringhiere.
+- **Dintorni piu' fedeli**: niente siepi e alberi inventati lungo le strade (dal vero c'e' prato), boschi OSM tenuti a
+  distanza dal ciglio, niente uliveti finti vicino al terminal; la strada che dal terminal va verso lo stadio e' in piano
+  come dal vero (il DEM aveva una gobba di 1.7 m); al posto dei due palazzi finti a ovest del terminal il cantiere con la
+  sua platea di fondazione (satellite 2026).
 - **Angolo sud-ovest (Street View 2024)**: ringhiere a telai dipinti di colori diversi lungo la Rava, l'ingresso del
   "Parco calisthenics e fitness" con due bacheche, il cartello blu e il cestino; cubo di cemento col murale sotto la
   pensilina dell'edificio (`tools/build_extras.py`, gira dopo il terreno per appoggiare tutto alle quote vere).
