@@ -753,9 +753,9 @@
    {
     "ambientOcclusionMap": "/levels/italy/art/road/t_asphalt_variation_02_ao.data.png",
     "baseColorFactor": [
-     0.6,
-     0.6,
-     0.6,
+     0.9,
+     0.9,
+     0.88,
      0.9
     ],
     "baseColorMap": "/levels/italy/art/road/t_asphalt_variation_02_b.color.png",

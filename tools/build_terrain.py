@@ -159,13 +159,13 @@ def save_img(arr, name, mode):
 # ================================================================== main
 def rava_to_lot(P):
     """la Strada Comunale Rava entra nel piazzale dall'angolo sud-ovest, tra la fine del marciapiede sud-ovest (y -34) e il
-    cordolo sud-est (y -47): da x modello -110 la porto dolcemente sul centro del varco (y -43.5, ortofoto)."""
+    cordolo sud-est (y -51): da x modello -110 la porto dolcemente sul centro della strada che prosegue a ovest (y -46.5)."""
     from geo import world2model, model2world
     Q = []
     for x, y in P:
         mx, my = world2model(x, y)
         k = smoothstep(-110, -37, mx)
-        Q.append(model2world(mx, my + (-43.5 - my) * k))
+        Q.append(model2world(mx, my + (-46.5 - my) * k))
     return np.array(Q)
 
 

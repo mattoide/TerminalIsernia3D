@@ -153,7 +153,12 @@ def asphalt_macro_detail(res=2048):
     out = 0.5 + tone
     # corsie dei bus: due coppie di tracce (scartamento 2.0 m) lungo le corsie di marcia, leggermente lucidate
     wob = lambda seed, amp: np.interp(mx, np.linspace(X0, X0 + SZ, 40), np.random.default_rng(seed).normal(0, amp, 40))
-    for yc, seed in ((18.0, 31), (-33.5, 32), (-11.0, 33)):
+    import lot_layout as LL
+    lanes = [(lambda x: LL.median_y(x) - LL.MED_HALF - 3.2, 31), (lambda x: LL.se_curb_y(x) + 3.0, 34),   # Rava, due sensi
+             (lambda x: -10.5 + 0.0348 * x, 33),                                                          # tra le file di isole
+             (lambda x: LL.nw_curb_y(x) - 4.0, 35)]                                                        # lungo il bordo nord-ovest
+    for f_lane, seed in lanes:
+        yc = np.array([f_lane(v) for v in mx])[None, :]
         yl = yc + wob(seed, 0.5)[None, :]
         d = np.abs(MY - yl)
         track = np.exp(-((d - 1.0) / 0.45) ** 2)                                 # le due ruote
@@ -162,7 +167,10 @@ def asphalt_macro_detail(res=2048):
         out += (-0.04 * track + -0.03 * drip) * along
     # sporco lungo i bordi: si stima con la distanza dal perimetro dell'asfalto (niente geometria qui:
     # uso il rettangolo del piazzale, i cordoli interni li sporcano i decal)
-    edge = np.minimum.reduce([np.abs(MY - 47.5), np.abs(MY + 47.5), np.abs(MX + 95), np.abs(MX - 119)])
+    from matplotlib.path import Path as _MP
+    from scipy import ndimage as _nd
+    inside = _MP(LL.lot_outline()).contains_points(np.stack([MX.ravel(), MY.ravel()], 1)).reshape(MX.shape)
+    edge = _nd.distance_transform_edt(inside) * px                        # distanza dal contorno vero del piazzale
     out -= 0.06 * np.exp(-edge / 1.8) * (0.6 + 0.8 * fbm(res, octaves=4, base_cells=24, seed=23))
     return np.clip(out, 0, 1)
 
@@ -390,10 +398,11 @@ if __name__ == "__main__":
 
     if run("asphalt"):
         # asfalto vecchio e asciutto: albedo lineare ~0.12, roughness 0.8-0.95 (prima era 0.55: sembrava bagnato)
-        cc0_set("Asphalt031", 2048, "4K", "t_ti_asphalt", dict(brightness=0.62, saturation=0.45, tint=(1.03, 1.0, 0.96)))
+        # Street View 2022/2024: asfalto sbiadito dal sole, piu' chiaro degli autobloccanti (albedo lineare ~0.2)
+        cc0_set("Asphalt031", 2048, "4K", "t_ti_asphalt", dict(brightness=1.45, saturation=0.35, tint=(1.03, 1.0, 0.96)))
         remap_rough("t_ti_asphalt_r.data.png", 0.80, 0.95)
         flatten_normal("t_ti_asphalt_nm.normal.png", 0.55)
-        cc0_set("Asphalt026C", 2048, "2K", "t_ti_asphalt_cracked", dict(brightness=1.9, saturation=0.45, contrast=0.85, tint=(1.02, 1.0, 0.97)))
+        cc0_set("Asphalt026C", 2048, "2K", "t_ti_asphalt_cracked", dict(brightness=6.5, saturation=0.35, contrast=0.85, tint=(1.02, 1.0, 0.97)))
         remap_rough("t_ti_asphalt_cracked_r.data.png", 0.78, 0.95)
         flatten_normal("t_ti_asphalt_cracked_nm.normal.png", 0.7)
         save(asphalt_breakup_mask(), "t_ti_asphalt_breakup_o.data.png", "L")

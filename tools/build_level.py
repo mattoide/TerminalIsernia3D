@@ -184,7 +184,7 @@ def terminal_materials():
             detailMap=T + "t_ti_asphalt_macro_detail_b.data.png", detailMapUseUV=1, detailScale=[1, 1], detailBaseColorMapStrength=1.0,
             layer2=stage(baseColorMap=T + "t_ti_asphalt_cracked_b.color.png", normalMap=T + "t_ti_asphalt_cracked_nm.normal.png",
                          roughnessMap=T + "t_ti_asphalt_cracked_r.data.png", ambientOcclusionMap=T + "t_ti_asphalt_cracked_ao.data.png",
-                         opacityMap=T + "t_ti_asphalt_breakup_o.data.png", opacityMapUseUV=1, opacityFactor=0.8)),
+                         opacityMap=T + "t_ti_asphalt_breakup_o.data.png", opacityMapUseUV=1, opacityFactor=0.5)),
         pbr("ti_pavers_moss", T + "t_ti_pavers_moss", "COBBLESTONE", **det_concrete),
         pbr("ti_pavers", T + "t_ti_pavers", "COBBLESTONE", **det_concrete),
         pbr("ti_pavers_grey", T + "t_ti_pavers_grey", "COBBLESTONE", **det_concrete),
@@ -410,9 +410,14 @@ def make_forest(meta):
     from scipy.spatial import cKDTree
     wtree = cKDTree(wpts) if len(wpts) else None
     lim = 2030
+    def se_side(X, Y):
+        """oltre la ringhiera sud-est (Street View 2022: canneto alto per una decina di metri, poi gli alberi)."""
+        mx, my = geo.world2model(np.asarray(X, float), np.asarray(Y, float))
+        return (mx > LL.SW_X - 10) & (mx < LL.NE_X + 10) & (my < np.interp(mx, *zip(*LL.SE_CURB)) - LL.SE_WALK + 0.5)
+
     def forest_mask(X, Y):
         f = tsample(TFOREST.astype(np.float32), X, Y, 0) > 0.5
-        f &= tsample(TDLOT, X, Y) > 7
+        f &= tsample(TDLOT, X, Y) > np.where(se_side(X, Y), 15.0, 7.0)
         f &= tsample(TDROAD, X, Y) > tsample(TRHW, X, Y) + 2.5
         return f
     for (r0, r1, sp) in ((0, 500, 5.5), (500, 1100, 8.0), (1100, 3000, 11.0)):
@@ -495,7 +500,8 @@ def make_forest(meta):
         dr = tsample(TDROAD, X, Y); hw = tsample(TRHW, X, Y)
         mx = np.array([geo.world2model(x, y)[0] for x, y in zip(X, Y)]) if len(X) else np.zeros(0)
         n = np.sin(X * 0.21) * np.cos(Y * 0.17) + np.sin(X * 0.05 + Y * 0.07)
-        return (d > 2.0) & (d < 11 + 4 * n) & (dr > hw + 1.2) & (mx > -45) & (n > -0.35)
+        se = se_side(X, Y)
+        return (d > 2.0) & (d < np.where(se, 15.0, 11 + 4 * n)) & (dr > hw + 1.2) & (mx > -45) & ((n > -0.35) | se)
     X, Y = poisson(reed_mask, -250, -250, 250, 250, 1.6)
     for x, y in zip(X, Y):
         put("ti_reeds_clump", x, y, 0.8, 1.25, z_off=0.0)
@@ -504,7 +510,7 @@ def make_forest(meta):
         d = tsample(TDLOT, X, Y)
         dr = tsample(TDROAD, X, Y); hw = tsample(TRHW, X, Y)
         n = np.sin(X * 0.21) * np.cos(Y * 0.17) + np.sin(X * 0.05 + Y * 0.07)
-        return (d > 2.5) & (d < 12) & (dr > hw + 1.5) & (n <= -0.35)
+        return (d > 2.5) & (d < 12) & (dr > hw + 1.5) & (n <= -0.35) & ~se_side(X, Y)
     X, Y = poisson(shrub_mask, -250, -250, 250, 250, 3.2)
     for x, y, uu in zip(X, Y, rng.random(len(X))):
         put(["tall_plant_bush", "generibush", "tree_beech_bush_a", "fluffy_bush", "holm_oak_bush"][int(uu * 5) % 5], x, y, 0.8, 1.3)
@@ -602,7 +608,7 @@ def roads(L):
     # velo d'asfalto della Rava con la tinta scura del piazzale (quello di Italy e' piu' chiaro e si vedeva lo stacco)
     ro = json.loads(json.dumps(out["italy_asphalt_overlay_light"]))
     ro.update(name="ti_rava_overlay", mapTo="ti_rava_overlay", persistentId=uid("mat/ti_rava_overlay"))
-    ro["Stages"][0]["baseColorFactor"] = [0.6, 0.6, 0.6, 0.9]
+    ro["Stages"][0]["baseColorFactor"] = [0.9, 0.9, 0.88, 0.9]
     out["ti_rava_overlay"] = ro
     d = os.path.join(LV, "art", "road"); os.makedirs(d, exist_ok=True)
     json.dump(out, open(os.path.join(d, "main.materials.json"), "w"), indent=1)
@@ -974,7 +980,7 @@ def lot_details(L, meta):
     # i rappezzi di Italy sono cemento chiaro: sul nostro asfalto sembravano macchie bianche -> piu' scuri
     for k, v in out_m.items():
         if k == "m_asphalt_repair_patch_decal":
-            v["Stages"][0]["baseColorFactor"] = [0.58, 0.58, 0.57, 1]   # 0.42 in gioco sembravano toppe nere
+            v["Stages"][0]["baseColorFactor"] = [0.8, 0.8, 0.79, 1]     # sull'asfalto chiaro (Street View) toppe appena piu' scure
     json.dump(out_m, open(os.path.join(d, "main.materials.json"), "w"), indent=1)
     # maschera dell'asfalto dalla mesh
     from build_terrain import dae_triangles, Raster
@@ -1061,9 +1067,21 @@ def lot_details(L, meta):
         crack(P, rng.uniform(0.9, 1.6))
     # sgommate: vedi skids()
     skids(L, R, asph_full)
+    # stalli dei bus nell'isola a "E" (Street View 2024): righe gialle sbiadite in diagonale
+    n_st = 0
+    for xa, xb in LL.E_BAYS:
+        for xs in np.arange(xa + 0.6, xb - 1.5, 2.7):
+            a, b = geo.model2world(xs, LL.E_BAY_Y[1] + 0.3), geo.model2world(xs + 2.2, LL.E_BAY_Y[0] - 0.3)
+            L.add("piazzale/segnaletica", {"class": "DecalRoad", "position": [a[0], a[1], 0.01],
+                                           "material": "italy_road_markings_line_thin_yellow",
+                                           "nodes": [[a[0], a[1], 0.01, 0.12], [b[0], b[1], 0.01, 0.12]], "overObjects": True,
+                                           "renderPriority": 23, "textureLength": 4, "decalBias": 0.0015, "distanceFade": [60, 30],
+                                           "startEndFade": [0.4, 0.4], "drivability": -1})
+            n_st += 1
     json.dump({"header": {"name": "DecalData File", "comments": "// Instances format: rectIdx, size, renderPriority, position.x, position.y, "
                           "position.z, normal.x, normal.y, normal.z, tangent.x, tangent.y, tangent.z, uid", "version": 2},
                "instances": inst}, open(os.path.join(LV, "main.decals.json"), "w"), indent=1)
+    print("stalli della E:", n_st)
     print("decal:", {k: len(v) for k, v in inst.items()})
 
 
@@ -1164,8 +1182,8 @@ def clutter(L):
             put("italy_clutter_trashbag", -1.6, 0.5, 200), put("italy_clutter_concbag_pile", 3.5, 0.9, 15),
             put("italy_clutter_pallet", -3.2, 0.35, 80, z=0.1), put("italy_clutter_metal_drum", 5.0, 1.2, 0)]
     # idranti sui marciapiedi (Street View 2022), mai sull'asfalto
-    for (mx, my, yaw) in [(58.0, LL.SE_RAIL_Y + 0.4, 0), (25.0, LL.nw_curb_y(25.0) + 0.15 + LL.NW_WALK - 0.45, 180),
-                          (LL.SW_X - LL.SW_WALK + 0.4, -22.0, 90)]:
+    for (mx, my, yaw) in [(58.0, LL.se_rail_y(58.0) + 0.4, 0), (25.0, LL.nw_curb_y(25.0) + 0.15 + LL.NW_WALK - 0.45, 180),
+                          (LL.SW_X - LL.SW_WALK + 0.4, -22.0, 90), (LL.E_POST[0], LL.E_POST[1], 0)]:   # + paletto rosso della "E"
         x, y = geo.model2world(mx, my)
         shp = "italy_clutter_fire_hydrant.DAE"
         L.add("terminal/arredo", {"class": "TSStatic", "position": [round(x, 3), round(y, 3), round(ground_z(x, y), 3)],

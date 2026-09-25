@@ -25,7 +25,7 @@
     "ambientOcclusionMap": "/levels/terminal_isernia/art/textures/t_ti_asphalt_cracked_ao.data.png",
     "opacityMap": "/levels/terminal_isernia/art/textures/t_ti_asphalt_breakup_o.data.png",
     "opacityMapUseUV": 1,
-    "opacityFactor": 0.8
+    "opacityFactor": 0.5
    },
    {},
    {}

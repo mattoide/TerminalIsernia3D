@@ -39,8 +39,45 @@ def in_old_median(x, y):
 
 
 # ---------------------------------------------------------------- bordi del piazzale
-SE_CURB_Y = -47.0          # cordolo lato strada del marciapiede sud-est
-SE_RAIL_Y = -49.6          # ringhiera sud-est (autobloccanti grigi tra cordolo e ringhiera)
+# cordolo sud-est: linea scura del cordolo rilevata metro per metro sull'ortofoto (scarto medio 0.2 m) e controllata su
+# Street View 2022 (cordolo a ~4 m dall'auto, marciapiede di ~2.6 m). Come isole e fascia centrale non e' parallelo
+# all'asse del modello: prima era una retta a y -47, 3 m troppo dentro a sud-ovest e 2 m troppo fuori a nord-est.
+SE_CURB = [(-36.0, -51.2), (-20.0, -50.6), (0.0, -50.3), (20.0, -49.7), (40.0, -48.7), (60.0, -47.8), (80.0, -46.9),
+           (100.0, -45.8), (120.0, -44.6)]
+SE_WALK = 2.5              # autobloccanti grigi tra cordolo e ringhiera
+
+
+def _pl(P, x):
+    if x <= P[0][0]:
+        return P[0][1]
+    for (x0, y0), (x1, y1) in zip(P, P[1:]):
+        if x <= x1:
+            return y0 + (y1 - y0) * (x - x0) / (x1 - x0)
+    return P[-1][1]
+
+
+def se_curb_y(x):
+    return _pl(SE_CURB, x)
+
+
+def se_rail_y(x):
+    return se_curb_y(x) - SE_WALK
+
+
+def se_curb_line(xa, xb, step=10.0):
+    """cordolo sud-est da xa a xb (anche al contrario), con i vertici della spezzata."""
+    lo, hi = min(xa, xb), max(xa, xb)
+    xs = sorted({lo, hi} | {x for x, _ in SE_CURB if lo < x < hi} | set(v for v in _frange(lo, hi, step)))
+    if xa > xb:
+        xs = xs[::-1]
+    return [(x, se_curb_y(x)) for x in xs]
+
+
+def _frange(a, b, s):
+    v = a + s
+    while v < b - 0.5:
+        yield v
+        v += s
 SW_X = -35.5               # bordo sud-ovest (marciapiede fino a SW_X - SW_WALK)
 SW_WALK = 2.5
 NE_X = 119.0
@@ -63,7 +100,7 @@ def nw_curb_y(x):
 
 def lot_outline():
     """contorno dell'asfalto (antiorario): lato sud-est, testata nord-est arrotondata, bordo nord-ovest, lato sud-ovest."""
-    pts = [(SW_X, SE_CURB_Y), (NE_X, SE_CURB_Y), (NE_X, 10.0)]
+    pts = se_curb_line(SW_X, NE_X) + [(NE_X, 10.0)]
     cx, cy, r = NE_X - 5.0, 10.0, 5.0                       # angolo nord-est raccordato
     for k in range(1, 9):
         a = math.radians(90 * k / 8)
@@ -80,11 +117,16 @@ def lot_outline():
 # tolti su indicazione dell'utente (non fanno parte del terminal): la lista resta per le maschere dei decal
 KIOSKS = []
 WILLOW = (7.5, 16.0)       # tronco del salice sul marciapiede nord-ovest, a ridosso della ringhiera (chioma a ~(7, 16.5))
-NOTICE_BOARD = (38.0, SE_RAIL_Y + 0.45)   # bacheca sul marciapiede sud-est (telaio arrugginito, pannello sbiadito)
+NOTICE_BOARD = (38.0, se_rail_y(38.0) + 0.45)   # bacheca sul marciapiede sud-est (telaio arrugginito, pannello sbiadito)
 # chiome della fascia centrale sull'ortofoto (quelle delle isole coincidono entro 1 m con island_xform)
 MEDIAN_CROWNS = [(-16.3, -32.6), (-6.9, -32.7), (44.8, -31.2), (62.7, -30.4), (69.9, -29.3)]
-# pensilina della fascia centrale: sull'ortofoto e' la tettoia a griglia 3.8 x 2.3 m sul lato strada, non a x 45
-MEDIAN_SHELTER = (8.1, -33.1)
+# pensilina della fascia centrale: resta alla x del modello v0.3 (~45, Street View 2022 la conferma li')
+MEDIAN_SHELTER = None
+# isola a "E" della v0.3 a sud-est dell'edificio: stalli dei bus tra i bracci (Street View 2024: righe gialle sbiadite
+# in diagonale e un paletto rosso sul braccio centrale)
+E_BAYS = [(88.2, 94.9), (96.6, 104.4)]      # x degli stalli, tra y -29.9 e -34.0
+E_BAY_Y = (-29.9, -34.0)
+E_POST = (95.75, -32.2)
 
 
 def in_median(x, y, pad=0.0):
@@ -112,7 +154,7 @@ def snap_tree(x, y):
 def relocate(x, y):
     """posizione vecchia (modello v0.3) -> posizione nella disposizione reale."""
     if y < -40.0 and SW_X - 1 < x < NE_X + 1:                 # marciapiede sud-est
-        return x, (SE_CURB_Y + SE_RAIL_Y) / 2 - 0.2
+        return x, se_rail_y(x) + 0.4                       # lampioni vicino alla ringhiera (Street View 2022)
     if SW_X - SW_WALK - 1.0 < x < SW_X + 1.0 and -34.0 < y < NW_CURB[0][1]:   # marciapiede sud-ovest
         return SW_X - SW_WALK / 2, y
     if in_old_median(x, y):

@@ -365,11 +365,11 @@ for sign, x in ((1, LL.MED_X0), (-1, LL.MED_X1)):
             tri = [a_, b_, c_] if (b_ - a_).cross(c_ - a_).z > 0 else [a_, c_, b_]
             ground.add_tri("ti_island_soil", [(v, UP.copy(), *uvs_for(v, UP, 2.0)) for v in tri])
 # marciapiede sud-est (grigio, ringhiera sul bordo esterno): polilinea verso ovest, marciapiede a sinistra
-se_line = [(LL.NE_X, LL.SE_CURB_Y), (LL.SW_X, LL.SE_CURB_Y)]
-curb(ground, se_line, walk=(abs(LL.SE_RAIL_Y - LL.SE_CURB_Y) - CURB_W, "ti_pavers_grey"))
+se_line = LL.se_curb_line(LL.NE_X, LL.SW_X, 5.0)                           # da nord-est a sud-ovest: fuori a sinistra
+curb(ground, se_line, walk=(LL.SE_WALK - CURB_W, "ti_pavers_grey"))
 # testata nord-est (solo cordolo): dall'angolo sud-est su fino al raccordo col bordo nord-ovest
-ne = [p for p in outline if p[0] >= LL.NE_X - 5.01 and p[1] > LL.SE_CURB_Y + 0.1]
-ne_line = list(reversed(ne)) + [(LL.NE_X, LL.SE_CURB_Y)]       # verso sud: cordolo a sinistra = fuori (+x)
+ne = [p for p in outline if p[0] >= LL.NE_X - 5.01 and p[1] > LL.se_curb_y(LL.NE_X) + 0.1]
+ne_line = list(reversed(ne)) + [(LL.NE_X, LL.se_curb_y(LL.NE_X))]       # verso sud: cordolo a sinistra = fuori (+x)
 curb(ground, ne_line)
 # bordo nord-ovest: marciapiede da NW_WALK_FROM al raccordo; tra la stradina dell'autolavaggio e i casotti solo cordolo
 curb(ground, polyline_between(LL.NW_WALK_FROM, 114.0), walk=(LL.NW_WALK, "ti_pavers_moss"))
@@ -390,7 +390,7 @@ meta["shapes"]["ti_building.dae"] = {"tris": n, "materials": m}
 
 # 3) ringhiera
 rail = MeshData("railing")
-railing(rail, [(LL.SW_X - 0.1, LL.SE_RAIL_Y), (LL.NE_X, LL.SE_RAIL_Y)])
+railing(rail, [(x, y - LL.SE_WALK) for x, y in LL.se_curb_line(LL.SW_X - 0.1, LL.NE_X, 5.0)])
 nw_rail = [(x, y + CURB_W + LL.NW_WALK) for x, y in polyline_between(LL.NW_WALK_FROM, 112.0, 4.0)]
 railing(rail, nw_rail)
 n, m = write_dae(os.path.join(OUT_DIR, "ti_railing.dae"), [rail], GEO)
@@ -408,7 +408,7 @@ for o in bench_objs:
         c0 = bb_center(o)
         if c0.x < X_CUT:
             continue
-        if med_c is not None and LL.in_old_median(c0.x, c0.y):
+        if med_c is not None and LL.MEDIAN_SHELTER and LL.in_old_median(c0.x, c0.y):
             nx_, ny_ = c0.x + LL.MEDIAN_SHELTER[0] - med_c.x, c0.y + LL.MEDIAN_SHELTER[1] - med_c.y
         else:
             nx_, ny_ = LL.relocate(c0.x, c0.y)

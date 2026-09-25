@@ -332,7 +332,7 @@ write_dae(os.path.join(OUT, "ti_skylight.dae"), [smd], GEO)
 emd = MeshData("powerline")
 tops = []
 for x in [-30 + 37.0 * k for k in range(5)]:
-    b = Vector((x, LL.SE_RAIL_Y - 1.0, -0.4))                          # un metro oltre la ringhiera, nel verde
+    b = Vector((x, LL.se_rail_y(x) - 0.8, -0.4))                       # appena oltre la ringhiera, nel verde
     tube(emd, "ti_pole_concrete", b - Vector((0, 0, 1.2)), b + Vector((0, 0, 9.4)), 0.14, 0.08, 8)   # interrato: il terreno scende
     box(emd, "ti_pole_concrete", b + Vector((-0.02, -0.45, 9.0)), b + Vector((-0.02, 0.45, 9.0)), 0.08)   # mensola
     for off in (-0.35, 0.35):
