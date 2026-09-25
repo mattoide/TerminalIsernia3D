@@ -339,14 +339,8 @@ add_poly(ground, "ti_asphalt", outline, 0.0, 3.0)
 ISL = island_matrix()
 for nm in ("Plane.001", "Plane.002", "Plane.003", "Plane.004", "Plane.005", "Plane.006", "Plane.007", "Plane.008", "Plane.009", "Plane.010"):
     extract(objs[nm], ground, xform_model=ISL @ objs[nm].matrix_world)       # isole diagonali: al loro posto vero
-extract(objs["Plane.011"], ground)                                            # piattaforma dell'edificio
-# a sud-est dell'edificio la v0.3 aveva un'isola a "E" in autobloccanti: dal satellite e' una lastra piatta di asfalto
-# piu' scuro con un bordino chiaro (vecchia banchina dei bus), a filo del piazzale
-sx0, sy0, sx1, sy1 = LL.EAST_SLAB
-add_poly(ground, "ti_slab", [(sx0, sy0), (sx1, sy0), (sx1, sy1), (sx0, sy1)], 0.012, 3.0)
-for (ax, ay), (bx, by) in (((sx0, sy0), (sx1, sy0)), ((sx1, sy0), (sx1, sy1)), ((sx1, sy1), (sx0, sy1)), ((sx0, sy1), (sx0, sy0))):
-    dx, dy = bx - ax, by - ay; ln = math.hypot(dx, dy); nx, ny = -dy / ln * 0.09, dx / ln * 0.09
-    add_poly(ground, "ti_curb", [(ax - nx, ay - ny), (bx - nx, by - ny), (bx + nx, by + ny), (ax + nx, ay + ny)], 0.02, 1.0)
+for nm in ("Plane.011", "Plane.012"):
+    extract(objs[nm], ground)                                                 # piattaforma dell'edificio e isola a "E" (con i lampioni)
 # fascia centrale: cordolo tutto attorno, autobloccanti rossastri verso la strada, terra ed erba verso il piazzale
 ring, t_med, n_med = median_ring()
 curb(ground, ring, closed=True)

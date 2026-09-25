@@ -7,7 +7,7 @@
                      corpo illuminante piatto in punta (testa a y=1.62, z=9.1 nel sistema locale, braccio verso +Y)
   ti_grilles.dae     grate metalliche nei tre archi della facciata sud-est (misurati sulla mesh: luce 1.97 m,
                      imposta 2.20 m, chiave 3.08 m, muro a y modello -14.1..-13.35)
-  ti_kiosks.dae      i due casotti prefabbricati nell'angolo nord-ovest e la bacheca del marciapiede sud-est
+  ti_bacheca.dae     la bacheca del marciapiede sud-est
   ti_willow.dae      grande salice piangente oltre il marciapiede nord-ovest (Street View 2022): tronco e branche
                      con la corteccia di pioppo del gioco, chioma a cupola di ~13 m con "tende" di rametti pendenti
 
@@ -344,36 +344,9 @@ for a, b in zip(tops, tops[1:]):                                       # catenar
         tube(emd, "ti_lamp_black", p, q, 0.012, 0.012, 4)
 write_dae(os.path.join(OUT, "ti_powerline.dae"), [emd], GEO)
 
-# ----------------------------------------------------------------------------- casotti e bacheca (ortofoto + Street View 2022)
-# due container prefabbricati sull'asfalto nell'angolo nord-ovest (grigio-bianco e crema), porta verso il piazzale;
-# bacheca sul marciapiede sud-est: due montanti e telaio arrugginiti, pannello bianco sbiadito, tettuccio
-kmd = MeshData("kiosks")
-for (cx, cy), KL, KW, tone in LL.KIOSKS:
-    body = "ti_kiosk_" + tone
-    KH = 2.55
-    box(kmd, "ti_curb", Vector((cx - KL / 2 - 0.1, cy, -0.05)), Vector((cx + KL / 2 + 0.1, cy, -0.05)), KW + 0.2, 0.3)   # basamento
-    box(kmd, body, Vector((cx - KL / 2, cy, 0.1 + KH / 2)), Vector((cx + KL / 2, cy, 0.1 + KH / 2)), KW, KH)
-    box(kmd, "ti_kiosk_roof", Vector((cx - KL / 2 - 0.12, cy, KH + 0.18)), Vector((cx + KL / 2 + 0.12, cy, KH + 0.18)), KW + 0.24, 0.16)
-    yf = cy - KW / 2 - 0.02                                         # facciata verso il piazzale (-y)
-    for k in range(1, int(KL / 1.1)):                               # giunti dei pannelli
-        x = cx - KL / 2 + KL * k / int(KL / 1.1)
-        box(kmd, "ti_kiosk_trim", Vector((x, yf, 0.12)), Vector((x, yf, KH + 0.08)), 0.05, 0.03)
-        box(kmd, "ti_kiosk_trim", Vector((x, cy + KW / 2 + 0.02, 0.12)), Vector((x, cy + KW / 2 + 0.02, KH + 0.08)), 0.05, 0.03)
-    for sx in (-1, 1):                                              # montanti d'angolo
-        for sy in (-1, 1):
-            c = Vector((cx + sx * (KL / 2 + 0.01), cy + sy * (KW / 2 + 0.01), 0))
-            box(kmd, "ti_kiosk_trim", c + Vector((0, 0, 0.1)), c + Vector((0, 0, KH + 0.1)), 0.1)
-    xd = cx + KL * 0.22                                             # porta
-    quad(kmd, "ti_kiosk_door", Vector((xd - 0.45, yf - 0.02, 0.12)), Vector((xd + 0.45, yf - 0.02, 0.12)),
-         Vector((xd + 0.45, yf - 0.02, 2.15)), Vector((xd - 0.45, yf - 0.02, 2.15)), n=Vector((0, -1, 0)))
-    xw = cx - KL * 0.2                                              # finestra con inferriata
-    quad(kmd, "ti_kiosk_window", Vector((xw - 0.65, yf - 0.02, 1.0)), Vector((xw + 0.65, yf - 0.02, 1.0)),
-         Vector((xw + 0.65, yf - 0.02, 1.95)), Vector((xw - 0.65, yf - 0.02, 1.95)), n=Vector((0, -1, 0)))
-    for k in range(6):
-        x = xw - 0.55 + 0.22 * k
-        box(kmd, "ti_grille", Vector((x, yf - 0.06, 1.0)), Vector((x, yf - 0.06, 1.95)), 0.025)
-    for z in (1.0, 1.95):
-        box(kmd, "ti_grille", Vector((xw - 0.68, yf - 0.06, z)), Vector((xw + 0.68, yf - 0.06, z)), 0.04)
+# ----------------------------------------------------------------------------- bacheca (Street View 2022)
+# sul marciapiede sud-est: due montanti e telaio arrugginiti, pannello bianco sbiadito, tettuccio
+kmd = MeshData("bacheca")
 bx, by = LL.NOTICE_BOARD
 for sx in (-0.75, 0.75):
     box(kmd, "ti_railing", Vector((bx + sx, by, 0.0)), Vector((bx + sx, by, 2.25)), 0.07)
@@ -384,7 +357,7 @@ quad(kmd, "ti_railing", Vector((bx - 0.9, by + 0.3, 2.28)), Vector((bx + 0.9, by
      Vector((bx + 0.9, by - 0.25, 2.18)), Vector((bx - 0.9, by - 0.25, 2.18)))            # tettuccio
 quad(kmd, "ti_railing", Vector((bx - 0.9, by - 0.25, 2.17)), Vector((bx + 0.9, by - 0.25, 2.17)),
      Vector((bx + 0.9, by + 0.3, 2.27)), Vector((bx - 0.9, by + 0.3, 2.27)))
-write_dae(os.path.join(OUT, "ti_kiosks.dae"), [kmd], GEO)
+write_dae(os.path.join(OUT, "ti_bacheca.dae"), [kmd], GEO)
 
 # ----------------------------------------------------------------------------- autolavaggio (OSM way 1238868719)
 # tettoia 35.6 x 7.1 m con 6 piste (ortofoto: copertura bianca), nel sistema locale: x lungo la tettoia, centro in 0;

@@ -247,13 +247,6 @@ def terminal_materials():
             roughnessFactor=0.7, metallicFactor=0.25),   # grate verniciate scure, arrugginite
         pbr("ti_bridge_concrete", T + "t_ti_curb", "ASPHALT", **det_concrete),
         pbr("ti_bridge_deck", T + "t_ti_asphalt", "ASPHALT"),
-        pbr("ti_slab", T + "t_ti_asphalt", "ASPHALT", baseColorFactor=[0.78, 0.78, 0.77, 1]),   # lastra a SE dell'edificio
-        pbr("ti_kiosk_grey", None, "METAL", baseColorFactor=[0.60, 0.61, 0.60, 1], **dict(paint, roughnessFactor=0.7)),
-        pbr("ti_kiosk_cream", None, "METAL", baseColorFactor=[0.72, 0.66, 0.52, 1], **dict(paint, roughnessFactor=0.7)),
-        pbr("ti_kiosk_roof", None, "METAL", baseColorFactor=[0.78, 0.78, 0.76, 1], **galv),
-        pbr("ti_kiosk_trim", None, "METAL", baseColorFactor=[0.42, 0.42, 0.41, 1], **dict(paint, roughnessFactor=0.6)),
-        pbr("ti_kiosk_door", None, "METAL", baseColorFactor=[0.12, 0.13, 0.14, 1], **dict(paint, roughnessFactor=0.5)),
-        pbr("ti_kiosk_window", None, "GLASS", baseColorFactor=[0.05, 0.06, 0.07, 1], roughnessFactor=0.08, metallicFactor=0.4),
         pbr("ti_notice_panel", None, "PLASTIC", baseColorFactor=[0.80, 0.80, 0.76, 1], roughnessFactor=0.85, metallicFactor=0,
             **dict(det_concrete, detailBaseColorMapStrength=0.6)),   # pannello bianco sbiadito della bacheca
         reeds_mat("ti_reeds", "t_grass_green_long_03", [0.58, 0.74, 0.52, 1]),
@@ -263,15 +256,46 @@ def terminal_materials():
 
 
 # ====================================================================== terminal: mesh + lampioni
-def place_terminal(L):
+_SHP = {}
+
+
+def SHP(nm):
+    """percorso nel gioco della mesh nm: il nome contiene un hash del contenuto. BeamNG tiene una cache compilata (.cdae)
+    per percorso e la riusa se le sembra piu' recente del .dae: con lo stesso nome, dopo un aggiornamento della mod
+    (o una ricostruzione a gioco aperto) disegnava la versione vecchia mentre la collisione era quella nuova
+    (isole 6 m fuori posto, alberi e pali "sulla strada")."""
+    if nm not in _SHP:
+        import hashlib
+        h = hashlib.md5(open(os.path.join(BUILD, "shapes", nm + ".dae"), "rb").read()).hexdigest()[:8]
+        _SHP[nm] = f"{nm}_{h}.dae"
+    return LVP + "art/shapes/terminal/" + _SHP[nm]
+
+
+def publish_shapes():
+    """copia atomica delle mesh con il nome a hash e rimozione delle versioni precedenti (il gioco tiene la mod montata)."""
     shp = os.path.join(LV, "art", "shapes", "terminal")
     os.makedirs(shp, exist_ok=True)
-    for f in glob.glob(os.path.join(BUILD, "shapes", "*.dae")):      # copia atomica: il gioco tiene la mod montata
-        tmp = os.path.join(BUILD, "tmp_save", os.path.basename(f)); os.makedirs(os.path.dirname(tmp), exist_ok=True)
-        shutil.copy2(f, tmp); os.replace(tmp, os.path.join(shp, os.path.basename(f)))
+    keep = set()
+    for f in glob.glob(os.path.join(BUILD, "shapes", "*.dae")):
+        nm = os.path.splitext(os.path.basename(f))[0]
+        dst = os.path.join(shp, os.path.basename(SHP(nm)))
+        keep.add(os.path.basename(dst))
+        if not os.path.exists(dst):
+            tmp = os.path.join(BUILD, "tmp_save", os.path.basename(dst)); os.makedirs(os.path.dirname(tmp), exist_ok=True)
+            shutil.copy2(f, tmp); os.replace(tmp, dst)
+    for f in glob.glob(os.path.join(shp, "*.dae")):
+        if os.path.basename(f) not in keep:
+            try:
+                os.remove(f)
+            except OSError as e:                     # aperta dal gioco: resta, ma nessun oggetto la usa piu'
+                print("non rimossa:", os.path.basename(f), e)
+
+
+def place_terminal(L):
+    shp = os.path.join(LV, "art", "shapes", "terminal")
     json.dump(terminal_materials(), open(os.path.join(shp, "main.materials.json"), "w"), indent=1)
-    for nm in ("ti_ground", "ti_building", "ti_railing", "ti_props", "ti_canopy", "ti_grilles", "ti_skylight", "ti_powerline", "ti_kiosks"):
-        L.add("terminal", {"name": nm.replace("ti_", "terminal_"), "class": "TSStatic", "position": [0, 0, 0], "shapeName": LVP + f"art/shapes/terminal/{nm}.dae",
+    for nm in ("ti_ground", "ti_building", "ti_railing", "ti_props", "ti_canopy", "ti_grilles", "ti_skylight", "ti_powerline", "ti_bacheca"):
+        L.add("terminal", {"name": nm.replace("ti_", "terminal_"), "class": "TSStatic", "position": [0, 0, 0], "shapeName": SHP(nm),
                            "collisionType": "Visible Mesh Final", "decalType": "Visible Mesh", "useInstanceRenderData": True})
     meta = json.load(open(os.path.join(BUILD, "export_meta.json")))
     for i, lp in enumerate(meta["lamps"]):
@@ -280,7 +304,7 @@ def place_terminal(L):
         rotl = [R[0][0], R[1][0], R[2][0], R[0][1], R[1][1], R[2][1], R[0][2], R[1][2], R[2][2]]
         light = f"ti_lamp_light_{i:02d}"
         L.add("terminal/lampioni", {"name": f"ti_lamp_{i:02d}", "class": "TSStatic", "position": lp["pos"], "rotationMatrix": rotl,
-                                    "shapeName": LVP + "art/shapes/terminal/ti_lamp_pastorale.dae", "collisionType": "Visible Mesh Final",
+                                    "shapeName": SHP("ti_lamp_pastorale"), "collisionType": "Visible Mesh Final",
                                     "useInstanceRenderData": True, "instanceColor": [0, 0, 0, 1], "child": light})
         # testa del lampione a pastorale (blender_props.py): locale (0, 1.62, 9.1), braccio lungo +Y
         h = np.array(lp["pos"]) + np.array(R) @ np.array([0.0, 1.62, 9.1])
@@ -298,7 +322,7 @@ def place_terminal(L):
         light = f"ti_globe_light_{i}"
         L.add("terminal/lampioni", {"name": f"ti_globe_{i}", "class": "TSStatic", "position": [x, y, round(ground_z(x, y), 3)],
                                     "rotationMatrix": rot_list_from_yaw(math.radians(yaw + geo.MODEL_ROT_DEG)),
-                                    "shapeName": LVP + "art/shapes/terminal/ti_lamp_globe.dae", "collisionType": "Visible Mesh Final",
+                                    "shapeName": SHP("ti_lamp_globe"), "collisionType": "Visible Mesh Final",
                                     "useInstanceRenderData": True, "instanceColor": [0, 0, 0, 1], "child": light})
         L.add("terminal/lampioni", {"name": light, "class": "PointLight", "position": [x, y, 3.2], "color": [1, 0.8, 0.55, 1],
                                     "brightness": 1.6, "radius": 12, "castShadows": False, "isEnabled": False, "nightLight": True})
@@ -319,11 +343,11 @@ def write_forest_defs():
     items, mats = {}, {}
     items["ti_reeds_clump"] = {"name": "ti_reeds_clump", "internalName": "ti_reeds_clump_int", "class": "ForestItemData",
                                "persistentId": uid("fid/reeds"), "annotation": "NATURE",
-                               "shapeFile": LVP + "art/shapes/terminal/ti_reeds.dae", "windScale": 0.8, "trunkBendScale": 0.03,
+                               "shapeFile": SHP("ti_reeds"), "windScale": 0.8, "trunkBendScale": 0.03,
                                "branchAmp": 0.08, "detailAmp": 0.35, "detailFreq": 0.9, "mass": 1}
     items["ti_willow"] = {"name": "ti_willow", "internalName": "ti_willow_int", "class": "ForestItemData",
                           "persistentId": uid("fid/willow"), "annotation": "NATURE",
-                          "shapeFile": LVP + "art/shapes/terminal/ti_willow.dae", "windScale": 0.7, "trunkBendScale": 0.006,
+                          "shapeFile": SHP("ti_willow"), "windScale": 0.7, "trunkBendScale": 0.006,
                           "branchAmp": 0.12, "detailAmp": 0.25, "detailFreq": 0.6, "mass": 5000, "radius": 0.4}
     for lv, names in FOREST_ITEMS.items():
         fi = va.forest_items(lv)
@@ -595,7 +619,7 @@ def roads(L):
     bpath = os.path.join(BUILD, "bridges.json")
     decks = json.load(open(bpath)) if os.path.exists(bpath) else []
     if decks:
-        L.add("roads", {"name": "viadotti", "class": "TSStatic", "position": [0, 0, 0], "shapeName": LVP + "art/shapes/terminal/ti_bridges.dae",
+        L.add("roads", {"name": "viadotti", "class": "TSStatic", "position": [0, 0, 0], "shapeName": SHP("ti_bridges"),
                         "collisionType": "Visible Mesh Final", "decalType": "Visible Mesh", "useInstanceRenderData": True})
     for r in TINFO["roads"] + [dict(d, deck=True, surface="") for d in decks]:
         P = np.array(r["pts"])
@@ -754,7 +778,7 @@ def buildings(L):
             cx_, cy_ = float(ctr[0]), float(ctr[1])
             L.add("dintorni/edifici", {"name": "autolavaggio", "class": "TSStatic", "position": [round(cx_, 3), round(cy_, 3), round(float(tz(cx_, cy_)[0]) + 0.05, 3)],
                                         "rotationMatrix": [round(v, 6) for v in rot_list_from_yaw(yaw)],
-                                        "shapeName": LVP + "art/shapes/terminal/ti_carwash.dae", "collisionType": "Visible Mesh Final",
+                                        "shapeName": SHP("ti_carwash"), "collisionType": "Visible Mesh Final",
                                         "decalType": "Visible Mesh", "useInstanceRenderData": True})
             BLD_POLYS.append([(cx_ + math.cos(yaw) * hx - math.sin(yaw) * hy, cy_ + math.sin(yaw) * hx + math.cos(yaw) * hy)
                               for hx, hy in ((-Lb / 2, -Wb / 2), (Lb / 2, -Wb / 2), (Lb / 2, Wb / 2), (-Lb / 2, Wb / 2))])
@@ -1189,14 +1213,14 @@ def environment(L):
                       "squareSize": mi["squareSize"], "baseTexSize": 4096, "materialTextureSet": "ti_TerrainMaterialTextureSet",
                       "terrainFile": LVP + "terrain_main.ter", "minimapImage": LVP + "terminal_isernia_minimap.png"})
     L.add("terrain", {"name": "sfondo_colline", "class": "TSStatic", "position": [0, 0, 0], "collisionType": "None",
-                      "shapeName": LVP + "art/shapes/terminal/ti_backdrop.dae", "useInstanceRenderData": True})
+                      "shapeName": SHP("ti_backdrop"), "useInstanceRenderData": True})
 
 
 def free_parking(p):
     """le isole ora sono al posto vero (6 m piu' a sud-est): un'auto che ci finirebbe sopra scivola sull'asfalto libero."""
     mx, my = geo.world2model(p[0], p[1])
     def clear(x, y):
-        return all(ground_z(*geo.model2world(x + ex, y + ey)) < 0.03 for ex in (-2.6, 0, 2.6) for ey in (-1.3, 0, 1.3))
+        return all(ground_z(*geo.model2world(x + ex, y + ey)) < 0.03 for ex in np.arange(-8.5, 8.6, 1.0) for ey in (-1.5, 0, 1.5))
     if clear(mx, my):
         return p
     for dy in np.arange(0.5, 12, 0.5):
@@ -1271,6 +1295,7 @@ def minimap():
 
 def main():
     L = Level()
+    publish_shapes()
     environment(L)
     meta = place_terminal(L)
     write_forest_defs()

@@ -23,11 +23,13 @@ e controllata sulle foto satellitari e su Street View 2022. Il modello v0.3 avev
   tra cordolo e ringhiera, sud-ovest lungo il vialetto; ringhiere nuove più leggere sui due lati lunghi.
 - Tolte le **strisce gialle** degli stalli (su Street View 2022 non ci sono più) e gli oggetti in carreggiata
   (barriere di plastica, cassonetti, fusti, cassone macerie); gli idranti stanno sui marciapiedi.
-- **Due container prefabbricati** nell'angolo nord-ovest, all'imbocco della stradina dell'autolavaggio, e la
-  **bacheca** arrugginita sul marciapiede sud-est; il salice ha il tronco a ridosso della ringhiera.
+- La **bacheca** arrugginita sul marciapiede sud-est; il salice ha il tronco a ridosso della ringhiera.
 - La linea elettrica è oltre la nuova ringhiera; lampioni, alberi e paline alla quota del fondo nuovo; le auto
   parcheggiate non finiscono più sopra le isole.
 - **Glitch**: il terreno (celle da 2 m) non affiora più dall'asfalto lungo i cordoli; i cordoli hanno la faccia posteriore.
+- **Cache delle mesh**: BeamNG tiene una copia compilata di ogni `.dae` e, se le sembra più recente, la riusa anche
+  dopo un aggiornamento: si vedevano le isole vecchie con alberi e pali già al posto nuovo, cioè "sulla strada".
+  Ora ogni mesh ha nel nome un hash del contenuto, quindi a ogni modifica il gioco la ricompila.
 
 ## Novità della v1.0.1
 

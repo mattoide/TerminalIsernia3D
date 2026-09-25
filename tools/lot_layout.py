@@ -74,14 +74,11 @@ def lot_outline():
     return pts
 
 
-# lastra rettangolare a sud-est dell'edificio (x0, y0, x1, y1): al posto dell'isola a "E" della v0.3
-EAST_SLAB = (85.5, -34.6, 107.2, -27.2)
-
-
 # ---------------------------------------------------------------- oggetti nuovi visti dal vero
 # due container prefabbricati nell'angolo nord-ovest (satellite: tetti chiari, grigio-bianco e crema; il rettangolo scuro
 # sull'ortofoto Esri e' la loro ombra verso nord-ovest)
-KIOSKS = [((-11.7, 17.1), 6.6, 2.35, "grey"), ((-4.9, 17.1), 5.7, 2.35, "cream")]
+# tolti su indicazione dell'utente (non fanno parte del terminal): la lista resta per le maschere dei decal
+KIOSKS = []
 WILLOW = (7.5, 16.0)       # tronco del salice sul marciapiede nord-ovest, a ridosso della ringhiera (chioma a ~(7, 16.5))
 NOTICE_BOARD = (38.0, SE_RAIL_Y + 0.45)   # bacheca sul marciapiede sud-est (telaio arrugginito, pannello sbiadito)
 # chiome della fascia centrale sull'ortofoto (quelle delle isole coincidono entro 1 m con island_xform)
