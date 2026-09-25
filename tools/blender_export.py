@@ -284,8 +284,9 @@ def median_ring():
     return pts, t, nv
 
 
-def railing(md, P, h=1.02, bay=2.0):
-    """ringhiera a croce di Sant'Andrea (Street View 2022): montanti ogni 2 m, correnti alto e basso, diagonali a X."""
+def railing(md, P, h=1.02, bay=2.0, base=0.0):
+    """ringhiera a croce di Sant'Andrea (Street View 2022): montanti ogni 2 m, correnti alto e basso, diagonali a X.
+    base < 0: montanti infissi nel terreno (dove il terreno sta sotto il livello del piazzale)."""
     L = [0.0]
     for a, b in zip(P, P[1:]):
         L.append(L[-1] + math.hypot(b[0] - a[0], b[1] - a[1]))
@@ -297,7 +298,7 @@ def railing(md, P, h=1.02, bay=2.0):
     nb = max(1, int(round(L[-1] / bay)))
     pts = [at(L[-1] * k / nb) for k in range(nb + 1)]
     for k, p in enumerate(pts):
-        rbox(md, p, p + UP * h, 0.05)
+        rbox(md, p + UP * base, p + UP * h, 0.05)
         if k < nb:
             q = pts[k + 1]
             rbox(md, p + UP * 0.12, q + UP * 0.12, 0.04)
@@ -365,11 +366,20 @@ for sign, x in ((1, LL.MED_X0), (-1, LL.MED_X1)):
             tri = [a_, b_, c_] if (b_ - a_).cross(c_ - a_).z > 0 else [a_, c_, b_]
             ground.add_tri("ti_island_soil", [(v, UP.copy(), *uvs_for(v, UP, 2.0)) for v in tri])
 # marciapiede sud-est (grigio, ringhiera sul bordo esterno): polilinea verso ovest, marciapiede a sinistra
-se_line = LL.se_curb_line(LL.NE_X, LL.SW_X, 5.0)                           # da nord-est a sud-ovest: fuori a sinistra
+se_line = LL.se_curb_line(LL.SE_EXT_X, LL.SW_X, 5.0)                       # da nord-est a sud-ovest: fuori a sinistra
 curb(ground, se_line, walk=(LL.SE_WALK - CURB_W, "ti_pavers_grey"))
+# testate del marciapiede sud-est (la strada prosegue ai due lati): chiuse fin sotto il suolo
+for p_, q_ in ((se_line[0], se_line[1]), (se_line[-1], se_line[-2])):
+    t_ = Vector((q_[0] - p_[0], q_[1] - p_[1], 0)).normalized(); n_ = Vector((-t_.y, t_.x, 0))
+    if n_.y > 0:
+        n_ = -n_                                                           # verso fuori (sud-est)
+    a0 = Vector((p_[0], p_[1], -0.3)); a1 = a0 + n_ * LL.SE_WALK
+    b1, b0 = a1 + UP * (Z_WALK + 0.3), a0 + UP * (Z_CURB + 0.3)
+    add_quad(ground, "ti_curb", a0, a1, b1, b0, 1.0, -t_)
+    add_quad(ground, "ti_curb", b0, b1, a1, a0, 1.0, t_)                   # a due facce: si vede da entrambi i lati
 # testata nord-est (solo cordolo): dall'angolo sud-est su fino al raccordo col bordo nord-ovest
-ne = [p for p in outline if p[0] >= LL.NE_X - 5.01 and p[1] > LL.se_curb_y(LL.NE_X) + 0.1]
-ne_line = list(reversed(ne)) + [(LL.NE_X, LL.se_curb_y(LL.NE_X))]       # verso sud: cordolo a sinistra = fuori (+x)
+ne = [p for p in outline if p[0] >= LL.NE_X - 5.01 and p[1] > LL.NE_OPEN_Y + 0.1]
+ne_line = list(reversed(ne)) + [(LL.NE_X, LL.NE_OPEN_Y)]                  # varco per la strada che prosegue a nord-est       # verso sud: cordolo a sinistra = fuori (+x)
 curb(ground, ne_line)
 # bordo nord-ovest: marciapiede da NW_WALK_FROM al raccordo; tra la stradina dell'autolavaggio e i casotti solo cordolo
 curb(ground, polyline_between(LL.NW_WALK_FROM, 114.0), walk=(LL.NW_WALK, "ti_pavers_moss"))
@@ -390,7 +400,16 @@ meta["shapes"]["ti_building.dae"] = {"tris": n, "materials": m}
 
 # 3) ringhiera
 rail = MeshData("railing")
-railing(rail, [(x, y - LL.SE_WALK) for x, y in LL.se_curb_line(LL.SW_X - 0.1, LL.NE_X, 5.0)])
+railing(rail, [(x, y - LL.SE_WALK) for x, y in LL.se_curb_line(LL.SW_X - 0.1, LL.SE_EXT_X, 5.0)])
+# ringhiera della testata nord-est, appena dietro il cordolo (Street View 2022), montanti infissi nel terreno
+ne_rail = []
+for p_ in ne_line:
+    dx_, dy_ = p_[0] - (LL.NE_X - 5.0), p_[1] - 10.0
+    if p_[1] > 10.0 and math.hypot(dx_, dy_) > 1e-6:                       # sull'arco: raggio + 0.35
+        k_ = (math.hypot(dx_, dy_) + 0.35) / math.hypot(dx_, dy_); ne_rail.append(((LL.NE_X - 5.0) + dx_ * k_, 10.0 + dy_ * k_))
+    else:
+        ne_rail.append((LL.NE_X + CURB_W + 0.2, p_[1]))
+railing(rail, ne_rail, base=-0.35)
 nw_rail = [(x, y + CURB_W + LL.NW_WALK) for x, y in polyline_between(LL.NW_WALK_FROM, 112.0, 4.0)]
 railing(rail, nw_rail)
 n, m = write_dae(os.path.join(OUT_DIR, "ti_railing.dae"), [rail], GEO)

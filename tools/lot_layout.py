@@ -43,7 +43,11 @@ def in_old_median(x, y):
 # Street View 2022 (cordolo a ~4 m dall'auto, marciapiede di ~2.6 m). Come isole e fascia centrale non e' parallelo
 # all'asse del modello: prima era una retta a y -47, 3 m troppo dentro a sud-ovest e 2 m troppo fuori a nord-est.
 SE_CURB = [(-36.0, -51.2), (-20.0, -50.6), (0.0, -50.3), (20.0, -49.7), (40.0, -48.7), (60.0, -47.8), (80.0, -46.9),
-           (100.0, -45.8), (120.0, -44.6)]
+           (100.0, -45.8), (120.0, -44.6), (135.0, -43.2), (150.0, -41.9)]
+# Street View 2022: la Rava non finisce nel piazzale, prosegue a nord-est (OSM: strada da x 115, y -40); marciapiede e
+# ringhiera sud-est la seguono. La testata nord-est ha una ringhiera marrone davanti al canneto e si apre sulla strada.
+SE_EXT_X = 150.0           # il marciapiede sud-est continua lungo la strada fino a qui
+NE_OPEN_Y = -34.0          # varco nella testata nord-est per la strada: da qui al cordolo sud-est
 SE_WALK = 2.5              # autobloccanti grigi tra cordolo e ringhiera
 
 
