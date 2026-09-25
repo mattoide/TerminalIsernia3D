@@ -23,7 +23,9 @@ e controllata sulle foto satellitari e su Street View 2022. Il modello v0.3 avev
   tra cordolo e ringhiera, sud-ovest lungo il vialetto; ringhiere nuove più leggere sui due lati lunghi. Il cordolo
   sud-est è rilevato metro per metro sull'ortofoto e non è parallelo all'edificio: la Rava è larga fino a 3 m in più.
 - **Confronto con Street View (2022/2024)**: asfalto chiaro e sbiadito come dal vero, canneto alto subito dietro la
-  ringhiera sud-est con gli alberi più indietro, righe gialle sbiadite e paletto rosso negli stalli dei bus dell'isola a "E".
+  ringhiera sud-est con gli alberi più indietro, righe gialle sbiadite e paletto rosso negli stalli dei bus dell'isola a "E",
+  cespuglio tondo e albero scuro accanto alla pensilina sulla fascia centrale. La testata nord-est si apre sulla strada che
+  prosegue oltre il piazzale (prima un cordolo la chiudeva), con la ringhiera marrone; il marciapiede sud-est la segue.
 - Tolte le **strisce gialle** degli stalli (su Street View 2022 non ci sono più) e gli oggetti in carreggiata
   (barriere di plastica, cassonetti, fusti, cassone macerie); gli idranti stanno sui marciapiedi.
 - La **bacheca** arrugginita sul marciapiede sud-est; il salice ha il tronco a ridosso della ringhiera.
